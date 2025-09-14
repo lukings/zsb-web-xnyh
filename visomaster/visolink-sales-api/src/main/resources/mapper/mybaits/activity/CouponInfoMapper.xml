@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.activity.dao.CouponInfoDao">
+
+        <!-- 通用查询映射结果 -->
+        <resultMap id="BaseResultMap" type="cn.visolink.system.activity.model.CouponInfo">
+                    <id column="id" property="id" />
+                    <result column="activity_id" property="activityId" />
+                    <result column="coupon_name" property="couponName" />
+                    <result column="coupon_type" property="couponType" />
+                    <result column="coupon_value" property="couponValue" />
+                    <result column="publish_time" property="publishTime" />
+                    <result column="begintime" property="begintime" />
+                    <result column="endtime" property="endtime" />
+                    <result column="is_repeated_collection" property="isRepeatedCollection" />
+                    <result column="collection_up" property="collectionUp" />
+                    <result column="ispay" property="ispay" />
+                    <result column="valid_type" property="validType" />
+                    <result column="valid_hours" property="validHours" />
+                    <result column="valid_begintime" property="validBegintime" />
+                    <result column="valid_endtime" property="validEndtime" />
+                    <result column="role_desc" property="roleDesc" />
+                    <result column="is_showstock" property="isShowstock" />
+                    <result column="stock_no" property="stockNo" />
+                    <result column="stock_surplus" property="stockSurplus" />
+                    <result column="coupon_collected" property="couponCollected" />
+                    <result column="coupon_closure" property="couponClosure" />
+                    <result column="coupon_status" property="couponStatus" />
+                    <result column="status" property="status" />
+                    <result column="isdel" property="isdel" />
+                    <result column="createtime" property="createtime" />
+                    <result column="creator" property="creator" />
+                    <result column="edittime" property="edittime" />
+                    <result column="editor" property="editor" />
+                    <result column="update_stock" property="updateStock" />
+        </resultMap>
+        <resultMap id="ResultMap" type="cn.visolink.system.activity.model.vo.CouponInfoVO">
+            <id column="id" property="id" />
+            <result column="activity_id" property="activityId" />
+            <result column="coupon_name" property="couponName" />
+            <result column="coupon_type" property="couponType" />
+            <result column="coupon_value" property="couponValue" />
+            <result column="publish_time" property="publishTime" />
+            <result column="begintime" property="begintime" />
+            <result column="endtime" property="endtime" />
+            <result column="is_repeated_collection" property="isRepeatedCollection" />
+            <result column="collection_up" property="collectionUp" />
+            <result column="ispay" property="ispay" />
+            <result column="valid_type" property="validType" />
+            <result column="valid_hours" property="validHours" />
+            <result column="valid_begintime" property="validBegintime" />
+            <result column="valid_endtime" property="validEndtime" />
+            <result column="role_desc" property="roleDesc" />
+            <result column="is_showstock" property="isShowstock" />
+            <result column="stock_no" property="stockNo" />
+            <result column="stock_surplus" property="stockSurplus" />
+            <result column="coupon_collected" property="couponCollected" />
+            <result column="coupon_closure" property="couponClosure" />
+            <result column="coupon_status" property="couponStatus" />
+            <result column="status" property="status" />
+            <result column="isdel" property="isdel" />
+            <result column="createtime" property="createtime" />
+            <result column="creator" property="creator" />
+            <result column="edittime" property="edittime" />
+            <result column="editor" property="editor" />
+            <result column="update_stock" property="updateStock" />
+        </resultMap>
+
+        <!--分页查询优惠券-->
+        <select id="getAllCouponInfoVO" parameterType="cn.visolink.system.activity.model.form.CouponInfoForm" resultMap="ResultMap">
+            SELECT
+            info.id,
+            info.coupon_no,
+            info.coupon_name,
+            aa.activity_no activityNo,
+            aa.activity_name activityName,
+            info.publish_time,
+            info.begintime,
+            info.endtime,
+            info.createtime,
+            ba.EmployeeName creator,
+            (
+            CASE
+
+            WHEN info.coupon_type = '1' THEN
+            '折扣券'
+            WHEN info.coupon_type = '2' THEN
+            '代金券'
+            WHEN info.coupon_type = '3' THEN
+            '礼品券' ELSE ''
+            END
+            ) coupon_type,
+            info.coupon_value,
+            info.stock_no,
+            info.stock_surplus,
+            info.coupon_collected,
+            info.coupon_closure,
+            (
+            CASE
+            WHEN info.`status` = 0 THEN
+            '已禁用'
+            WHEN info.coupon_status = 1 THEN '草稿'
+            WHEN info.endtime &lt;= now( )
+            AND info.coupon_status = 2
+            AND info.`status` = 1 THEN
+            '已结束'
+            WHEN ((info.begintime &lt;= now( ) AND info.endtime &gt; now( )) or info.is_vow_award = 1)
+            AND info.coupon_status = 2
+            AND info.`status` = 1 THEN
+            '已开始'
+            WHEN info.coupon_status = 2
+            AND info.publish_time &lt;= now( ) AND info.`status` = 1 THEN '已发布'
+            WHEN info.coupon_status = 2 AND info.publish_time &gt; now( )
+            AND info.`status` = 1 THEN
+            '未发布'
+            ELSE ''
+            END
+            ) coupon_status,
+            ifnull(t.cstCount,0) collectionCstCount,
+            (select count(DISTINCT collection_openid) from a_coupon_detail where coupon_id = info.id and closure_id is not null) closureCstCount,
+            ifnull(t.collectionCount,0) collectionCount,
+            ifnull(t.closureCount,0) closureCount
+            FROM
+            a_coupon_info info
+            LEFT JOIN b_account ba ON ba.id = info.creator
+            LEFT JOIN a_activity_info aa ON aa.id = info.activity_id
+            LEFT JOIN (select coupon_id,count(1) collectionCount,count( DISTINCT collection_openid) cstCount,
+            sum(case when closure_id is not null then 1 else 0 end) closureCount
+            from a_coupon_detail where isdel = 0 GROUP BY coupon_id) t on info.id = t.coupon_id
+            where info.isdel = 0
+            <if test="creator!=null and creator!=''">
+                and ba.EmployeeName like concat('%',#{creator},'%')
+            </if>
+            <if test="activityName!=null and activityName!=''">
+                and aa.activity_name like concat('%',#{activityName},'%')
+            </if>
+            <if test="activityNo!=null and activityNo !=''">
+                and aa.activity_no like concat('%',#{activityNo},'%')
+            </if>
+            <if test="couponName!=null and couponName!=''">
+                and info.coupon_name like concat('%',#{couponName},'%')
+            </if>
+            <if test="couponNo!=null and couponNo!=''">
+                and info.coupon_no like concat('%',#{couponNo},'%')
+            </if>
+            <if test="projectList != null and projectList.size() > 0">
+                and info.id in (select DISTINCT coupon_id from a_coupon_project where project_id in
+                <foreach collection="projectList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                )
+            </if>
+            <if test="couponTypeList!=null and couponTypeList.size() > 0">
+                and info.coupon_type in
+                <foreach collection="couponTypeList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="couponStatus!=null and couponStatus!='' and couponStatus == '1'.toString()">
+                and info.coupon_status = #{couponStatus}
+            </if>
+            <if test="couponStatus!=null and couponStatus!='' and couponStatus == '2'.toString()">
+                and info.coupon_status = 2 and info.publish_time &lt;= now() and info.begintime &gt; now() and info.`status`
+                = 1
+            </if>
+            <if test="couponStatus!=null and couponStatus!='' and couponStatus == '0'.toString()">
+                and info.`status` = 0
+            </if>
+            <if test="couponStatus!=null and couponStatus!='' and couponStatus == '3'.toString()">
+                and ((info.begintime &lt;= now( ) AND info.endtime &gt; now( )) or info.is_vow_award = 1) and
+                info.coupon_status = 2 and info.`status` = 1
+            </if>
+            <if test="couponStatus!=null and couponStatus!='' and couponStatus == '4'.toString()">
+                and info.endtime &lt;= now() and info.coupon_status = 2 and info.`status` = 1
+            </if>
+            <if test="couponStatus!=null and couponStatus!='' and couponStatus == '5'.toString()">
+                and info.publish_time &gt; now() and info.coupon_status = 2 and info.`status` = 1
+            </if>
+            <if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+                and info.publish_time BETWEEN #{date1} AND #{date2}
+            </if>
+            <if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+                and info.begintime BETWEEN #{date1} AND #{date2}
+            </if>
+            <if test="reportTime==3  and date1!=null and date1!='' and date2!=null and date2!=''">
+                and info.endtime BETWEEN #{date1} AND #{date2}
+            </if>
+            <if test="is_vow_award !=null and is_vow_award !=''">
+                and info.is_vow_award = #{is_vow_award}
+            </if>
+            order by info.createtime desc
+        </select>
+
+        <!--添加优惠券-->
+        <insert id="insertCouponInfo" parameterType="cn.visolink.system.activity.model.form.CouponInfoForm">
+            insert into a_coupon_info(id,activity_id,coupon_no,coupon_name,coupon_type,coupon_value,
+            <if test="publishTime!=null and publishTime!=''">
+                publish_time,
+            </if>
+            <if test="begintime!=null and begintime!=''">
+                begintime,
+            </if>
+            <if test="endtime!=null and endtime!=''">
+                endtime,
+            </if>
+            is_repeated_collection,collection_up,valid_type,valid_hours,
+            <if test="validBegintime!=null and validBegintime!=''">
+                valid_begintime,
+            </if>
+            <if test="validEndtime!=null and validEndtime!=''">
+                valid_endtime,
+            </if>
+            role_desc,stock_no,stock_surplus,coupon_status,createtime,creator,coupon_image_url,is_vow_award,is_wei_lou)
+            values(#{id},#{activityId},#{couponNo},#{couponName},#{couponType},#{couponValue},
+            <if test="publishTime!=null and publishTime!=''">
+                #{publishTime},
+            </if>
+            <if test="begintime!=null and begintime!=''">
+                #{begintime},
+            </if>
+            <if test="endtime!=null and endtime!=''">
+                #{endtime},
+            </if>
+            #{isRepeatedCollection},
+            #{collectionUp},#{validType},#{validHours},
+            <if test="validBegintime!=null and validBegintime!=''">
+                #{validBegintime},
+            </if>
+            <if test="validEndtime!=null and validEndtime!=''">
+                #{validEndtime},
+            </if>
+            #{roleDesc},#{stockNo},#{stockSurplus},#{couponStatus},
+            #{createtime},#{creator},#{coupon_image_url},#{is_vow_award},#{isWeiLou})
+        </insert>
+        <!--更新优惠券-->
+        <update id="updateCouponInfo" parameterType="cn.visolink.system.activity.model.form.CouponInfoForm">
+            update a_coupon_info
+            set coupon_name = #{couponName},
+            coupon_type = #{couponType},
+            coupon_value = #{couponValue},
+            publish_time = #{publishTime},
+            begintime = #{begintime},
+            endtime = #{endtime},
+            is_repeated_collection = #{isRepeatedCollection},
+            collection_up = #{collectionUp},
+            valid_type = #{validType},
+            valid_hours = #{validHours},
+            <if test="validBegintime!=null and validBegintime!=''">
+                valid_begintime = #{validBegintime},
+            </if>
+            <if test="validEndtime!=null and validEndtime!=''">
+                valid_endtime = #{validEndtime},
+            </if>
+            role_desc = #{roleDesc},
+            stock_no = #{stockNo},
+            stock_surplus = #{stockSurplus},
+            update_stock = #{updateStock},
+            coupon_status = #{couponStatus},
+            edittime = now(),
+            editor = #{creator},
+            coupon_image_url=#{coupon_image_url},
+            is_vow_award=#{is_vow_award},
+            is_wei_lou=#{isWeiLou}
+            where id =#{id}
+        </update>
+        <!--更新优惠券状态-->
+        <update id="updateCouponInfoStatus" parameterType="java.util.Map">
+            update a_coupon_info
+            <set>
+                <if test="isDel!=null and isDel!=''">
+                    isdel = #{isDel},
+                </if>
+                <if test="couponStatus!=null and couponStatus!=''">
+                    coupon_status = #{couponStatus},
+                    publish_time = now(),
+                </if>
+                <if test="status!=null">
+                    status = #{status},
+                </if>
+                edittime = now(),
+                editor = #{userId},
+            </set>
+            where id = #{id}
+        </update>
+        <select id="getCouponInfoById" parameterType="java.lang.String" resultMap="ResultMap">
+          select * from a_coupon_info where id = #{id}
+        </select>
+        <!--添加优惠券关联项目-->
+        <insert id="insertCouponPro" parameterType="java.util.Map">
+            insert into a_coupon_project(id,coupon_id,project_id,project_name)
+            values(uuid(),#{couponId},#{projectId},#{projectName})
+        </insert>
+        <!--查询优惠券关联项目ID-->
+        <select id="getCouponPro" parameterType="java.lang.String" resultType="java.lang.String">
+            select project_id from a_coupon_project where coupon_id = #{id}
+        </select>
+        <!--删除关联项目-->
+        <delete id="deleteCouponPro" parameterType="java.lang.String">
+            delete from a_coupon_project where coupon_id = #{couponId} and project_id = #{projectId}
+        </delete>
+        <!--获取项目名称-->
+        <select id="getProNameById" resultType="java.lang.String" parameterType="java.lang.String">
+            select ProjectName from b_project where id = #{projectId} and IsDel = 0
+        </select>
+        <!--获取项目及区域集团-->
+        <select id="getProNameAndAreaName" parameterType="java.lang.String" resultType="java.util.Map">
+            select bp.AreaName,bp.ProjectName from a_coupon_project ap
+            INNER JOIN b_project bp on ap.project_id = bp.id
+            where ap.coupon_id = #{id}
+        </select>
+        <!--获取优惠券领取明细-->
+        <select id="getCouponDetailList" parameterType="cn.visolink.system.activity.model.form.CouponDetailForm" resultType="cn.visolink.system.activity.model.vo.CouponDetailVO">
+            select ad.coupon_id couponId,ad.coupon_name couponName,aa.activity_name activityName,ad.collection_time collectionTime,
+                    <if test="isAll!=null">
+                        bro.Mobile AS mobile,
+                    </if>
+                    <if test="isAll==null">
+                        INSERT (bro.Mobile, 4, 4, '****') AS mobile,
+                    </if>
+                    (case when (bro.WeChatUserName = 'null' or bro.WeChatUserName is null) then ''
+                      else bro.WeChatUserName end) weChatUserName,
+                   (case when ad.status = 1 and ad.valid_endtime &gt; now() then '已领取'
+                                    when ad.status = 2 then '已核销'
+                                    when (ad.status  = 1 and ad.valid_endtime &lt; now()) or ad.status  = 3 then '已过期' else '' end) status,
+                   ad.closure_time closureTime,ad.closure_pro_name closureProName,ad.closure,
+                   (case ad.give_type
+                        when 1 then '活动'
+                        when 2 then '微楼书' else '' end) giveType,
+                   (case ad.coupon_type when 1 then '折扣券'
+                                        when 2 then '代金券' when 3 then '礼品券'
+                                        when 4 then '秒杀券' else '' end) couponType,
+                   ad.coupon_value couponValue,ad.valid_begintime validBegintime,
+                   ad.valid_endtime validEndtime
+            from a_coupon_detail ad
+                     left JOIN a_activity_info aa on ad.activity_id = aa.ID
+                     left join (select OpenId,Mobile,WeChatUserName from a_broker_user GROUP BY OpenId) bro on ad.collection_openid = bro.OpenId
+                     where isdel = 0
+                    <if test="activityId != null and activityId != '' ">
+                        and ad.activity_id = #{activityId}
+                    </if>
+                    <if test="couponId!=null and couponId!=''">
+                        and ad.coupon_id = #{couponId}
+                    </if>
+                    <if test="couponName!=null and couponName!=''">
+                        and ad.coupon_name like concat('%',#{couponName},'%')
+                    </if>
+                    <if test="search!=null and search!=''">
+                        and (bro.Mobile like concat('%',#{search},'%') or bro.WeChatUserName like concat('%',#{search},'%'))
+                    </if>
+                    <if test="activityName!=null and activityName!=''">
+                        and aa.activity_name like concat('%',#{activityName},'%')
+                    </if>
+                    <if test="closureProName!=null and closureProName!=''">
+                        and ad.closure_pro_name like concat('%',#{closureProName},'%')
+                    </if>
+                    <if test="projectList != null and projectList.size() > 0">
+                        and ad.coupon_id in (select DISTINCT coupon_id from a_coupon_project where project_id in
+                        <foreach collection="projectList" index="index" item="item" open="("
+                                 separator="," close=")">
+                            #{item}
+                        </foreach>
+                        )
+                    </if>
+                    <if test="status == '1'.toString()">
+                        <![CDATA[ and (ad.status = 1 and ad.valid_endtime > now()) ]]>
+                    </if>
+                    <if test="status == '2'.toString()">
+                        and ad.status = 2
+                    </if>
+                    <if test="status == '3'.toString()">
+                        <![CDATA[ and ((ad.status  = 1 and ad.valid_endtime < now()) or ad.status  = 3) ]]>
+                    </if>
+                    <if test="giveType!=null and giveType.size() > 0">
+                        and ad.give_type in
+                        <foreach collection="giveType" index="index" item="item" open="("
+                                 separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                    <if test="couponTypeList!=null and couponTypeList.size() > 0">
+                        and ad.coupon_type in
+                        <foreach collection="couponTypeList" index="index" item="item" open="("
+                                 separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                    <if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+                        and ad.collection_time BETWEEN #{date1} AND #{date2}
+                    </if>
+                    <if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+                        and ad.closure_time BETWEEN #{date1} AND #{date2}
+                    </if>
+                    order by ad.collection_time desc
+
+        </select>
+
+        <!-- 通用查询结果列 -->
+        <sql id="Base_Column_List">
+        id, activity_id, coupon_name, coupon_type, coupon_value, publish_time, begintime, endtime, is_repeated_collection, collection_up, ispay, valid_type, valid_hours, valid_begintime, valid_endtime, role_desc, is_showstock, stock_no, stock_surplus, coupon_collected, coupon_closure, coupon_status, status, isdel, createtime, creator, edittime, editor
+    </sql>
+
+</mapper>

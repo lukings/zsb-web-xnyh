@@ -1,0 +1,657 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.enterprisedatabase.dao.EnterpriseDatabaseDao">
+
+    <select id="selectEdCommonFieldConfigurationList"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCommonFieldConfigurationVo">
+        select
+            ID,PID,field_code fieldCode,
+            field_name fieldName,field_to_zsb_code fieldToZsbCode,field_to_zsb_name fieldToZsbName,list_index listIndex,
+            processing_method_for_duplicate_data processingMethodForDuplicateData,
+            (case processing_method_for_duplicate_data when '1' then '跳过该字段' when '2' then '覆盖原字段内容' when '3' then '去重并合并该字段内容' else '' end) processingMethodForDuplicateDataValue,
+            is_show isShow,(case is_show when '1' then '是' else '否' end) isShowValue,
+            is_required isRequired,(case is_required when '1' then '是' else '否' end) isRequiredValue,
+            is_critical_field isCriticalField,(case is_critical_field when '1' then '是' else '否' end) isCriticalFieldValue,
+            is_communication_field isCommunicationField,(case is_communication_field when '1' then '是' else '否' end) isCommunicationFieldValue,
+            is_read_only isReadOnly,field_description fieldDescription,
+            show_type showType,(case show_type when '1' then '文本' when '2' then '数值' when '3' then '时间' when '4' then '下拉单选' end) showTypeValue,
+            param_defaults paramDefaults, decimal_places decimalPlaces,unit,min_val minVal,max_val maxVal,storage_mode storageMode,
+            status,isdel,create_time createTime,creator,
+            update_time updateTime,updator,field_type_code fieldTypeCode,field_type_name fieldTypeName
+        from ed_common_field_configuration
+        where isdel = 0 and PID = '-1'
+        <if test="fieldName != null and fieldName != ''">
+            and field_name = #{fieldName}
+        </if>
+        order by list_index
+    </select>
+
+    <select id="selectZsbTableFieldList" resultType="java.util.Map">
+        select column_name value, column_comment label
+        from information_schema.columns
+        where table_schema = (select database())
+          and table_name = (#{tableName})
+    </select>
+
+    <select id="selectEdCommonFieldConfigurationDetail"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCommonFieldConfigurationVo">
+        select
+            ID,PID,field_code fieldCode,
+            field_name fieldName,field_to_zsb_code fieldToZsbCode,field_to_zsb_name fieldToZsbName,list_index listIndex,
+            processing_method_for_duplicate_data processingMethodForDuplicateData,(case processing_method_for_duplicate_data when '1' then '是' else '否' end) processingMethodForDuplicateDataValue,
+            is_show isShow,(case is_show when '1' then '是' else '否' end) isShowValue,
+            is_required isRequired,(case is_required when '1' then '是' else '否' end) isRequiredValue,
+            is_critical_field isCriticalField,(case is_critical_field when '1' then '是' else '否' end) isCriticalFieldValue,
+            is_communication_field isCommunicationField,(case is_communication_field when '1' then '是' else '否' end) isCommunicationFieldValue,
+            is_read_only isReadOnly,field_description fieldDescription,
+            show_type showType,(case show_type when '1' then '文本' when '2' then '数值' when '3' then '时间' when '4' then '下拉单选' end) showTypeValue,
+            param_defaults paramDefaults, decimal_places decimalPlaces,unit,min_val minVal,max_val maxVal,storage_mode storageMode,
+            status,isdel,create_time createTime,creator,
+            update_time updateTime,updator,field_type_code fieldTypeCode,field_type_name fieldTypeName
+        from ed_common_field_configuration
+        where isdel = 0
+        and ID = #{id}
+    </select>
+    <select id="selectEdCommonFieldConfigurationDefaultValueList"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCommonFieldConfigurationVo">
+        select
+            ID,field_code fieldCode,field_name fieldName
+        from ed_common_field_configuration
+        where isdel = 0
+          and PID = #{id}
+    </select>
+
+    <insert id="insertEdCommonFieldConfiguration">
+        insert into ed_common_field_configuration
+        ( ID,PID,field_code
+        ,field_name,field_to_zsb_code,field_to_zsb_name,list_index
+        ,processing_method_for_duplicate_data,is_show
+        ,is_required,is_critical_field,is_communication_field
+        ,is_read_only,field_description,show_type,param_defaults
+        ,decimal_places,unit,min_val
+        ,max_val,storage_mode,status
+        ,isdel,create_time,creator,field_type_code,field_type_name)
+        values (#{id},#{pid},#{fieldCode}
+               ,#{fieldName},#{fieldToZsbCode},#{fieldToZsbName},#{listIndex}
+               ,#{processingMethodForDuplicateData},#{isShow}
+               ,#{isRequired},#{isCriticalField},#{isCommunicationField}
+               ,1,#{fieldDescription},#{showType}
+               ,#{paramDefaults},#{decimalPlaces},#{unit},#{minVal},#{maxVal},#{storageMode}
+               ,1,0,#{createTime},#{creator},#{fieldTypeCode},#{fieldTypeName})
+    </insert>
+
+    <update id="updateEdCommonFieldConfiguration">
+        update ed_common_field_configuration
+        <set>
+            <if test="fieldCode != null and fieldCode != ''">
+                field_code = #{fieldCode},
+            </if>
+            <if test="fieldName != null and fieldName != ''">
+                field_name = #{fieldName},
+            </if>
+            <if test="fieldToZsbCode != null and fieldToZsbCode != ''">
+                field_to_zsb_code = #{fieldToZsbCode},
+            </if>
+            <if test="fieldToZsbCode == null or fieldToZsbCode == ''">
+                field_to_zsb_code = null,
+            </if>
+            <if test="fieldToZsbName != null and fieldToZsbName != ''">
+                field_to_zsb_name = #{fieldToZsbName},
+            </if>
+            <if test="fieldToZsbName == null or fieldToZsbName == ''">
+                field_to_zsb_name = null,
+            </if>
+            <if test="listIndex != null and listIndex != ''">
+                list_index = #{listIndex},
+            </if>
+            <if test="processingMethodForDuplicateData != null and processingMethodForDuplicateData != ''">
+                processing_method_for_duplicate_data = #{processingMethodForDuplicateData},
+            </if>
+            <if test="isShow != null and isShow != ''">
+                is_show = #{isShow},
+            </if>
+            <if test="isRequired != null and isRequired != ''">
+                is_required = #{isRequired},
+            </if>
+            <if test="isCriticalField != null and isCriticalField != ''">
+                is_critical_field = #{isCriticalField},
+            </if>
+            <if test="isCommunicationField != null and isCommunicationField != ''">
+                is_communication_field = #{isCommunicationField},
+            </if>
+            <if test="isReadOnly != null and isReadOnly != ''">
+                is_read_only = #{isReadOnly},
+            </if>
+            <if test="fieldDescription != null and fieldDescription != ''">
+                field_description = #{fieldDescription},
+            </if>
+            <if test="showType != null and showType != ''">
+                show_type = #{showType},
+            </if>
+            <if test="paramDefaults != null and paramDefaults != ''">
+                param_defaults = #{paramDefaults},
+            </if>
+            <if test="decimalPlaces != null and decimalPlaces != ''">
+                decimal_places = #{decimalPlaces},
+            </if>
+            <if test="unit != null and unit != ''">
+                unit = #{unit},
+            </if>
+            <if test="minVal != null and minVal != ''">
+                min_val = #{minVal},
+            </if>
+            <if test="maxVal != null and maxVal != ''">
+                max_val = #{maxVal},
+            </if>
+            <if test="storageMode != null and storageMode != ''">
+                storage_mode = #{storageMode},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            <if test="updator != null and updator != ''">
+                updator = #{updator},
+            </if>
+            <if test="fieldTypeCode != null and fieldTypeCode != ''">
+                field_type_code = #{fieldTypeCode},
+            </if>
+            <if test="fieldTypeCode == null or fieldTypeCode == ''">
+                field_type_code = null,
+            </if>
+            <if test="fieldTypeName != null and fieldTypeName != ''">
+                field_type_name = #{fieldTypeName},
+            </if>
+            <if test="fieldTypeName == null or fieldTypeName == ''">
+                field_type_name = null,
+            </if>
+            update_time = #{updateTime}
+        </set>
+        where ID = #{id}
+    </update>
+
+    <update id="deleteEdCommonFieldConfigurationDefaultValueInfo">
+        update ed_common_field_configuration set isdel = 1 where PID = #{id}
+    </update>
+
+    <select id="selectEdImportTemplateConfigurationTableHeadList"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCommonFieldConfigurationVo">
+        select
+            field_code fieldCode,
+            field_name fieldName,
+            show_type showType,
+            ID id,
+            param_defaults paramDefaults,
+            decimal_places decimalPlaces,
+            unit unit,
+            min_val minVal,
+            max_val maxVal,
+            is_required isRequired
+        from ed_common_field_configuration
+        where PID = '-1' and isdel = 0 and status = 1
+        order by list_index
+    </select>
+
+    <select id="selectEdImportTemplateConfigurationList"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdImportTemplateConfigurationVo">
+        select
+            ID,PID pid,template_name templateName,data_sources_code dataSourcesCode,data_sources_name dataSourcesName,
+            common_field_configuration_id commonFieldConfigurationId,field_code fieldCode,field_name fieldName,field_value fieldValue,
+            template_starting_line templateStartingLine,status,isdel,create_time createTime,creator,
+            update_time updateTime,updator
+        from ed_import_template_configuration
+        where isdel = 0 and PID = '-1'
+        <if test="templateName !=null and templateName != ''">
+            and template_name = #{templateName}
+        </if>
+    </select>
+
+    <select id="selectEdImportTemplateConfigurationInfo"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdImportTemplateConfigurationVo">
+        select
+            ID,PID pid,template_name templateName,data_sources_code dataSourcesCode,data_sources_name dataSourcesName,
+            common_field_configuration_id commonFieldConfigurationId,field_code fieldCode,field_name fieldName,field_value fieldValue,
+            template_starting_line templateStartingLine,status,isdel,create_time createTime,creator,
+            update_time updateTime,updator,
+            (select is_communication_field from ed_common_field_configuration where ID = common_field_configuration_id) isCommunicationField
+        from ed_import_template_configuration
+        where PID = #{id}
+    </select>
+
+    <select id="selectEdImportTemplateConfigurationDetail"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdImportTemplateConfigurationVo">
+        select
+            ID,PID pid,template_name templateName,data_sources_code dataSourcesCode,data_sources_name dataSourcesName,
+            common_field_configuration_id commonFieldConfigurationId,field_code fieldCode,field_name fieldName,field_value fieldValue,
+            template_starting_line templateStartingLine,status,isdel,create_time createTime,creator,
+            update_time updateTime,updator
+        from ed_import_template_configuration
+        where isdel = 0
+        and ID = #{id}
+    </select>
+    <select id="selectEdImportTemplateConfigurationDetail2" resultType="java.util.Map">
+        select
+            template_name templateName,data_sources_code dataSourcesCode,data_sources_name dataSourcesName,
+            template_starting_line templateStartingLine
+        from ed_import_template_configuration
+        where isdel = 0
+          and ID = #{id}
+    </select>
+
+    <insert id="insertEdImportTemplateConfiguration">
+        insert into ed_import_template_configuration
+        ( ID,PID,template_name,data_sources_code
+        ,data_sources_name,common_field_configuration_id
+        ,field_code,field_name,field_value,template_starting_line,status
+        ,isdel,create_time,creator)
+        values (#{id},#{pid},#{templateName},#{dataSourcesCode}
+               ,#{dataSourcesName},#{commonFieldConfigurationId},#{fieldCode}
+               ,#{fieldName},#{fieldValue},#{templateStartingLine},1
+               ,0,#{createTime},#{creator})
+    </insert>
+
+    <update id="updateEdImportTemplateConfiguration">
+        update ed_import_template_configuration
+        <set>
+            <if test="templateName != null and templateName != ''">
+                template_name = #{templateName},
+            </if>
+            <if test="dataSourcesCode != null and dataSourcesCode != ''">
+                data_sources_code = #{dataSourcesCode},
+            </if>
+            <if test="dataSourcesName != null and dataSourcesName != ''">
+                data_sources_name = #{dataSourcesName},
+            </if>
+            <if test="commonFieldConfigurationId != null and commonFieldConfigurationId != ''">
+                common_field_configuration_id = #{commonFieldConfigurationId},
+            </if>
+            <if test="fieldCode != null and fieldCode != ''">
+                field_code = #{fieldCode},
+            </if>
+            <if test="fieldName != null and fieldName != ''">
+                field_name = #{fieldName},
+            </if>
+            <if test="fieldValue != null and fieldValue != ''">
+                field_value = #{fieldValue},
+            </if>
+            <if test="templateStartingLine != null and templateStartingLine != ''">
+                template_starting_line = #{templateStartingLine},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            <if test="updator != null and updator != ''">
+                updator = #{updator},
+            </if>
+            update_time = #{updateTime}
+        </set>
+        where ID = #{id}
+    </update>
+
+    <update id="updateEdImportTemplateConfigurationStatus">
+        update ed_import_template_configuration set status = #{status} where ID = #{id};
+        update ed_import_template_configuration set status = #{status} where PID = #{id};
+    </update>
+
+    <select id="selectEdCustomerIdList" resultType="java.lang.String">
+        select distinct customer_id customerId
+        from ed_customer_info
+        where 1 = 1 and (examine_pre_type = 1 or (examine_pre_type = 0 and FIND_IN_SET (import_user,#{importUser})))
+        <if test="keyWord != null and keyWord.size() > 0">
+            <foreach collection="keyWord" item="item" open="(" separator="," close=")">
+                and (common_field_configuration_id = #{item.code} and field_value = #{item.value})
+            </foreach>
+        </if>
+        order by create_time desc
+    </select>
+
+    <select id="selectEdCustomerList"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCustomerInfoVo">
+        select ID,customer_id customerId,common_field_configuration_id commonFieldConfigurationId,
+               field_code fieldCode,field_name fieldName,field_value fieldValue,data_sources_code dataSourcesCode,data_sources_name dataSourcesName,
+               examine_pre_type examinePreType,expire_date expireDate,import_user importUser,status,isdel,create_time createTime,creator,
+               update_time updateTime,updator
+        from ed_customer_info
+        where 1 = 1
+        and customer_id in (
+            <foreach collection="ids" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        )
+    </select>
+
+    <select id="selectEdCommonFieldConfigurationShowList" resultType="java.lang.String">
+        select
+        ID
+        from ed_common_field_configuration
+        where isdel = 0 and PID = '-1'
+          and is_show = 1
+    </select>
+
+    <select id="selectEdCustomerDetail"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCustomerInfoVo">
+        select ID,customer_id customerId,common_field_configuration_id commonFieldConfigurationId,
+               field_code fieldCode,field_name fieldName,field_value fieldValue,data_sources_code dataSourcesCode,data_sources_name dataSourcesName
+        from ed_customer_info
+        where 1 = 1
+          and customer_id = #{customerId}
+          and common_field_configuration_id in (
+              <foreach collection="fieldList" item="item" separator=",">
+                  #{item}
+              </foreach>
+            )
+    </select>
+
+    <select id="selectEdImportTemplateList" resultType="java.util.Map">
+        select ID value,template_name label
+        from ed_import_template_configuration
+        where 1 = 1 and isdel = 0 and status = 1 and pid = '-1'
+    </select>
+
+    <select id="selectEdImportCustomerLogList"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdImportCustomerLogVo">
+        select
+            ID,confirm_id confirmId,confirm_name confirmName,
+            DATE_FORMAT(confirm_time,'%Y-%m-%d %H:%i:%s') confirmTime,
+            import_batch importBatch,import_result importResult,
+            DATE_FORMAT(invalid_time,'%Y-%m-%d %H:%i:%s') invalidTime
+        from ed_import_customer_log
+        where 1 = 1
+        and confirm_id = #{confirmId}
+        order by confirm_time desc
+    </select>
+
+    <select id="selectEdCustomerIdExpireList"
+            resultType="java.lang.String">
+        select
+            distinct customer_id
+        from ed_customer_info
+        where examine_pre_type = 0
+        and now() >= expire_date
+    </select>
+
+    <update id="updateEdCustomerExaminePreTypeInfo">
+        update ed_customer_info set examine_pre_type = 1
+        where customer_id in (
+            <foreach collection="list" item="item" separator=",">
+                #{item}
+            </foreach>
+        )
+    </update>
+
+    <insert id="saveBacthEdImportCustomerTe">
+        insert into ed_customer_info_te
+        ( ID,import_user_id,import_user_name
+        ,import_time,import_batch,is_confirm
+        ,customer_id,common_field_configuration_id,field_code
+        ,field_name,field_value,data_sources_code
+        ,data_sources_name,examine_pre_type,expire_date
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (
+            UUID(),#{item.importUserId},#{item.importUserName},
+            #{item.importTime},#{item.importBatch},#{item.isConfirm},
+            #{item.customerId},#{item.commonFieldConfigurationId}, #{item.fieldCode},
+            #{item.fieldName},#{item.fieldValue},#{item.dataSourcesCode},
+            #{item.dataSourcesName},#{item.examinePreType},#{item.expireDate}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertEdImportCustomerLog">
+        insert into ed_import_customer_log
+        ( ID,confirm_id,confirm_name
+        ,confirm_time,import_batch,import_result
+        ,invalid_time,is_syn_to,status
+        ,isdel,create_time,creator
+        ,update_time,updator)
+        values (UUID(),#{confirmId},#{confirmName}
+               ,#{confirmTime},#{importBatch},#{importResult}
+               ,#{invalidTime},#{isSynTo},1
+               ,0,#{createTime},#{creator}
+               ,#{updateTime},#{updator})
+    </insert>
+
+    <update id="updateEdImportCustomerTeConfirm">
+        update ed_customer_info_te set is_confirm = 1 where import_batch = #{importBatch}
+    </update>
+
+    <select id="getEdImportCustomerTeConfirm"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCustomerInfoTeVo">
+        select
+            ID,import_user_id importUserId,import_user_name importUserName,
+            import_time importTime,import_batch importBatch,is_confirm isConfirm,
+            customer_id customerId,common_field_configuration_id commonFieldConfigurationId,field_code fieldCode,
+            field_name fieldName,field_value fieldValue,data_sources_code dataSourcesCode,
+            data_sources_name dataSourcesName,examine_pre_type examinePreType,expire_date expireDate
+        from ed_customer_info_te
+        where is_confirm = 1
+        order by import_time
+    </select>
+
+    <select id="selectEdCustomerIsRepeat" resultType="java.lang.String">
+        select
+            customer_id customerId
+        from ed_customer_info
+        where field_value = #{customerName} and common_field_configuration_id = #{commonFieldId}
+    </select>
+
+    <select id="selectEdCustomerFieldInfo"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCustomerInfoVo">
+        select
+            ID,customer_id customerId,common_field_configuration_id commonFieldConfigurationId,
+            field_code fieldCode,field_name fieldName,field_value fieldValue,data_sources_code dataSourcesCode,data_sources_name dataSourcesName,
+            examine_pre_type examinePreType,DATE_FORMAT(expire_date,'%Y-%m-%d %H:%i:%s') expireDate,import_user importUser,status,isdel,DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:%s') createTime,creator,
+            DATE_FORMAT(update_time,'%Y-%m-%d %H:%i:%s') updateTime,updator
+        from ed_customer_info
+        where customer_id = #{customerId} and common_field_configuration_id = #{commonFieldConfigurationId}
+    </select>
+
+    <delete id="deleteEdCustomerIsRepeatField">
+        delete from ed_customer_info where customer_id = #{customerId} and common_field_configuration_id = #{commonFieldConfigurationId}
+    </delete>
+
+    <insert id="saveEdCustomerInfo">
+        insert into ed_customer_info
+        ( ID,customer_id,common_field_configuration_id
+        ,field_code,field_name,field_value
+        ,data_sources_code,data_sources_name,examine_pre_type
+        ,expire_date,import_user,status
+        ,isdel,create_time,creator)
+        values (UUID(),#{customerId},#{commonFieldConfigurationId}
+               ,#{fieldCode},#{fieldName},#{fieldValue}
+               ,#{dataSourcesCode},#{dataSourcesName},#{examinePreType}
+               ,#{expireDate},#{importUserId},1
+               ,0,#{importTime},#{importUserId})
+    </insert>
+
+    <insert id="saveBatchEdCustomerInfo">
+        insert into ed_customer_info
+        ( ID,customer_id,common_field_configuration_id
+        ,field_code,field_name,field_value
+        ,data_sources_code,data_sources_name,examine_pre_type
+        ,expire_date,import_user,status
+        ,isdel,create_time,creator)
+        values
+        <foreach collection="list" item="item" separator=",">
+           (UUID(),#{item.customerId},#{item.commonFieldConfigurationId}
+            ,#{item.fieldCode},#{item.fieldName},#{item.fieldValue}
+            ,#{item.dataSourcesCode},#{item.dataSourcesName},#{item.examinePreType}
+            ,#{item.expireDate},#{item.importUserId},1
+            ,0,#{item.importTime},#{item.importUserId})
+        </foreach>
+    </insert>
+
+    <update id="updateEdCustomerInfo">
+        update ed_customer_info
+        <set>
+            <if test="fieldValue != null and fieldValue != ''">
+                field_value = #{fieldValue},
+            </if>
+            <if test="dataSourcesCode != null and dataSourcesCode != ''">
+                data_sources_code = #{dataSourcesCode},
+            </if>
+            <if test="dataSourcesName != null and dataSourcesName != ''">
+                data_sources_name = #{dataSourcesName},
+            </if>
+            <if test="importUserId != null and importUserId != ''">
+                import_user = #{importUserId},
+                updator = #{importUserId},
+            </if>
+            update_time = #{importTime}
+        </set>
+        where customer_id = #{customerId} and common_field_configuration_id = #{commonFieldConfigurationId}
+    </update>
+
+    <insert id="saveEdCustomerRelate">
+        insert into ed_import_customer_relate
+        (import_batch,customer_id)
+        values (#{importBatch},#{customerId})
+    </insert>
+
+    <delete id="deleteEdImportCustomerTeConfirm">
+        truncate ed_customer_info_te;
+    </delete>
+
+    <delete id="deleteEdImportTemplateConfigurationCInfo">
+        delete from ed_import_template_configuration where PID = #{id}
+    </delete>
+
+    <insert id="addDict">
+        insert into s_dictionary(ID,PID,ListIndex,DictCode,DictName,DictType,Levels,AuthCompanyID,ProductID,Creator,CreateTime,Status,IsDel,DictionaryLevel,ParamMode,DictTypeMode,StorageMode,ComGUID)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id},#{item.pid},#{item.listIndex},#{item.value},#{item.name},#{item.type},#{item.levels},'ede1b679-3546-11e7-a3f8-5254007b6f02','ee3b2466-3546-11e7-a3f8-5254007b6f02','企业数据库字典导入',NOW(),1,0,1,2,null,2,'A5C1554B-B9F0-EA11-80D0-005056AA7C75')
+        </foreach>
+    </insert>
+
+    <select id="getEdIndustryOne" resultType="java.util.Map">
+        select ID id,DictName value,DictCode code,DictName label,PID pid from s_dictionary where pid in (
+            select ID from s_dictionary where pid = -1 and DictCode = 'edsshy' and IsDel = 0 and Status = 1) and IsDel = 0 and Status = 1 order by CAST(ListIndex AS SIGNED)
+    </select>
+
+    <select id="getEdIndustryTwo" resultType="java.util.Map">
+        select ID id,DictName value,DictCode code,DictName label,PID pid from s_dictionary
+        where pid in (
+        <foreach collection="ids" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+        and IsDel = 0 and Status = 1 order by CAST(ListIndex AS SIGNED);
+    </select>
+
+    <select id="getEdCustomerTeDistinctCustomerIdCount" resultType="java.lang.Integer">
+        select count(distinct customer_id) from ed_customer_info_te
+        where import_batch = #{importBatch}
+    </select>
+    <select id="getEdCustomerTeDistinctCustomerIdList" resultType="java.lang.String">
+        select distinct customer_id from ed_customer_info_te
+        where import_batch = #{importBatch}
+<!--        <if test="pageIndex != null and pageIndex != '' and pageSize !=null and pageSize !=''">-->
+            LIMIT #{pageIndex},#{pageSize}
+<!--        </if>-->
+    </select>
+    <select id="getEdCustomerTeList"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCustomerInfoTeVo">
+        select
+            ID,import_user_id importUserId,import_user_name importUserName,
+            import_time importTime,import_batch importBatch,is_confirm isConfirm,
+            customer_id customerId,common_field_configuration_id commonFieldConfigurationId,field_code fieldCode,
+            field_name fieldName,field_value fieldValue,data_sources_code dataSourcesCode,
+            data_sources_name dataSourcesName,examine_pre_type examinePreType,expire_date expireDate
+        from ed_customer_info_te
+        where customer_id in (
+            <foreach collection="ids" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+    </select>
+    <select id="getBatchEdCustomerTeList"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdCustomerInfoVo">
+        select
+        ID,import_user_id importUserId,import_user_name importUserName,
+        import_time importTime,import_batch importBatch,is_confirm isConfirm,
+        customer_id customerId,common_field_configuration_id commonFieldConfigurationId,field_code fieldCode,
+        field_name fieldName,field_value fieldValue,data_sources_code dataSourcesCode,
+        data_sources_name dataSourcesName,examine_pre_type examinePreType,expire_date expireDate
+        from ed_customer_info_te
+        where import_batch = #{batchCode}
+    </select>
+
+    <select id="selectEdCustomerRelateIds" resultType="java.lang.String">
+        select customer_id from ed_import_customer_relate where import_batch = #{batchCode}
+    </select>
+
+    <select id="selectEdCommonTemplateConfigurationInfo"
+            resultType="cn.visolink.system.enterprisedatabase.model.EdImportTemplateConfigurationVo">
+        select ID,
+               PID                    pid,
+               '招商宝企业数据库通用模板'  templateName,
+               '-1'                   dataSourcesCode,
+               '招商宝'                dataSourcesName,
+               ID                     commonFieldConfigurationId,
+               field_code             fieldCode,
+               field_name             fieldName,
+               field_name             fieldValue,
+               1                      templateStartingLine,
+               status,
+               isdel,
+               create_time            createTime,
+               creator,
+               update_time            updateTime,
+               updator,
+               is_communication_field isCommunicationField
+        from ed_common_field_configuration
+        where PID = '-1'
+          and isdel = 0
+          and status = 1
+        order by list_index
+    </select>
+
+    <select id="getAllocationAllCustomerUserOrgInfo" resultType="java.util.Map">
+        select distinct if(com.JobCode in('qyfz','qyyxjl'), org.ID, bp.AreaID) areaId,
+                        bp.ID projectId,
+                        com.JobCode jobCode
+        from s_jobs job
+                 left join s_commonjobs com on job.CommonJobID = com.ID
+                 left join s_jobsuserrel rel on job.ID = rel.JobID
+                 left join s_organization org on job.JobOrgID = org.ID
+                 left join b_project bp on org.ProjectID = bp.ID
+                 left join s_jobsmenurel jm on job.ID = jm.JobID
+                 left join s_commonjobsmenurel cjm on com.ID = cjm.JobID
+                 left join s_menus men on jm.MenuID = men.ID
+                 left join s_menus men2 on cjm.MenuID = men2.ID
+        where job.IsDel = 0
+          and job.Status = 1
+          and com.IsDel = 0
+          and org.IsDel = 0
+          and org.Status = 1
+          and (men.MenuSysName = 'ed_join_call_distribution' or men2.MenuSysName = 'ed_join_call_distribution')
+          and com.JobCode in ('zszj', 'qyzszj', 'yxjl', 'qyyxjl', 'qyfz', '10001')
+          and rel.AccountID = #{userId}
+    </select>
+    <select id="getTimeoutWarning" resultType="cn.visolink.message.model.OverdueUnconsumedProjectRecord">
+        select id AS id,
+               account_id AS accountId,
+               company_id AS companyId,
+               project_name AS projectName,
+               project_id AS projectId,
+               money AS money,
+               remark AS remark,
+               is_disable AS isDisable,
+               is_delete AS isDelete,
+               create_uid AS createUid,
+               update_uid AS updateUid,
+               delete_uid AS deleteUid,
+               create_time AS createTime,
+               update_time AS updateTime,
+               delete_time AS deleteTime,
+               not_call_day AS notCallDay,
+               over_not_call_day AS overNotCallDay,
+               is_read AS isRead
+        from overdue_unconsumed_project_record
+        where is_read != 1 and over_not_call_day > 0
+    </select>
+    <update id="updateTimeoutWarning">
+        update overdue_unconsumed_project_record set is_read = 1 where id = #{id}
+    </update>
+</mapper>

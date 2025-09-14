@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.org.dao.OrganizationDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.visolink.system.org.model.Organization">
+        <id column="ID" property="id"/>
+        <result column="PID" property="pid"/>
+        <result column="OrgCode" property="OrgCode"/>
+        <result column="OrgName" property="OrgName"/>
+        <result column="OrgShortName" property="OrgShortName"/>
+        <result column="OrgCategory" property="OrgCategory"/>
+        <result column="ListIndex" property="ListIndex"/>
+        <result column="Levels" property="Levels"/>
+        <result column="FullPath" property="FullPath"/>
+        <result column="AuthCompanyID" property="AuthCompanyID"/>
+        <result column="ProductID" property="ProductID"/>
+        <result column="Creator" property="Creator"/>
+        <result column="CreateTime" property="CreateTime"/>
+        <result column="Editor" property="Editor"/>
+        <result column="EditTime" property="EditTime"/>
+        <result column="Status" property="Status"/>
+        <result column="IsDel" property="IsDel"/>
+        <result column="CurrentPoint" property="CurrentPoint"/>
+        <result column="ProjectID" property="ProjectID"/>
+        <result column="OrgCompanyID" property="OrgCompanyID"/>
+        <result column="OrgType" property="OrgType"/>
+        <result column="PName" property="pName"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, PID, OrgCode, OrgName, OrgShortName, OrgCategory, ListIndex, Levels, FullPath, AuthCompanyID, ProductID, Creator, CreateTime, Editor, EditTime, Status, IsDel, CurrentPoint, ProjectID, OrgCompanyID, OrgType
+    </sql>
+
+    <select id="findOrgListByOrgIdAndProIdAndCompanyId" resultType="cn.visolink.system.org.model.Organization"
+            parameterType="java.util.Map">
+        <choose>
+            <when test="jobCode!='20001'">
+                SELECT * FROM (
+                SELECT A.ID ,
+                A.OrgCode ,
+                A.OrgName ,
+                A.OrgShortName ,
+                A.OrgCategory ,
+                A.ListIndex ,
+                A.FullPath ,
+                A.Levels ,
+                A.PID ,
+                A.Status,
+                (SELECT OrgName FROM S_Organization B WHERE B.ID = A.PID) AS PName,
+                A.IsDel,
+                A.ProjectID,
+                A.OrgCompanyID,
+                A.OrgType
+                FROM S_Organization A  where 1=1 and A.IsDel = 0  and A.OrgName is not null and A.OrgCategory in (1, 2)
+                <if test='isNeedShow=="0"'>
+                    and A.Status=1
+                </if>
+                ) t
+                ORDER BY OrgCategory asc
+            </when>
+            <otherwise>
+                SELECT * FROM (
+                SELECT A.ID ,
+                A.OrgCode ,
+                A.OrgName ,
+                A.OrgShortName ,
+                A.OrgCategory ,
+                A.ListIndex ,
+                A.FullPath ,
+                A.Levels ,
+                A.PID ,
+                A.Status,
+                (SELECT OrgName FROM S_Organization B WHERE B.ID = A.PID) AS PName,
+                A.IsDel,
+                A.ProjectID,
+                A.OrgCompanyID,
+                A.OrgType
+                FROM S_Organization A
+
+                WHERE 1=1 and A.IsDel = 0  and A.OrgName is not null  and A.OrgCategory in (1, 2)
+                <if test='isNeedShow=="0"'>
+                    AND  A.Status=1
+                </if>
+                and FullPath like CONCAT((select so.FullPath from b_account ac join s_jobsuserrel sjr on
+                ac.ID=sjr.AccountID
+                join s_jobs job on job.ID=sjr.JobID and job.isIdm = 0
+                join s_organization so on job.JobOrgID=so.ID where ac.UserName=#{userName} and so.ProjectID = #{projectId} ORDER BY so.OrgCategory limit 1), '%')
+                ) t
+
+                ORDER BY OrgCategory ASC,ListIndex ASC
+
+            </otherwise>
+        </choose>
+
+    </select>
+
+    <select id="findOrgListByOrgIdAndProIdAndCompanyIdNew" resultType="cn.visolink.system.org.model.Organization"
+            parameterType="java.util.Map">
+        <choose>
+            <when test="jobCode=='10001'">
+                SELECT * FROM (
+                SELECT A.ID ,
+                A.OrgCode ,
+                A.OrgName ,
+                A.OrgShortName ,
+                A.OrgCategory ,
+                A.ListIndex ,
+                A.FullPath ,
+                A.Levels ,
+                A.PID ,
+                A.Status,
+                (SELECT OrgName FROM S_Organization B WHERE B.ID = A.PID) AS PName,
+                A.IsDel,
+                A.ProjectID,
+                A.OrgCompanyID,
+                A.OrgType
+                FROM S_Organization A  where 1=1 and A.IsDel = 0  and A.OrgName is not null and A.OrgCategory in (1, 2)
+                <if test='isNeedShow=="0"'>
+                    and A.Status=1
+                </if>
+                ) t
+                ORDER BY OrgCategory asc
+            </when>
+            <otherwise>
+                SELECT * FROM (
+                SELECT A.ID ,
+                A.OrgCode ,
+                A.OrgName ,
+                A.OrgShortName ,
+                A.OrgCategory ,
+                A.ListIndex ,
+                A.FullPath ,
+                A.Levels ,
+                A.PID ,
+                A.Status,
+                (SELECT OrgName FROM S_Organization B WHERE B.ID = A.PID) AS PName,
+                A.IsDel,
+                A.ProjectID,
+                A.OrgCompanyID,
+                A.OrgType
+                FROM S_Organization A
+
+                WHERE 1=1 and A.IsDel = 0  and A.OrgName is not null  and A.OrgCategory in (4,5,8)
+                <if test='isNeedShow=="0"'>
+                    AND  A.Status=1
+                </if>
+                ${sql} and A.OrgName != '发展推荐人'
+                ) t
+                ORDER BY OrgCategory ASC,ListIndex ASC
+
+            </otherwise>
+        </choose>
+
+    </select>
+
+    <select id="findOrgListByOrgIdAndProIdAndCompanyId2" resultType="cn.visolink.system.org.model.Organization"
+            parameterType="java.util.Map">
+        <choose>
+            <when test="jobCode!='20001'">
+                SELECT * FROM (
+                SELECT A.ID ,
+                A.OrgCode ,
+                A.OrgName ,
+                A.OrgShortName ,
+                A.OrgCategory ,
+                A.ListIndex ,
+                A.FullPath ,
+                A.Levels ,
+                A.PID ,
+                A.Status,
+                (SELECT OrgName FROM S_Organization B WHERE B.ID = A.PID) AS PName,
+                A.IsDel,
+                A.ProjectID,
+                A.OrgCompanyID,
+                A.OrgType
+                FROM S_Organization A  where 1=1 and A.IsDel = 0
+                and A.OrgName is not null
+                and 4 > A.OrgCategory and A.OrgCategory != 0
+                <if test='isNeedShow=="0"'>
+                    and A.Status=1
+                </if>
+                ) t
+                ORDER BY OrgCategory asc
+            </when>
+            <otherwise>
+                SELECT * FROM (
+                SELECT A.ID ,
+                A.OrgCode ,
+                A.OrgName ,
+                A.OrgShortName ,
+                A.OrgCategory ,
+                A.ListIndex ,
+                A.FullPath ,
+                A.Levels ,
+                A.PID ,
+                A.Status,
+                (SELECT OrgName FROM S_Organization B WHERE B.ID = A.PID) AS PName,
+                A.IsDel,
+                A.ProjectID,
+                A.OrgCompanyID,
+                A.OrgType
+                FROM S_Organization A
+
+                WHERE 1=1 and A.IsDel = 0  and A.OrgName is not null and 4 > A.OrgCategory and A.OrgCategory != 0
+                <if test='isNeedShow=="0"'>
+                    AND  A.Status=1
+                </if>
+                and FullPath like CONCAT((select so.FullPath from b_account ac join s_jobsuserrel sjr on
+                ac.ID=sjr.AccountID
+                join s_jobs job on job.ID=sjr.JobID and job.isIdm = 0
+                join s_organization so on job.JobOrgID=so.ID where ac.UserName=#{userName} and so.ProjectID = #{projectId} ORDER BY so.OrgCategory limit 1), '%')
+                ) t
+
+                ORDER BY OrgCategory ASC,ListIndex ASC
+
+            </otherwise>
+        </choose>
+
+    </select>
+
+
+    <update id="updateStatusById" parameterType="cn.visolink.system.org.model.form.OrganizationForm">
+              UPDATE S_Organization SET Status=#{status},Editor=#{userName},EditTime=NOW() WHERE ID=#{id}
+    </update>
+
+
+    <select id="queryChildOrgs" resultType="cn.visolink.system.org.model.form.OrganizationForm"  parameterType="java.util.Map">
+             SELECT *FROM S_Organization where pid=#{id} and OrgName is not null
+               ORDER BY Levels ASC,ListIndex ASC
+              LIMIT #{pageIndex},#{pageSize}
+
+    </select>
+    <select id="queryChildOrgsCount" resultType="java.lang.String"  parameterType="java.util.Map">
+             SELECT COUNT(1) as total FROM S_Organization where pid=#{id}
+             ORDER BY Levels ASC,ListIndex ASC
+    </select>
+
+    <select id="getParentProject" resultType="java.util.Map"  parameterType="java.lang.String">
+             SELECT id,ProjectId,OrgName,OrgShortName FROM S_Organization where id=#{value}
+    </select>
+    <select id="updateChildFullPath"   parameterType="java.util.Map">
+            UPDATE S_Organization set fullPath=#{fullPath} where id=#{id}
+    </select>
+
+
+
+    <!--获取组织列表-->
+    <select id="getOrgList" resultType="java.util.Map">
+        select DISTINCT jor.orgId from s_jobsuserrel jur  join s_jobsorgrel jor on jur.JobID=jor.jobId where jur.AccountID=#{UserId} and jor.orgId is not null
+    </select>
+
+    <!--获取三级列表-->
+    <select id="getThreeOrgList" resultType="java.util.Map" parameterType="java.util.Map">
+        select bloc_id as ID,bloc_name as name,  -1 as PID,0 as PPID,0 as Levels,1 as orgLevel from s_four_level_org group by bloc_id
+        union all
+        select distinct business_unit_id as ID,business_unit_name as name,bloc_id as PID,0 as PPID,1 as Levels,2 as orgLevel from s_four_level_org mm
+        <where>
+            1=1
+            and (bloc_id in  (${resOrgId})
+            or business_unit_id in (${resOrgId})
+            or city_id in  (${resOrgId})
+            or project_id in (${resOrgId}))
+            <if test="name != null and name!='' ">
+                and (business_unit_name like "%"#{name}"%" or city_name like "%"#{name}"%" or project_name like "%"#{name}"%")
+            </if>
+        </where>
+        union all
+        select distinct mm.project_id as ID,mm.project_name as name,0 as PID,mm.business_unit_id as PPID,99 as Levels,4 as orgLevel from s_four_level_org mm
+        <where>
+            1=1
+            and (bloc_id in  (${resOrgId})
+            or business_unit_id in (${resOrgId})
+            or city_id in  (${resOrgId})
+            or project_id in (${resOrgId}))
+            <if test="name != null and name!='' ">
+                and (business_unit_name like "%"#{name}"%" or city_name like "%"#{name}"%" or project_name like "%"#{name}"%")
+            </if>
+        </where>
+    </select>
+
+    <select id="selectThreeOrgByPid" parameterType="string" resultType="cn.visolink.system.org.model.Organization">
+        SELECT
+        A.ID ,
+        A.OrgCode ,
+        A.OrgName ,
+        A.OrgShortName ,
+        A.OrgCategory ,
+        A.ListIndex ,
+        A.FullPath ,
+        A.Levels ,
+        A.PID ,
+        A.Status,
+        A.OrgName AS PName,
+        A.IsDel,
+        A.ProjectID,
+        A.OrgCompanyID,
+        A.OrgType
+        FROM S_Organization A
+        WHERE A.PID in ${pid}
+        AND A.IsDel = 0
+        AND A.`Status` = 1
+        AND A.OrgName IS NOT NULL
+        ORDER BY A.OrgCategory ASC
+    </select>
+
+    <select id="isExistNextOrg" parameterType="string" resultType="integer">
+        select
+        count(A.ID)
+        FROM S_Organization A
+        WHERE A.PID = #{pid}
+        AND A.IsDel = 0
+        AND A.`Status` = 1
+        AND A.OrgName IS NOT NULL
+    </select>
+</mapper>

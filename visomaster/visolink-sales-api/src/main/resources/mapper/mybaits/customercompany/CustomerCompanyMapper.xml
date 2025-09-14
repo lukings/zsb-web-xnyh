@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.customercompany.dao.CustomerCompanyMapper">
+
+    <!--获取客户公司列表-->
+    <select id="getCustomerCompanyList" parameterType="java.util.Map" resultType="java.util.Map">
+        select * from s_customer_company
+        <where>
+            1 = 1
+            <if test="companyCode !=null and companyCode !=''">
+               and companyCode like '${companyCode}%'
+            </if>
+            <if test="companyName !=null and compantCode !=''">
+               and companyName like '${companyName}%'
+            </if>
+            and isDel = 0
+        </where>
+    </select>
+
+    <!--初始化账号-->
+    <insert id="initUserAdmin" parameterType="java.util.Map">
+INSERT INTO `b_account`(`ID`, `UserName`, `Password`, `AccountType`, `EmployeeCode`, `EmployeeName`, `Gender`, `OfficeTel`, `OfficeMail`, `Mobile`, `PostCode`, `Address`, `UserOrgID`, `AuthCompanyID`, `ProductID`, `Creator`, `CreateTime`, `Editor`, `EditTime`, `Status`, `IsDel`, `HeadImg`, `AccountAttr`, `SubordCompanyID`, `Image`) VALUES (#{accountId}, #{username}, 'C4CA4238A0B923820DCC509A6F75849B', 2, 'admin', 'Administrator', 1, NULL, NULL, NULL, 'saas', NULL, NULL, #{authCompanyId}, '666666', 'admin', now(), 'admin', now(), 1, 0, NULL, 0, NULL, NULL);
+INSERT INTO `zhyx`.`s_commonjobs`(`ID`, `JobCode`, `JobName`, `JobDesc`, `AuthCompanyID`, `ProductID`, `Creator`, `CreateTime`, `Editor`, `EditTime`, `Status`, `IsDel`) VALUES (#{commonJobId}, '10001', #{jobName}, #{jobName}, #{authCompanyId}, NULL, 'admin', now(), 'admin', now(), 1, 0);
+INSERT INTO `zhyx`.`s_jobs`(`ID`, `JobCode`, `JobName`, `JobDesc`, `JobPID`, `CommonJobID`, `JobOrgID`, `AuthCompanyID`, `ProductID`, `Creator`, `CreateTime`, `Editor`, `EditTime`, `Status`, `IsDel`) VALUES (#{jobId}, #{jobName}, #{jobName}, #{jobName}, NULL, #{commonJobId}, NULL, #{authCompanyId}, NULL, NULL, now(), NULL, NULL, 1, 0);
+INSERT INTO `zhyx`.`s_commonjobsmenurel`(`ID`, `JobID`, `MenuID`) VALUES (uuid(), #{commonJobId}, 'edf23d9f-df5c-11e9-920b-005056a3da31');
+INSERT INTO `zhyx`.`s_commonjobsmenurel`(`ID`, `JobID`, `MenuID`) VALUES (uuid(), #{commonJobId}, 'edf23d9f-df5c-11e9-920b-005056a3da34');
+INSERT INTO `zhyx`.`s_commonjobsmenurel`(`ID`, `JobID`, `MenuID`) VALUES (uuid(), #{commonJobId}, 'edf23d9f-df5c-11e9-920b-005056a3da35');
+INSERT INTO `zhyx`.`s_commonjobsmenurel`(`ID`, `JobID`, `MenuID`) VALUES (uuid(), #{commonJobId}, 'edf23d9f-df5c-11e9-920b-005056a3da32');
+INSERT INTO `zhyx`.`s_jobsuserrel`(`ID`, `AccountID`, `JobID`, `CurrentJob`, `ListIndex`, `IsShow`, `Tag`) VALUES (uuid(), #{accountId}, #{jobId}, 1, 0, 1, NULL);
+    </insert>
+
+    <!--新增公司-->
+    <insert id="saveCustomerCompany" parameterType="java.util.Map">
+        insert into s_customer_company
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            ID,
+            <if test="companyCode !=null and companyCode !=''">
+                companyCode,
+            </if>
+            <if test="companyName !=null and companyName !=''">
+                companyName,
+            </if>
+            <if test="shortName !=null and shortName !=''">
+                shortName,
+            </if>
+            <if test="companyAddress !=null and companyAddress !=''">
+                companyAddress,
+            </if>
+            <if test="principalName !=null and principalName !=''">
+                principalName,
+            </if>
+            <if test="principalPhone !=null and principalPhone !=''">
+                principalPhone,
+            </if>
+            <if test="creator !=null and creator !=''">
+                creator,
+            </if>
+                createTime,
+            <if test="status !=null and status !=''">
+                status,
+            </if>
+                isDel
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+               #{authCompanyId},
+            <if test="companyCode !=null and companyCode !=''">
+                #{companyCode},
+            </if>
+            <if test="companyName !=null and companyName !=''">
+                #{companyName},
+            </if>
+            <if test="shortName !=null and shortName !=''">
+                #{shortName},
+            </if>
+            <if test="companyAddress !=null and companyAddress !=''">
+                #{companyAddress},
+            </if>
+            <if test="principalName !=null and principalName !=''">
+                #{principalName},
+            </if>
+            <if test="principalPhone !=null and principalPhone !=''">
+                #{principalPhone},
+            </if>
+            <if test="creator !=null and creator !=''">
+                #{creator},
+            </if>
+                now(),
+            <if test="status !=null and status !=''">
+                #{status},
+            </if>
+                0
+        </trim>
+    </insert>
+
+    <!--修改公司-->
+    <update id="updateCustomerCompanyById" parameterType="java.util.Map">
+        update s_customer_company
+        <set>
+           <if test="companyName != null and companyName != ''">
+               companyName = #{companyName},
+           </if>
+           <if test="shortName != null and shortName != ''">
+               shortName = #{shortName},
+           </if>
+           <if test="companyAddress != null and companyAddress != ''">
+               companyAddress = #{companyAddress},
+           </if>
+           <if test="principalName != null and principalName != ''">
+               principalName = #{principalName},
+           </if>
+           <if test="principalPhone != null and principalPhone != ''">
+               principalPhone = #{principalPhone},
+           </if>
+               status = #{status},
+           <if test="editor != null and editor != ''">
+               editor = #{editor},
+           </if>
+              editTime = now(),
+        </set>
+        where ID = #{companyId}
+    </update>
+    <!--删除公司-->
+    <delete id="deleteCustomerCompanyById" parameterType="java.util.Map">
+        delete from s_customer_company where ID=#{companyId}
+    </delete>
+
+    <!--获取产品-->
+    <select id="getAllProduct" resultType="java.util.Map">
+        select * from s_product
+    </select>
+
+    <!--根据公司ID获取公司产品-->
+    <select id="getAllProductByCompanyID" parameterType="java.lang.String" resultType="java.util.Map">
+        select * from s_productcompanyrel spc left join s_product pd on spc.ProductID=pd.ID where spc.CompanyID=#{companyId}
+    </select>
+
+    <insert id="saveProductCompanys" parameterType="java.util.List">
+        delete from s_productcompanyrel where companyId=#{companyId};
+        insert into s_productcompanyrel values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (uuid(),#{item},#{companyId})
+        </foreach>
+    </insert>
+
+</mapper>

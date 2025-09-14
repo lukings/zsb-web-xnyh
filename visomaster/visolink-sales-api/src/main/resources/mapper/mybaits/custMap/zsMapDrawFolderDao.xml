@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.custMap.dao.ZsMapDrawFolderDao">
+	<insert id="save">
+		INSERT INTO b_zsmap_draw_folder (folder_id,`level`,parent_id,title,create_by,create_time,update_by,update_time,is_del) VALUES
+		        (#{folderId},#{level},#{parentId},#{title},#{createBy},now(),#{updateBy},now(),0)
+	</insert>
+	<update id="update">
+		update b_zsmap_draw_folder set title = #{title} where folder_id = #{folderId}
+	</update>
+	<select id="select" resultType="cn.visolink.system.custMap.bo.ZsMapDrawFolderResBO">
+		select
+			folder_id folderId,
+			`level` level,
+			parent_id parentId,
+			title title
+			from
+			b_zsmap_draw_folder bzdf
+			where
+			is_del = 0
+			<if test="folderId != null and folderId != ''">
+				and folder_id = #{folderId}
+			</if>
+			<if test="parentId != null and parentId != ''">
+				and parent_id = #{parentId}
+			</if>
+			<if test="level != null">
+				and `level` = #{level}
+			</if>
+			<if test="title != null and title != ''">
+				and title = #{title}
+			</if>
+			<if test="createBy != null and createBy != ''">
+				and create_by = #{createBy}
+			</if>
+	</select>
+</mapper>

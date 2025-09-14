@@ -1,0 +1,3904 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.custMap.dao.CustMapDao">
+
+	<select id="getAllPark" parameterType="java.util.Map" resultType="java.util.Map">
+		select DISTINCT ParkName id,ParkName name
+		from b_project_clues
+		where ParkName is not null
+		<if test="projectList!=null and projectList.size()>0">
+			and projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		union
+		select DISTINCT ParkName id,ParkName name
+		from b_project_opportunity
+		where ParkName is not null
+		<if test="projectList!=null and projectList.size()>0">
+			and projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+	</select>
+
+	<select id="getAllLabel" parameterType="java.util.Map" resultType="java.util.Map">
+		select DISTINCT Label id,Label name
+		from b_project_clues
+		where Label is not null
+		<if test="projectList!=null and projectList.size()>0">
+			and projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userLabel!=null and userLabel!=''">
+			and Label like concat('%',#{userLabel},'%')
+		</if>
+		union
+		select DISTINCT Label id,Label name
+		from b_project_opportunity
+		where Label is not null
+		<if test="projectList!=null and projectList.size()>0">
+			and projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userLabel!=null and userLabel!=''">
+			and Label like concat('%',#{userLabel},'%')
+		</if>
+		LIMIT 50
+	</select>
+
+	<select id="tokerNumNew" parameterType="java.util.Map" resultType="java.util.Map">
+		select clu.CustomerName,clu.Longitude,clu.Latitude,
+		'1' type, clu.projectClueId
+		from b_project_clues clu
+		LEFT JOIN b_information bin on clu.ProjectClueId = bin.ProjectClueId
+		where clu.Latitude is not null and clu.Longitude is not null
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like '%${item}%'
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList.size()>0">
+			and clu.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clu.ReportUserID in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+	</select>
+
+	<select id="reportNum" parameterType="java.util.Map" resultType="java.util.Map">
+		select clu.CustomerName,clu.Longitude,clu.Latitude, clu.OpportunityClueId opportunityClueId
+		from b_project_opportunity clu
+		LEFT JOIN b_information bin on clu.OpportunityClueId = bin.OpportunityClueId
+		where clu.Latitude is not null and clu.Longitude is not null and clu.ClueStatus = 1
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like '%${item}%'
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList.size()>0">
+			and clu.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clu.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+	</select>
+
+	<select id="visitNum" parameterType="java.util.Map" resultType="java.util.Map">
+		select clu.CustomerName,clu.Longitude,clu.Latitude, clu.OpportunityClueId opportunityClueId
+		from b_project_opportunity clu
+		LEFT JOIN b_information bin on clu.OpportunityClueId = bin.OpportunityClueId
+		where clu.Latitude is not null and clu.Longitude is not null and clu.ClueStatus = 2
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like '%${item}%'
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList.size()>0">
+			and clu.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clu.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.TheFirstVisitDate between #{startTime} and #{endTime}
+		</if>
+	</select>
+
+	<select id="signNumNew" parameterType="java.util.Map" resultType="java.util.Map">
+		select clu.CustomerName,clu.Longitude,clu.Latitude, clu.OpportunityClueId opportunityClueId
+		from b_project_opportunity clu
+		LEFT JOIN b_information bin on clu.OpportunityClueId = bin.OpportunityClueId
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like '%${item}%'
+			</foreach>
+			)
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			inner join (select distinct OpportunityClueId from b_opportunity_trade where
+			IsClosed = 0
+			and ContractDate between #{startTime} and #{endTime}
+			) t on t.OpportunityClueId = clu.OpportunityClueId
+		</if>
+		where clu.Latitude is not null and clu.Longitude is not null and clu.ClueStatus = 8
+		<if test="projectList!=null and projectList.size()>0">
+			and clu.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clu.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+
+	</select>
+
+	<select id="tokerNumNewHeat" parameterType="java.util.Map" resultType="java.util.Map">
+		select clu.Longitude,clu.Latitude,count(1) count
+		from b_project_clues clu
+		LEFT JOIN b_information bin on clu.ProjectClueId = bin.ProjectClueId
+		where clu.Latitude is not null and clu.Longitude is not null
+		<if test="projectList!=null and projectList.size()>0">
+			and clu.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clu.ReportUserID in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+		group by clu.Longitude,clu.Latitude
+	</select>
+
+	<select id="reportNumHeat" parameterType="java.util.Map" resultType="java.util.Map">
+		select clu.Longitude,clu.Latitude,count(1) count
+		from b_project_opportunity clu
+		LEFT JOIN b_information bin on clu.OpportunityClueId = bin.OpportunityClueId
+		where clu.Latitude is not null and clu.Longitude is not null and clu.ClueStatus = 1
+		<if test="projectList!=null and projectList.size()>0">
+			and clu.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clu.ReportUserID in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+		group by clu.Longitude,clu.Latitude
+	</select>
+
+	<select id="visitNumHeat" parameterType="java.util.Map" resultType="java.util.Map">
+		select clu.Longitude,clu.Latitude,count(1) count
+		from b_project_opportunity clu
+		LEFT JOIN b_information bin on clu.OpportunityClueId = bin.OpportunityClueId
+		where clu.Latitude is not null and clu.Longitude is not null and clu.ClueStatus = 2
+		<if test="projectList!=null and projectList.size()>0">
+			and clu.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clu.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.TheFirstVisitDate between #{startTime} and #{endTime}
+		</if>
+		group by clu.Longitude,clu.Latitude
+	</select>
+
+	<select id="signNumNewHeat" parameterType="java.util.Map" resultType="java.util.Map">
+		select clu.Longitude,clu.Latitude,count(1) count
+		from b_project_opportunity clu
+		LEFT JOIN b_information bin on clu.OpportunityClueId = bin.OpportunityClueId
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			inner join (select distinct OpportunityClueId from b_opportunity_trade
+			where IsClosed = 0
+			and ContractDate between #{startTime} and #{endTime}
+			) t on t.OpportunityClueId = clu.OpportunityClueId
+		</if>
+		where clu.Latitude is not null and clu.Longitude is not null and clu.ClueStatus = 8
+		<if test="projectList!=null and projectList.size()>0">
+			and clu.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clu.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		group by clu.Longitude,clu.Latitude
+
+	</select>
+
+	<select id="getCstIndustryOne" resultType="java.util.Map">
+		select DISTINCT DictName id,DictName code,DictName name from s_dictionary where pid in (
+			select ID name from s_dictionary where pid in (
+				select ID from s_dictionary where pid = -1 and DictCode = 'SshyD'));
+	</select>
+
+	<select id="getTeamUser" parameterType="java.lang.String" resultType="java.lang.String">
+		select ba.ID
+		from b_account ba
+				 INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and ba.IsDel = 0
+				 INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+				 INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+				 INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		where com.JobCode = #{jobCode}
+		  and org.id = #{orgId}
+	</select>
+	<select id="getTeamUserNew" parameterType="java.lang.String" resultType="java.lang.String">
+		select ba.ID
+		from b_account ba
+		INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and ba.IsDel = 0
+		INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+		INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+		INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		where (com.JobCode = 'zygw' or com.JobCode='qyzygw')
+		and org.FullPath like CONCAT(#{orgPath}, '%')
+	</select>
+
+	<select id="getProjectUserXsjl" parameterType="java.lang.String" resultType="java.lang.String">
+		select ba.ID
+		from b_account ba
+		INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and ba.IsDel = 0
+		INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+		INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+		INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		where (com.JobCode = 'xsjl' or com.JobCode='qyxsjl')
+		and org.FullPath like CONCAT(#{orgPath}, '%')
+	</select>
+	
+	<select id="getTeamUserInfo" parameterType="java.lang.String" resultType="java.util.Map">
+		select ba.ID as userId, ba.EmployeeName as employeeName, ba.UserName as userName
+		from b_account ba
+		INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and ba.IsDel = 0 and rel.status = 1
+		INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+		INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+		INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		where org.FullPath like CONCAT(#{orgPath}, '%')
+		order by ba.EmployeeName
+	</select>
+
+	<select id="getProjectUserGlz" parameterType="java.lang.String" resultType="java.lang.String">
+		select ba.ID
+		from b_account ba
+		INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and ba.IsDel = 0
+		INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+		INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+		INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		where (com.JobCode != 'zygw' and  com.JobCode!='qyzygw')
+		and org.FullPath like CONCAT(#{orgPath}, '%')
+	</select>
+
+	<select id="getProjectUserGlc" parameterType="java.lang.String" resultType="java.lang.String">
+		select ba.ID
+		from b_account ba
+		INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and ba.IsDel = 0
+		INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+		INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+		INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		where (com.JobCode != 'zygw' and  com.JobCode!='qyzygw')
+		and org.ProjectID =#{projectID}
+	</select>
+
+	<select id="getProjectUserGlz" parameterType="java.lang.String" resultType="java.lang.String">
+		select ba.ID
+		from b_account ba
+		INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and ba.IsDel = 0
+		INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+		INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+		INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		where (com.JobCode != 'zygw' and  com.JobCode!='qyzygw')
+		and org.FullPath like CONCAT(#{orgPath}, '%')
+	</select>
+
+
+	<select id="getUserOrgs" parameterType="java.lang.String" resultType="java.lang.String">
+		select org.ID
+		from s_jobsuserrel rel
+				 INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0 and rel.status = 1
+				 INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+				 INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		where com.JobCode = #{jobCode}
+		  and rel.status = 1
+		  and rel.AccountID = #{userId};
+	</select>
+
+	<select id="getUserOrgsNew" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT org2.ID
+		FROM s_organization org2
+		WHERE EXISTS (
+		SELECT 1
+		FROM s_jobsuserrel rel
+		INNER JOIN s_jobs jobs ON rel.JobID = jobs.ID AND jobs.isIdm = 0
+		INNER JOIN s_commonjobs com ON jobs.CommonJobID = com.ID AND com.isIdm = 0
+		INNER JOIN s_organization org ON org.id = jobs.JobOrgID AND org.IsDel = 0
+		WHERE com.JobCode = #{jobCode}
+		  and rel.status = 1
+		AND rel.AccountID = #{userId}
+		AND org2.FullPath LIKE CONCAT(org.FullPath, '%')
+		);
+	</select>
+
+	<select id="getChannelTokerCustomer" resultType="cn.visolink.system.channel.model.vo.ProjectCluesNew">
+		SELECT
+		clue.ProjectClueId projectClueId,
+		if(length(trim(clue.diy_hide_customer_name)) = 0 or clue.diy_hide_customer_name is null,concat(left(clue.CustomerName,1),'**'),clue.diy_hide_customer_name) customerName,
+		clue.CustomerName oldCustomerName,
+		CONCAT(
+		LEFT ( clue.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( clue.CustomerMobile, 4 )) customerMobile,
+		clue.CustomerMobile oldCustomerMobile,
+		clue.ProjectName projectName,
+		clue.ReportCreateTime reportCreateTime,
+		clue.ReportUserName reportUserName,
+		(
+		CASE
+		WHEN clue.ReportUserRole = '1' THEN
+		'项目招商专员'
+		WHEN clue.ReportUserRole = '2' THEN
+		'区域招商专员'
+		WHEN clue.ReportUserRole = '3' THEN
+		'全民经纪人'
+		ELSE
+		''
+		END
+		) reportUserRole,
+		(case clue.IsPark when 1 then '是' when 0 then '否' else '' end  ) isPark,
+		clue.ParkAddress parkAddress,
+		clue.ParkFloor parkFloor,
+		clue.ParkName parkName,
+		clue.CustomerAddress customerAddress,
+		inf.DetailedAddress detailedAddress,
+		inf.BelongIndustriseDesc belongIndustriseDesc,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		inf.IndustryDirectoryChildDesc industryDirectoryChildDesc,
+		clue.MainProducts businessProducts
+		FROM
+		b_project_clues clue
+		left join b_information inf ON clue.ProjectClueId = inf.ProjectClueId
+		WHERE clue.Latitude is not null and clue.Longitude is not null
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clue.CustomerAddress like '%${item}%'
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList.size()>0">
+			and clue.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clue.ReportUserID in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clue.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and inf.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clue.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+	</select>
+	<select id="getSalesReportCustomer" resultType="cn.visolink.system.channel.model.vo.ProjectCluesNew">
+		SELECT
+		opp.OpportunityClueId opportunityClueId,
+		opp.ProjectClueId projectClueId,
+		opp.projectId projectId,
+		opp.ProjectName projectName,
+		if(length(trim(opp.diy_hide_customer_name)) = 0 or opp.diy_hide_customer_name is null,concat(left(opp.CustomerName,1),'**'),opp.diy_hide_customer_name) customerName,
+		opp.CustomerName oldCustomerName,
+		opp.SourceMode sourceMode,
+		inf.BelongIndustriseDesc belongIndustriseDesc,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.Contacts contacts,
+		CONCAT(
+		LEFT ( opp.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( opp.CustomerMobile, 4 )) customerMobile,
+		opp.CustomerMobile oldCustomerMobile,
+
+		opp.ReportCreateTime reportCreateTime,
+		opp.ReportUserName reportUserName,
+		opp.ReportTeamName reportTeamName,
+		(
+		CASE
+		WHEN opp.ReportUserRole = '1' THEN
+		'项目招商专员'
+		WHEN opp.ReportUserRole = '2' THEN
+		'区域招商专员'
+		WHEN opp.ReportUserRole = '3' THEN
+		'全民经纪人'
+		ELSE
+		''
+		END
+		) reportUserRole,
+		opp.TokerTheLatestFollowDate tokerTheLatestFollowDate,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesAttributionTime salesAttributionTime,
+		opp.SalesFollowExpireDate salesFollowExpireDate,
+		opp.TheFirstVisitDate theFirstVisitDate,
+		opp.VisitDate visitDate,
+		opp.CustomerLevel customerLevel,
+		opp.TradeLevel tradeLevel,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesTheLatestFollowDate salesTheLatestFollowDate,
+		(
+		CASE
+		WHEN opp.IsTaoGuest = 1 THEN
+		'是'
+		ELSE
+		'否'
+		END
+		) isTaoGuest,
+		(
+		CASE
+		WHEN opp.ClueStatus = 1 THEN
+		'报备'
+		WHEN opp.ClueStatus = 2 THEN
+		'到访'
+		WHEN opp.ClueStatus = 8 THEN
+		'签约'
+		ELSE
+		'作废'
+		END
+		) clueStatus,
+		(case opp.IsPark when 1 then '是' when 0 then '否' else '' end  ) isPark,
+		opp.ParkName parkName,
+		opp.ParkAddress parkAddress,
+		opp.ParkFloor parkFloor,
+		opp.CustomerAddress customerAddress,
+		inf.DetailedAddress detailedAddress,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.MainProducts businessProducts,
+		inf.MainRawMaterials mainRawMaterials,
+		inf.PeopleNum peopleNum,
+		inf.ExistingPlantArea existingPlantArea,
+		inf.AnnualOutputValue annualOutputValue,
+		inf.TaxAmountYear taxAmountYear,
+		inf.WorkShopTypeDesc workShopTypeDesc,
+		inf.IntentionTypeDesc intentionTypeDesc,
+		inf.IntentionalAreaDesc intentionalAreaDesc,
+		inf.IntentionalPrice acceptPriceDesc,
+		inf.IntentionalFloorDesc intentionalFloorDesc,
+		opp.Longitude longitude,
+		opp.Latitude latitude
+		FROM
+		b_project_opportunity opp
+		LEFT JOIN b_information inf ON opp.OpportunityClueId = inf.OpportunityClueId
+		where opp.Latitude is not null and opp.Longitude is not null and opp.ClueStatus = 1
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				opp.CustomerAddress like '%${item}%'
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList.size()>0">
+			and opp.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and opp.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and opp.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and inf.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and opp.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+	</select>
+	<select id="getSalesVisitCustomer" resultType="cn.visolink.system.channel.model.vo.ProjectCluesNew">
+		SELECT
+		opp.OpportunityClueId opportunityClueId,
+		opp.ProjectClueId projectClueId,
+		opp.projectId projectId,
+		opp.ProjectName projectName,
+		if(length(trim(opp.diy_hide_customer_name)) = 0 or opp.diy_hide_customer_name is null,concat(left(opp.CustomerName,1),'**'),opp.diy_hide_customer_name) customerName,
+		opp.CustomerName oldCustomerName,
+		opp.SourceMode sourceMode,
+		inf.BelongIndustriseDesc belongIndustriseDesc,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.Contacts contacts,
+		CONCAT(
+		LEFT ( opp.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( opp.CustomerMobile, 4 )) customerMobile,
+		opp.CustomerMobile oldCustomerMobile,
+
+		opp.ReportCreateTime reportCreateTime,
+		opp.ReportUserName reportUserName,
+		opp.ReportTeamName reportTeamName,
+		(
+		CASE
+		WHEN opp.ReportUserRole = '1' THEN
+		'项目招商专员'
+		WHEN opp.ReportUserRole = '2' THEN
+		'区域招商专员'
+		WHEN opp.ReportUserRole = '3' THEN
+		'全民经纪人'
+		ELSE
+		''
+		END
+		) reportUserRole,
+		opp.TokerTheLatestFollowDate tokerTheLatestFollowDate,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesAttributionTime salesAttributionTime,
+		opp.SalesFollowExpireDate salesFollowExpireDate,
+		opp.TheFirstVisitDate theFirstVisitDate,
+		opp.VisitDate visitDate,
+		opp.CustomerLevel customerLevel,
+		opp.TradeLevel tradeLevel,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesTheLatestFollowDate salesTheLatestFollowDate,
+		(
+		CASE
+		WHEN opp.IsTaoGuest = 1 THEN
+		'是'
+		ELSE
+		'否'
+		END
+		) isTaoGuest,
+		(
+		CASE
+		WHEN opp.ClueStatus = 1 THEN
+		'报备'
+		WHEN opp.ClueStatus = 2 THEN
+		'到访'
+		WHEN opp.ClueStatus = 8 THEN
+		'签约'
+		ELSE
+		'作废'
+		END
+		) clueStatus,
+		(case opp.IsPark when 1 then '是' when 0 then '否' else '' end  ) isPark,
+		opp.ParkName parkName,
+		opp.ParkAddress parkAddress,
+		opp.ParkFloor parkFloor,
+		opp.CustomerAddress customerAddress,
+		inf.DetailedAddress detailedAddress,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.MainProducts businessProducts,
+		inf.MainRawMaterials mainRawMaterials,
+		inf.PeopleNum peopleNum,
+		inf.ExistingPlantArea existingPlantArea,
+		inf.AnnualOutputValue annualOutputValue,
+		inf.TaxAmountYear taxAmountYear,
+		inf.WorkShopTypeDesc workShopTypeDesc,
+		inf.IntentionTypeDesc intentionTypeDesc,
+		inf.IntentionalAreaDesc intentionalAreaDesc,
+		inf.IntentionalPrice acceptPriceDesc,
+		inf.IntentionalFloorDesc intentionalFloorDesc,
+		opp.Longitude longitude,
+		opp.Latitude latitude
+		FROM
+		b_project_opportunity opp
+		LEFT JOIN b_information inf ON opp.OpportunityClueId = inf.OpportunityClueId
+		where opp.Latitude is not null and opp.Longitude is not null and opp.ClueStatus = 2
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				opp.CustomerAddress like '%${item}%'
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList.size()>0">
+			and opp.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and opp.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and opp.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and inf.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and opp.TheFirstVisitDate between #{startTime} and #{endTime}
+		</if>
+	</select>
+	<select id="getSalesSignCustomer" resultType="cn.visolink.system.channel.model.vo.ProjectCluesNew">
+		SELECT
+		opp.OpportunityClueId opportunityClueId,
+		opp.ProjectClueId projectClueId,
+		opp.projectId projectId,
+		opp.ProjectName projectName,
+		if(length(trim(opp.diy_hide_customer_name)) = 0 or opp.diy_hide_customer_name is null,concat(left(opp.CustomerName,1),'**'),opp.diy_hide_customer_name) customerName,
+		opp.CustomerName oldCustomerName,
+		opp.SourceMode sourceMode,
+		inf.BelongIndustriseDesc belongIndustriseDesc,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.Contacts contacts,
+		CONCAT(
+		LEFT ( opp.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( opp.CustomerMobile, 4 )) customerMobile,
+		opp.CustomerMobile oldCustomerMobile,
+
+		opp.ReportCreateTime reportCreateTime,
+		opp.ReportUserName reportUserName,
+		opp.ReportTeamName reportTeamName,
+		(
+		CASE
+		WHEN opp.ReportUserRole = '1' THEN
+		'项目招商专员'
+		WHEN opp.ReportUserRole = '2' THEN
+		'区域招商专员'
+		WHEN opp.ReportUserRole = '3' THEN
+		'全民经纪人'
+		ELSE
+		''
+		END
+		) reportUserRole,
+		opp.TokerTheLatestFollowDate tokerTheLatestFollowDate,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesAttributionTime salesAttributionTime,
+		opp.SalesFollowExpireDate salesFollowExpireDate,
+		opp.TheFirstVisitDate theFirstVisitDate,
+		opp.VisitDate visitDate,
+		opp.CustomerLevel customerLevel,
+		opp.TradeLevel tradeLevel,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesTheLatestFollowDate salesTheLatestFollowDate,
+		(
+		CASE
+		WHEN opp.IsTaoGuest = 1 THEN
+		'是'
+		ELSE
+		'否'
+		END
+		) isTaoGuest,
+		(
+		CASE
+		WHEN opp.ClueStatus = 1 THEN
+		'报备'
+		WHEN opp.ClueStatus = 2 THEN
+		'到访'
+		WHEN opp.ClueStatus = 8 THEN
+		'签约'
+		ELSE
+		'作废'
+		END
+		) clueStatus,
+		(case opp.IsPark when 1 then '是' when 0 then '否' else '' end  ) isPark,
+		opp.ParkName parkName,
+		opp.ParkAddress parkAddress,
+		opp.ParkFloor parkFloor,
+		opp.CustomerAddress customerAddress,
+		inf.DetailedAddress detailedAddress,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.MainProducts businessProducts,
+		inf.MainRawMaterials mainRawMaterials,
+		inf.PeopleNum peopleNum,
+		inf.ExistingPlantArea existingPlantArea,
+		inf.AnnualOutputValue annualOutputValue,
+		inf.TaxAmountYear taxAmountYear,
+		inf.WorkShopTypeDesc workShopTypeDesc,
+		inf.IntentionTypeDesc intentionTypeDesc,
+		inf.IntentionalAreaDesc intentionalAreaDesc,
+		inf.IntentionalPrice acceptPriceDesc,
+		inf.IntentionalFloorDesc intentionalFloorDesc,
+		opp.Longitude longitude,
+		opp.Latitude latitude
+		FROM
+		b_project_opportunity opp
+		LEFT JOIN b_information inf ON opp.OpportunityClueId = inf.OpportunityClueId
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				opp.CustomerAddress like '%${item}%'
+			</foreach>
+			)
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			inner join (select distinct OpportunityClueId from b_opportunity_trade where
+			IsClosed = 0
+			and ContractDate between #{startTime} and #{endTime}
+			) t on t.OpportunityClueId = opp.OpportunityClueId
+		</if>
+		where opp.Latitude is not null and opp.Longitude is not null and opp.ClueStatus = 8
+		<if test="projectList!=null and projectList.size()>0">
+			and opp.projectId in  (
+			<foreach collection="projectList" item="item" separator=",">
+				#{item.projectId}
+			</foreach>
+			)
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and opp.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and opp.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and inf.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+	</select>
+	<select id="getProList" resultType="cn.visolink.system.project.model.vo.ProjectVO">
+		select DISTINCT ID projectId from b_project
+		where ComGUID in (
+			select DISTINCT ComGUID comguid
+			from b_project bp
+					 INNER JOIN s_organization org on org.id = bp.ComGUID
+			where bp.IsDel = 0 and bp.isSyn = 1 ${where}
+			) and isSyn = 1
+	</select>
+	<select id="getAreaNameAndProNames" resultType="java.util.Map">
+		select GROUP_CONCAT(distinct org.OrgName) areaName,GROUP_CONCAT(distinct bp.ProjectName) projectName,
+		GROUP_CONCAT(distinct bp.id) projectId
+		from b_project bp
+		left JOIN s_organization org on org.id = bp.ComGUID
+		where bp.IsDel = 0 and bp.id in
+		<foreach collection="list" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item.projectId}
+		</foreach>
+	</select>
+	<select id="getMapPermissions"
+			resultType="cn.visolink.system.custMap.bo.ZsMapPermissionsResBO">
+		select
+		p.AreaID ,
+		p.AreaName ,
+		p.projectName,
+		org.ProjectID projectId,
+		act.EmployeeName userName,
+		act.ID accountId,
+		job.JobName,
+		com.JobCode jobCode,
+		bzp.permissions_id permissionsId,
+		bzp.area_permissions areaPermissions,
+		bzp.area_start_date areaStartDate,
+		bzp.area_end_date areaEndDate,
+		concat(bzp.area_start_date,'至',bzp.area_end_date) areaExpirationDate,
+		bzp.proj_permissions projPermissions,
+		bzp.proj_start_date projStartDate,
+		bzp.proj_end_date projEndDate,
+		concat(bzp.proj_start_date,'至',bzp.proj_end_date) projExpirationDate,
+		bzp.permissions_type permissionsType
+		from
+		s_organization org
+		inner join b_project p on org.ProjectID = p.ID and p.STATUS = 1 and p.IsDel = 0
+		inner join s_jobs job on job.JobOrgID = org.id and job.Status = 1 and job.IsDel = 0 and job.isIdm = 0
+		inner join s_jobsuserrel jsr on jsr.JobID = job.id and jsr.status = 1
+		inner join b_account act on act.id = jsr.AccountID and act.IsDel = 0
+		inner join s_commonjobs com on job.CommonJobID = com.ID and com.IsDel = 0 and com.Status = 1
+		left join b_zsmap_permissions bzp on act.ID = bzp.account_id
+		where
+		${fullPaths}
+		and act.Status = 1 and bzp.is_del=0
+		<if test="projectIds != null and projectIds.size() > 0">
+			and p.ID in (
+			<foreach collection="projectIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="userName != null and userName != ''">
+			and act.EmployeeName like concat('%',#{userName},'%')
+		</if>
+	</select>
+	<select id="getOpportunity" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		select
+		clu.CustomerName customerName,
+		clu.Longitude longitude,
+		clu.Latitude latitude,
+		(case when exists (select 1 from b_followup_record a where FollowUpWay = '报备' and a.OpportunityClueId = clu.OpportunityClueId)
+		AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('2','3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+		and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+		then 1
+		when  exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+		AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+		then 2
+		when exists ( select 1 from b_followup_record a where IsThreeOnesStatus =1 and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+		and not exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+		AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+		then 3
+		when exists ( select 1 from b_followup_record a where FollowUpWay in ('2') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+		AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+		and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+		then 4
+		when exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+		then 8
+		else 0 end) type,
+		clu.OpportunityClueId businessId,
+		clu.CustomerMobile customerMobile,
+		#{mapType} as mapType,
+		#{dataRange} as dataRange
+		from b_project_opportunity clu
+		LEFT JOIN b_information bin on clu.OpportunityClueId = bin.OpportunityClueId
+		where clu.Latitude is not null and clu.Longitude is not null
+		AND clu.ClueStatus not in ('0','9','10')
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like concat('%',#{item}, '%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			and clu.projectId in  (${projectList})
+		</if>
+		<!--<if test="userIds!=null and userIds.size()>0">
+			and clu.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>-->
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND clu.TaskId in (select id from b_task bt where taskName like concat('%',#{taskName},'%'))
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName  like concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile  = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.SalesAttributionName  like concat('%',#{salesAttributionName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND clu.Label  like concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.SalesAttributionTeamId  in
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			and clu.SalesAttributionTeamId not in
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+
+	<delete id="clearOpportunityCacheStaging">
+		TRUNCATE TABLE b_project_opportunity_cache_staging
+	</delete>
+
+	<delete id="clearOpportunityCache">
+		TRUNCATE TABLE b_project_opportunity_cache
+	</delete>
+	<insert id="insertOpportunityCache">
+		INSERT INTO b_project_opportunity_cache (ProjectId, OpportunityClueId, CustomerName, CustomerMobile, Longitude, Latitude, StatusType, UpdateTime, mapType, dataRange)
+		select ProjectId,OpportunityClueId, CustomerName, CustomerMobile, Longitude, Latitude, StatusType, UpdateTime, mapType, dataRange from b_project_opportunity_cache_staging
+	</insert>
+
+
+	<insert id="updateOpportunityCacheStagingXM">
+		INSERT INTO b_project_opportunity_cache_staging (
+		    ProjectId,
+			OpportunityClueId,
+			CustomerName,
+			CustomerMobile,
+			Longitude,
+			Latitude,
+			StatusType,
+			mapType,
+			dataRange,
+			UpdateTime
+		)
+		SELECT
+		    clu.projectId,
+			clu.OpportunityClueId,
+			clu.CustomerName,
+			clu.CustomerMobile,
+			clu.Longitude,
+			clu.Latitude,
+			CASE
+				WHEN EXISTS (SELECT 1 FROM b_opportunity_trade WHERE OpportunityClueId = clu.OpportunityClueId) THEN 1
+
+				WHEN EXISTS (SELECT 1 FROM b_followup_record a WHERE FollowUpWay IN ('3','4') AND a.OpportunityClueId = clu.OpportunityClueId AND a.Status = 2)
+					AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId) THEN 2
+
+				WHEN EXISTS (SELECT 1 FROM b_followup_record a WHERE IsThreeOnesStatus = 1 AND a.OpportunityClueId = clu.OpportunityClueId AND a.Status = 2)
+					AND NOT EXISTS (SELECT 1 FROM b_followup_record a WHERE FollowUpWay IN ('3','4') AND a.OpportunityClueId = clu.OpportunityClueId AND a.Status = 2)
+					AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId) THEN 3
+
+				WHEN EXISTS (SELECT 1 FROM b_followup_record a WHERE FollowUpWay IN ('2') AND a.OpportunityClueId = clu.OpportunityClueId AND a.Status = 2)
+					AND NOT EXISTS (SELECT 1 FROM b_followup_record a WHERE (FollowUpWay IN ('3','4') OR IsThreeOnesStatus = 1) AND a.OpportunityClueId = clu.OpportunityClueId AND a.Status = 2)
+					and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId) THEN 4
+
+				WHEN EXISTS (SELECT 1 FROM b_followup_record a WHERE FollowUpWay = '报备' AND a.OpportunityClueId = clu.OpportunityClueId)
+					AND NOT EXISTS (SELECT 1 FROM b_followup_record a WHERE (FollowUpWay IN ('2','3','4') OR IsThreeOnesStatus = 1) AND a.OpportunityClueId = clu.OpportunityClueId AND a.Status = 2)
+					and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId) THEN 5
+				ELSE 6
+				END AS StatusType,
+			'1' AS mapType,
+			'1' AS dataRange,
+			NOW()
+		FROM b_project_opportunity clu
+		WHERE clu.Latitude IS NOT NULL
+		  AND clu.Longitude IS NOT NULL
+		  AND clu.ClueStatus NOT IN ('0','9','10')
+	</insert>
+
+
+	<insert id="updateOpportunityCacheStagingXM_Tkdt">
+		INSERT INTO b_project_opportunity_cache_staging (
+		    ProjectId,
+			OpportunityClueId,
+			CustomerName,
+			CustomerMobile,
+			Longitude,
+			Latitude,
+			StatusType,
+			mapType,
+			dataRange,
+			UpdateTime
+		)
+		SELECT
+		clu.projectId,
+		clu.OpportunityClueId,
+		clu.CustomerName,
+		clu.CustomerMobile,
+		clu.Longitude,
+		clu.Latitude,
+		CASE
+		WHEN EXISTS (SELECT 1 FROM b_opportunity_trade WHERE OpportunityClueId = clu.OpportunityClueId and ProjectID= clu.ProjectID) THEN 1
+		WHEN EXISTS (SELECT 1 FROM b_opportunity_trade WHERE OpportunityClueId = clu.OpportunityClueId and ProjectID!= clu.ProjectID) THEN 2
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.OpportunityClueId = clu.OpportunityClueId
+		AND a.FollowUpWay IN ('3','4')
+		AND a.Status = 2
+		GROUP BY a.OpportunityClueId
+		HAVING COUNT(*) >= 2
+		) THEN 7
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.OpportunityClueId = clu.OpportunityClueId
+		AND a.FollowUpWay IN ('3','4')
+		AND a.Status = 2
+		GROUP BY a.OpportunityClueId
+		HAVING COUNT(*) = 1
+		) THEN 6
+		WHEN EXISTS (SELECT 1 FROM b_followup_record a WHERE FollowUpWay IN ('2') AND a.OpportunityClueId = clu.OpportunityClueId AND a.Status = 2)
+		AND  EXISTS (SELECT 1 FROM b_followup_record a WHERE (FollowUpWay IN ('3','4') OR IsThreeOnesStatus = 1) AND a.OpportunityClueId = clu.OpportunityClueId AND a.Status = 2)
+		and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+		THEN 4
+		-- 当不满足上述条件时，通过ProjectClueId关联b_project_clues表，使用第二个查询的逻辑
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_project_clues clues
+		JOIN b_followup_record a ON a.ProjectClueId = clues.ProjectClueId
+		WHERE clues.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_project_clues clues
+		JOIN b_followup_record a ON a.ProjectClueId = clues.ProjectClueId
+		WHERE clues.ProjectClueId = clu.ProjectClueId
+		AND a.Status = 2
+		AND (a.FollowUpWay IN ('3','4') OR a.IsThreeOnesStatus = 1)
+		) THEN 3
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_project_clues clues
+		JOIN b_followup_record a ON a.ProjectClueId = clues.ProjectClueId
+		WHERE clues.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '6'
+		AND a.Status = 2
+		) THEN 5
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_project_clues clues
+		JOIN b_followup_record a ON a.ProjectClueId = clues.ProjectClueId
+		WHERE clues.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '导入'
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_project_clues clues
+		JOIN b_followup_record a ON a.ProjectClueId = clues.ProjectClueId
+		WHERE clues.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay != '导入'
+		) THEN 8
+		ELSE 8
+		END AS StatusType,
+		'2' AS mapType,
+		'1' AS dataRange,
+		NOW()
+		FROM b_project_opportunity clu
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus NOT IN ('0','9','10')
+	</insert>
+
+
+	<insert id="updateOpportunityCacheStagingQY">
+		INSERT INTO b_project_opportunity_cache_staging (
+		    ProjectId,
+			OpportunityClueId,
+			CustomerName,
+			Longitude,
+			Latitude,
+			StatusType,
+			CustomerMobile,
+			mapType,
+			dataRange,
+			UpdateTime
+		)
+		SELECT
+		    clu.ProjectId,
+			clu.OpportunityClueId,
+			clu.CustomerName,
+			clu.Longitude,
+			clu.Latitude,
+			 StatusType,
+			clu.CustomerMobile,
+			'1' AS mapType,
+			'2' AS dataRange,
+			NOW()
+		FROM b_project_opportunity_cache_staging clu where clu.mapType=1 and clu.dataRange=1
+	</insert>
+
+	<insert id="updateOpportunityCacheStagingQY_Tkdt">
+		INSERT INTO b_project_opportunity_cache_staging (
+		ProjectId,
+		OpportunityClueId,
+		CustomerName,
+		Longitude,
+		Latitude,
+		StatusType,
+		CustomerMobile,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.ProjectId,
+		clu.OpportunityClueId,
+		clu.CustomerName,
+		clu.Longitude,
+		clu.Latitude,
+		StatusType,
+		clu.CustomerMobile,
+		'2' AS mapType,
+		'2' AS dataRange,
+		NOW()
+		FROM b_project_opportunity_cache_staging clu where clu.mapType=2 and clu.dataRange=1
+	</insert>
+
+
+	<insert id="updateOpportunityCacheStagingJT">
+		INSERT INTO b_project_opportunity_cache_staging (
+		ProjectId,
+		OpportunityClueId,
+		CustomerName,
+		Longitude,
+		Latitude,
+		StatusType,
+		CustomerMobile,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.ProjectId,
+		clu.OpportunityClueId,
+		clu.CustomerName,
+		clu.Longitude,
+		clu.Latitude,
+		StatusType,
+		clu.CustomerMobile,
+		'1' AS mapType,
+		'3' AS dataRange,
+		NOW()
+		FROM b_project_opportunity_cache_staging clu where clu.mapType=1 and clu.dataRange=1
+	</insert>
+	<insert id="updateOpportunityCacheStagingJT_Tkdt">
+		INSERT INTO b_project_opportunity_cache_staging (
+		ProjectId,
+		OpportunityClueId,
+		CustomerName,
+		Longitude,
+		Latitude,
+		StatusType,
+		CustomerMobile,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.ProjectId,
+		clu.OpportunityClueId,
+		clu.CustomerName,
+		clu.Longitude,
+		clu.Latitude,
+		StatusType,
+		clu.CustomerMobile,
+		'2' AS mapType,
+		'3' AS dataRange,
+		NOW()
+		FROM b_project_opportunity_cache_staging clu where clu.mapType=2 and clu.dataRange=1
+	</insert>
+
+
+	<delete id="clearCluesCacheStaging">
+		TRUNCATE TABLE b_project_clues_cache_staging
+	</delete>
+
+	<delete id="clearCluesCache">
+		TRUNCATE TABLE b_project_clues_cache
+	</delete>
+	<insert id="insertCluesCache">
+		INSERT INTO b_project_clues_cache (ProjectId,SourceMode,ProjectClueId, CustomerName, CustomerMobile, Longitude, Latitude, StatusType, UpdateTime, mapType, dataRange)
+		select ProjectId,SourceMode,ProjectClueId, CustomerName, CustomerMobile, Longitude, Latitude, StatusType, UpdateTime, mapType, dataRange from b_project_clues_cache_staging
+	</insert>
+
+
+	<insert id="updateCluesCacheStagingXM_Khdt">
+		INSERT INTO b_project_clues_cache_staging (
+		ProjectId,
+		SourceMode,
+		ProjectClueId,
+		CustomerName,
+		CustomerMobile,
+		Longitude,
+		Latitude,
+		StatusType,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.projectId,
+		clu.SourceMode,
+		clu.ProjectClueId,
+		clu.CustomerName,
+		clu.CustomerMobile,
+		clu.Longitude,
+		clu.Latitude,
+		CASE
+		WHEN clu.location_error IS NOT NULL THEN '9'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '报备'
+		AND a.Status = 2
+		AND a.Creator != clu.SalesAttributionId
+		) THEN '8'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '报备'
+		) THEN '7'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay NOT IN ('导入', '招商专员-新增走访', '导入历史数据', '任务下发')
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay IN ('2','3','4','报备')
+		) THEN '6'
+		ELSE '6'
+		END  StatusType,
+		'1' AS mapType,
+		'1' AS dataRange,
+		NOW()
+		FROM b_project_Clues clu
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus IN (0,11,13) and left(ifnull(flag,''),4)!='maph'
+	</insert>
+
+	<insert id="updateCluesCacheStagingXM_KhdtMapHis">
+		INSERT INTO b_project_clues_cache_staging (
+		ProjectId,
+		ProjectClueId,
+		CustomerName,
+		CustomerMobile,
+		Longitude,
+		Latitude,
+		StatusType,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+
+		SELECT t.ProjectId,t.ProjectClueId,t.CustomerName,t.CustomerMobile,t.Longitude,t.Latitude,t.type_new,1,1,now() from (
+		select
+		a.*,
+		b.type_his,
+		-- 权重映射（枚举值越小，权重越大）
+		CASE b.type_his
+		WHEN '1' THEN 9
+		WHEN '2' THEN 8
+		WHEN '3' THEN 7
+		WHEN '4' THEN 6
+		WHEN '5' THEN 5
+		WHEN '9' THEN 4
+		WHEN '8' THEN 3
+		WHEN '7' THEN 2
+		WHEN '6' THEN 1
+		ELSE 0
+		END AS weight_his,
+		CASE a.StatusType
+		WHEN '1' THEN 9
+		WHEN '2' THEN 8
+		WHEN '3' THEN 7
+		WHEN '4' THEN 6
+		WHEN '5' THEN 5
+		WHEN '9' THEN 4
+		WHEN '8' THEN 3
+		WHEN '7' THEN 2
+		WHEN '6' THEN 1
+		ELSE 0
+		END AS weight_status,
+		-- 取权重大的type
+		CASE
+		WHEN
+		(CASE b.type_his
+		WHEN '1' THEN 9
+		WHEN '2' THEN 8
+		WHEN '3' THEN 7
+		WHEN '4' THEN 6
+		WHEN '5' THEN 5
+		WHEN '9' THEN 4
+		WHEN '8' THEN 3
+		WHEN '7' THEN 2
+		WHEN '6' THEN 1
+		ELSE 0
+		END)
+		>=
+		(CASE a.StatusType
+		WHEN '1' THEN 9
+		WHEN '2' THEN 8
+		WHEN '3' THEN 7
+		WHEN '4' THEN 6
+		WHEN '5' THEN 5
+		WHEN '9' THEN 4
+		WHEN '8' THEN 3
+		WHEN '7' THEN 2
+		WHEN '6' THEN 1
+		ELSE 0
+		END)
+		THEN b.type_his
+		ELSE a.StatusType
+		END AS type_new
+		FROM (
+		SELECT tmp.StatusType, a.*
+		FROM (
+		SELECT ProjectClueId, projectId, ProjectName, CustomerName,CustomerMobile,Longitude,Latitude
+		FROM b_project_clues
+		WHERE Latitude IS NOT NULL
+		AND Longitude IS NOT NULL
+		AND ClueStatus IN (0,11,13) and left(ifnull(flag,''),4)='maph'
+		) a
+		INNER JOIN (
+
+		SELECT
+		clu.ProjectClueId,
+		CASE
+		WHEN clu.location_error IS NOT NULL THEN '9'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '报备'
+		AND a.Status = 2
+		AND a.Creator != clu.SalesAttributionId
+		) THEN '8'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '报备'
+		) THEN '7'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay NOT IN ('导入', '招商专员-新增走访', '导入历史数据', '任务下发')
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay IN ('2','3','4','报备')
+		) THEN '6'
+		ELSE '6'
+		END  StatusType
+		FROM b_project_Clues clu
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus IN (0,11,13) and left(ifnull(flag,''),4)='maph'
+
+
+		) tmp
+		ON a.ProjectClueId = tmp.ProjectClueId
+		) a
+		LEFT JOIN (
+		SELECT
+		CASE
+		WHEN fr.FollowUpDetail IS NULL THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = 'null' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '目标企业' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '已成交（在本项目）' THEN '1'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '已成交（在其他项目）' THEN '1'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '见到老板（未完成三个一）' THEN '7'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '见到老板（完成三个一）' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '未见到老板' THEN '7'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '仅来访本项目一次' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '来访本项目两次及以上' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '企业不存在' THEN '9'
+		ELSE '6'
+		END as type_his,
+
+		clu.ProjectClueId
+		FROM b_project_clues clu
+		LEFT JOIN b_followup_record fr
+		ON clu.ProjectClueId = fr.ProjectClueId
+		AND fr.FollowUpWay = '导入历史数据'
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus IN (0, 11, 13) and left(ifnull(clu.flag,''),4)='maph'
+		) b
+		ON a.ProjectClueId = b.ProjectClueId
+		) t
+	</insert>
+
+
+
+	<insert id="updateCluesCacheStagingXM_Tkdt">
+		INSERT INTO b_project_clues_cache_staging (
+		ProjectId,
+		SourceMode,
+		ProjectClueId,
+		CustomerName,
+		CustomerMobile,
+		Longitude,
+		Latitude,
+		StatusType,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.projectId,
+		ifnull(clu.SourceMode,''),
+		clu.ProjectClueId,
+		clu.CustomerName,
+		clu.CustomerMobile,
+		clu.Longitude,
+		clu.Latitude,
+		CASE
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.Status = 2
+		AND (a.FollowUpWay IN ('3','4') OR a.IsThreeOnesStatus = 1)
+		) THEN '3'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '6'
+		AND a.Status = 2
+		) THEN '5'
+		WHEN clu.location_error IS NOT NULL THEN '9'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '导入'
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay != '导入'
+		) THEN '8'
+		ELSE '8'
+		END  StatusType,
+		'2' AS mapType,
+		'1' AS dataRange,
+		NOW()
+		FROM b_project_clues clu
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus IN (0,11,13) and left(ifnull(flag,''),4)!='maph'
+	</insert>
+
+	<insert id="updateCluesCacheStagingXM_TkdtMapHis">
+		INSERT INTO b_project_clues_cache_staging (
+		ProjectId,
+		ProjectClueId,
+		CustomerName,
+		CustomerMobile,
+		Longitude,
+		Latitude,
+		StatusType,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+
+		SELECT t.projectId,t.ProjectClueId,t.CustomerName,t.CustomerMobile,t.Longitude,t.Latitude,t.type_new,2 as mapType,1 as dataRange,now() from (
+		select
+		a.*,
+		b.type_his,
+		-- 权重映射（枚举值越小，权重越大）
+		CASE b.type_his
+		WHEN '1' THEN 9
+		WHEN '2' THEN 8
+		WHEN '7' THEN 7
+		WHEN '6' THEN 6
+		WHEN '4' THEN 5
+		WHEN '3' THEN 4
+		WHEN '5' THEN 3
+		WHEN '9' THEN 2
+		WHEN '8' THEN 1
+		ELSE 0
+		END AS weight_his,
+		CASE a.StatusType
+		WHEN '1' THEN 9
+		WHEN '2' THEN 8
+		WHEN '7' THEN 7
+		WHEN '6' THEN 6
+		WHEN '4' THEN 5
+		WHEN '3' THEN 4
+		WHEN '5' THEN 3
+		WHEN '9' THEN 2
+		WHEN '8' THEN 1
+		ELSE 0
+		END AS weight_status,
+		-- 取权重大的type
+		CASE
+		WHEN
+		(CASE b.type_his
+		WHEN '1' THEN 9
+		WHEN '2' THEN 8
+		WHEN '7' THEN 7
+		WHEN '6' THEN 6
+		WHEN '4' THEN 5
+		WHEN '3' THEN 4
+		WHEN '5' THEN 3
+		WHEN '9' THEN 2
+		WHEN '8' THEN 1
+		ELSE 0
+		END)
+		>=
+		(CASE a.StatusType
+		WHEN '1' THEN 9
+		WHEN '2' THEN 8
+		WHEN '7' THEN 7
+		WHEN '6' THEN 6
+		WHEN '4' THEN 5
+		WHEN '3' THEN 4
+		WHEN '5' THEN 3
+		WHEN '9' THEN 2
+		WHEN '8' THEN 1
+		ELSE 0
+		END)
+		THEN b.type_his
+		ELSE a.StatusType
+		END AS type_new
+		FROM (
+		SELECT tmp.StatusType, a.*
+		FROM (
+		SELECT ProjectClueId, projectId, ProjectName, CustomerName,CustomerMobile,Longitude,Latitude
+		FROM b_project_clues WHERE Latitude IS NOT NULL
+		AND Longitude IS NOT NULL
+		AND ClueStatus IN (0,11,13) and left(ifnull(flag,''),4)='maph'
+		) a
+		INNER JOIN (
+
+		SELECT
+
+		clu.ProjectClueId,
+		CASE
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.Status = 2
+		AND (a.FollowUpWay IN ('3','4') OR a.IsThreeOnesStatus = 1)
+		) THEN '3'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '6'
+		AND a.Status = 2
+		) THEN '5'
+		WHEN clu.location_error IS NOT NULL THEN '9'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '导入'
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay != '导入'
+		) THEN '8'
+		ELSE '8'
+		END  StatusType
+		FROM b_project_clues clu
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus IN (0,11,13) and left(ifnull(flag,''),4)='maph'
+
+
+
+		) tmp
+		ON a.ProjectClueId = tmp.ProjectClueId
+		) a
+		LEFT JOIN (
+		SELECT
+		CASE
+		WHEN fr.FollowUpDetail IS NULL THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = 'null' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '目标企业' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '已成交（在本项目）' THEN '1'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '已成交（在其他项目）' THEN '2'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '见到老板（未完成三个一）' THEN '3'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '见到老板（完成三个一）' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '未见到老板' THEN '5'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '仅来访本项目一次' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '来访本项目两次及以上' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '企业不存在' THEN '9'
+		ELSE '8'
+		END AS type_his,
+		clu.ProjectClueId
+		FROM b_project_clues clu
+		LEFT JOIN b_followup_record fr
+		ON clu.ProjectClueId = fr.ProjectClueId
+		AND fr.FollowUpWay = '导入历史数据'
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus IN (0, 11, 13) and left(ifnull(clu.flag,''),4)='maph'
+		) b
+		ON a.ProjectClueId = b.ProjectClueId
+		) t
+	</insert>
+
+
+	<insert id="updateCluesCacheStagingQY_Khdt">
+		INSERT INTO b_project_clues_cache_staging (
+		ProjectId,
+		SourceMode,
+		ProjectClueId,
+		CustomerName,
+		Longitude,
+		Latitude,
+		StatusType,
+		CustomerMobile,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.projectId,
+		clu.SourceMode,
+		clu.ProjectClueId,
+		clu.CustomerName,
+		clu.Longitude,
+		clu.Latitude,
+		StatusType,
+		clu.CustomerMobile,
+		'1' AS mapType,
+		'2' AS dataRange,
+		NOW()
+		FROM b_project_clues_cache_staging clu where clu.mapType=1 and clu.dataRange=1
+	</insert>
+
+	<insert id="updateCluesCacheStagingQY_Tkdt">
+		INSERT INTO b_project_clues_cache_staging (
+		ProjectId,
+		SourceMode,
+		ProjectClueId,
+		CustomerName,
+		Longitude,
+		Latitude,
+		StatusType,
+		CustomerMobile,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.projectId,
+		clu.SourceMode,
+		clu.ProjectClueId,
+		clu.CustomerName,
+		clu.Longitude,
+		clu.Latitude,
+		StatusType,
+		clu.CustomerMobile,
+		'2' AS mapType,
+		'2' AS dataRange,
+		NOW()
+		FROM b_project_clues_cache_staging clu where clu.mapType=2 and clu.dataRange=1
+	</insert>
+
+
+	<insert id="updateCluesCacheStagingJT_Khdt">
+		INSERT INTO b_project_clues_cache_staging (
+		ProjectId,
+		SourceMode,
+		ProjectClueId,
+		CustomerName,
+		Longitude,
+		Latitude,
+		StatusType,
+		CustomerMobile,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.projectId,
+		clu.SourceMode,
+		clu.ProjectClueId,
+		clu.CustomerName,
+		clu.Longitude,
+		clu.Latitude,
+		StatusType,
+		clu.CustomerMobile,
+		'1' AS mapType,
+		'3' AS dataRange,
+		NOW()
+		FROM b_project_clues_cache_staging clu where clu.mapType=1 and clu.dataRange=1
+	</insert>
+	<insert id="updateCluesCacheStagingJT_Tkdt">
+		INSERT INTO b_project_clues_cache_staging (
+		ProjectId,
+		SourceMode,
+		ProjectClueId,
+		CustomerName,
+		Longitude,
+		Latitude,
+		StatusType,
+		CustomerMobile,
+		mapType,
+		dataRange,
+		UpdateTime
+		)
+		SELECT
+		clu.projectId,
+		clu.SourceMode,
+		clu.ProjectClueId,
+		clu.CustomerName,
+		clu.Longitude,
+		clu.Latitude,
+		StatusType,
+		clu.CustomerMobile,
+		'2' AS mapType,
+		'3' AS dataRange,
+		NOW()
+		FROM b_project_clues_cache_staging clu where clu.mapType=2 and clu.dataRange=1
+	</insert>
+
+
+	<select id="getOpportunityFromCache" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		SELECT
+		clu.SourceMode AS sourceMode,
+		IF(LENGTH(TRIM(IFNULL(clu.diy_hide_customer_name, ''))) = 0, CONCAT(LEFT(clu.CustomerName, 1), '**'), clu.diy_hide_customer_name) AS customerName,
+		clu.CustomerName AS oldCustomerName,
+		clu.Longitude longitude,
+		clu.Latitude latitude,
+		csc.StatusType type,
+		clu.OpportunityClueId businessId,
+		clu.ProjectClueId projectClueId,
+
+		clu.IsReferralOk isReferralOk,
+		clu.wqt_referee_name wqtRefereeName,
+		clu.wqt_referee_time wqtRefereeTime,
+		clu.SalesTheLatestFollowDate salesTheLatestFollowDate,
+		(select count(1) from b_cust_referral where OpportunityClueId = clu.OpportunityClueId and status  = 1) isEditOk,
+
+		clu.Contacts contacts,
+		CONCAT(
+		LEFT ( clu.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( clu.CustomerMobile, 4 )) customerMobile,
+		clu.CustomerMobile oldCustomerMobile,
+		csc.mapType,
+		csc.dataRange,
+		clu.CustomerAddress as companyAddress,
+		bin.DetailedAddress as detailAddress,
+		bin.BelongIndustriseDesc as industryCategory,
+		bin.BelongIndustriseTwoDesc as secondaryCategory,
+		clu.MainProducts as mainProduct,
+		clu.ProjectName as intentionProject,
+		clu.ReportCreateTime as entryTime,
+		clu.ReportUserName as entryPerson,
+		CASE
+		WHEN clu.ReportUserRole = '1' THEN '项目招商专员'
+		WHEN clu.ReportUserRole = '2' THEN '区域招商专员'
+		WHEN clu.ReportUserRole = '3' THEN '全民经纪人'
+		ELSE ''
+		END as entryPersonIdentity,
+		CASE WHEN clu.IsPark = 1 THEN '是' ELSE '否' END as isPark,
+		clu.ParkAddress as parkAddress,
+		clu.ParkFloor as parkFloors,
+		clu.ParkName as parkName,
+		clu.ClueStatus,
+		(
+		CASE
+		WHEN clu.ClueStatus = 1 THEN
+		'报备'
+		WHEN clu.ClueStatus = 2 THEN
+		'到访'
+		WHEN clu.ClueStatus = 8 THEN
+		'签约'
+		ELSE
+		'作废'
+		END
+		) clueStatusCh,
+		(
+		CASE
+		WHEN clu.IsTaoGuest = 1 THEN
+		'是'
+		ELSE
+		'否'
+		END
+		) isTaoGuest,
+		clu.projectId,
+
+
+
+
+
+		bin.MainRawMaterials AS mainRawMaterials,
+		bin.PeopleNum AS peopleNum,
+		bin.ExistingPlantArea AS existingPlantArea,
+		bin.AnnualOutputValue AS annualOutputValue,
+		bin.TaxAmountYear AS taxAmountYear,
+		clu.PlantTypeDesc AS plantTypeDesc,
+		clu.ReportTeamName AS reportTeamName,
+		clu.TheFirstVisitDate AS theFirstVisitDate,
+		clu.VisitDate AS visitDate,
+		clu.IsThreeOnes AS isThreeOnes,
+		bin.IntentionTypeDesc AS intentionTypeDesc,
+		bin.IntentionalAreaDesc AS intentionalAreaDesc,
+		bin.AcceptPriceDesc AS acceptPriceDesc,
+		bin.IntentionalFloorDesc AS intentionalFloorDesc,
+		clu.CustomerLevel AS customerLevel,
+		DATEDIFF(clu.SalesFollowExpireDate, NOW()) AS disTime,
+		clu.SalesFollowExpireDate AS salesFollowExpireDate,
+		clu.Label as label,
+		clu.SalesAttributionTeamId as salesAttributionTeamId,
+		clu.SalesAttributionTeamName as salesAttributionTeamName,
+		clu.SalesAttributionId as salesAttributionId,
+		clu.SalesAttributionName as salesAttributionName,
+		clu.SalesAttributionTime as salesAttributionTime,
+		if(clu.SalesAttributionId=#{UserId},1,0) isSelf
+		FROM b_project_opportunity clu
+		LEFT JOIN b_project_opportunity_cache csc ON csc.OpportunityClueId = clu.OpportunityClueId
+		LEFT JOIN b_information bin on clu.OpportunityClueId = bin.OpportunityClueId
+		where clu.ClueStatus not in ('0','9','10','11','13') and clu.Latitude is not null and clu.Longitude is not null and clu.IsDel=0
+		<if test="areaList!=null and areaList.size()>0">
+			AND clu.OpportunityClueId IN (
+			SELECT OpportunityClueId FROM b_project_opportunity
+			WHERE (
+			<foreach collection="areaList" item="item" separator="or">
+				CustomerAddress LIKE concat('%',#{item}, '%')
+			</foreach>
+			)
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			AND clu.OpportunityClueId IN (
+			SELECT OpportunityClueId FROM b_project_opportunity
+			WHERE projectId IN (${projectList})
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			AND clu.OpportunityClueId IN (
+			SELECT OpportunityClueId FROM b_project_opportunity
+			WHERE ParkName = #{parkName}
+			)
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			AND clu.OpportunityClueId IN (
+			SELECT clu1.OpportunityClueId FROM b_project_opportunity clu1
+			LEFT JOIN b_information bin ON clu1.OpportunityClueId = bin.OpportunityClueId
+			WHERE bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+			)
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			AND clu.OpportunityClueId IN (
+			SELECT OpportunityClueId FROM b_project_opportunity
+			WHERE ReportCreateTime BETWEEN #{startTime} AND DATE_ADD(#{endTime},INTERVAL 1 DAY)
+			)
+		</if>
+		<if test="taskName != null and taskName != ''">
+
+			AND clu.ProjectClueId IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId in (SELECT id FROM b_task bt WHERE taskName LIKE concat('%',#{taskName},'%'))
+			)
+		</if>
+
+		<if test="taskId != null and taskId != ''">
+			AND clu.ProjectClueId IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId =#{taskId}
+			)
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName LIKE concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.OpportunityClueId IN (
+			SELECT OpportunityClueId FROM b_project_opportunity
+			WHERE SalesAttributionName LIKE concat('%',#{salesAttributionName},'%')
+			)
+		</if>
+		<if test="salesAttributionNameS != null and salesAttributionNameS.size() > 0">
+			AND clu.SalesAttributionName IN
+			<foreach collection="salesAttributionNameS" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+
+		</if>
+
+<!--		<if test="tagLabel != null and tagLabel != ''">-->
+<!--			AND clu.OpportunityClueId IN (-->
+<!--			SELECT OpportunityClueId FROM b_project_opportunity-->
+<!--			WHERE Label LIKE concat('%',#{tagLabel},'%')-->
+<!--			)-->
+<!--		</if>-->
+
+		<if test="tagLabelS!=null and tagLabelS.size()>0">
+			AND (
+			<foreach collection="tagLabelS" item="item" separator="or">
+				clu.Label LIKE concat('%',#{item}, '%')
+			</foreach>
+			)
+		</if>
+
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.OpportunityClueId IN (
+			SELECT OpportunityClueId FROM b_project_opportunity
+			WHERE SalesAttributionTeamId IN
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			AND clu.OpportunityClueId IN (
+			SELECT OpportunityClueId FROM b_project_opportunity
+			WHERE SalesAttributionTeamId NOT IN
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="mapType != null and mapType != ''">
+			AND csc.mapType = #{mapType}
+		</if>
+		<if test="dataRange != null and dataRange != ''">
+			AND csc.dataRange = #{dataRange}
+		</if>
+		<if test="clueStatus != null and clueStatus != ''">
+			AND clu.ClueStatus = #{clueStatus}
+		</if>
+		<if test="clueStatuss != null and clueStatuss.size() > 0">
+			AND clu.ClueStatus IN
+			<foreach collection="clueStatuss" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test='types!=null and types.size()>0'>
+			AND csc.StatusType in (
+				<foreach collection="types" item="item" separator=",">
+					#{item}
+				</foreach>
+			)
+		</if>
+		<if test='userIds!=null and userIds.size()>0 and projPermissList=="" and permissionType=="1"'>
+			AND (
+				clu.ReportUserID IN (
+				<foreach collection="userIds" item="item" separator=",">
+					#{item}
+				</foreach>
+				) or
+				clu.SalesAttributionId IN (
+				<foreach collection="userIds" item="item" separator=",">
+					#{item}
+				</foreach>
+				) or
+				clu.CreateUserId IN (
+				<foreach collection="userIds" item="item" separator=",">
+					#{item}
+				</foreach>
+				)
+			)
+		</if>
+		<if test='projPermissList != "" and (userIds == null or userIds.size() == 0) and permissionType=="1"'>
+			and clu.projectId in  (${projPermissList})
+		</if>
+		<if test='userIds!=null and userIds.size()>0 and projPermissList != "" and permissionType=="1"'>
+			AND (
+					(
+						clu.ReportUserID IN (
+						<foreach collection="userIds" item="item" separator=",">
+							#{item}
+						</foreach>
+						) or
+						clu.SalesAttributionId IN (
+						<foreach collection="userIds" item="item" separator=",">
+							#{item}
+						</foreach>
+						) or
+						clu.CreateUserId IN (
+						<foreach collection="userIds" item="item" separator=",">
+							#{item}
+						</foreach>
+						)
+					) OR
+					clu.OpportunityClueId IN (
+						SELECT OpportunityClueId FROM b_project_opportunity
+						WHERE projectId IN (${projPermissList})
+					)
+				)
+		</if>
+		<if test="custNature != null and custNature != ''">
+			<if test='custNature == "1"'>
+				AND clu.ProjectClueId IN (
+				SELECT customerId FROM b_task_customer where ifnull(customerType,'')=3
+				)
+			</if>
+			<if test='custNature == "2"'>
+				AND clu.ProjectClueId IN (
+				SELECT customerId FROM b_task_customer where ifnull(customerType,'')=1
+				)
+			</if>
+		</if>
+		<if test="isIntentionStatus != null and isIntentionStatus != ''">
+			AND clu.IsIntentionStatus = #{isIntentionStatus}
+		</if>
+	</select>
+
+	<select id="selectActiveTaskCustomerIds" resultType="java.lang.String">
+		<![CDATA[
+        SELECT customerId
+        FROM b_task_customer
+        WHERE taskId IN (
+            SELECT id FROM b_task t
+            WHERE t.isDel = 0
+            AND NOW() <= t.endTime
+            AND IFNULL(t.status, 99) != 4
+            AND t.projectId=#{projectId}
+        )
+    ]]>
+	</select>
+
+	<select id="getCluesFromCache" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		SELECT
+		distinct
+		clu.SourceMode as sourceMode,
+		IF(LENGTH(TRIM(IFNULL(clu.diy_hide_customer_name, ''))) = 0, CONCAT(LEFT(clu.CustomerName, 1), '**'), clu.diy_hide_customer_name) AS customerName,
+		clu.CustomerName AS oldCustomerName,
+		clu.Longitude as longitude,
+		clu.Latitude as latitude,
+		tmp.StatusType as type,
+		clu.ProjectClueId as businessId,
+		clu.ProjectClueId as projectClueId,
+		'' as isReferralOk,
+		'' as wqtRefereeTime,
+		'' as wqtRefereeName,
+		'' as salesTheLatestFollowDate,
+		'' as isEditOk,
+		clu.Contacts as contacts,
+		CONCAT(
+		LEFT ( clu.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( clu.CustomerMobile, 4 )) customerMobile,
+		clu.CustomerMobile oldCustomerMobile,
+		clu.CustomerAddress as companyAddress,
+		bin.DetailedAddress as detailAddress,
+		bin.BelongIndustriseDesc as industryCategory,
+		bin.BelongIndustriseTwoDesc as secondaryCategory,
+		clu.MainProducts as mainProduct,
+		clu.ProjectName as intentionProject,
+		clu.ReportCreateTime as entryTime,
+		clu.ReportUserName as entryPerson,
+		CASE
+		WHEN clu.ReportUserRole = '1' THEN '项目招商专员'
+		WHEN clu.ReportUserRole = '2' THEN '区域招商专员'
+		WHEN clu.ReportUserRole = '3' THEN '全民经纪人'
+		ELSE ''
+		END as entryPersonIdentity,
+		CASE WHEN clu.IsPark = 1 THEN '是' ELSE '否' END as isPark,
+		clu.ParkAddress as parkAddress,
+		clu.ParkFloor as parkFloors,
+		clu.ParkName as parkName,
+		clu.ClueStatus,
+		(case clu.ClueStatus when 0 then '新增' when 11 then '分配' when 13 then '报备失败' else '' end) clueStatusCh,
+	 	'' as isTaoGuest,
+		clu.projectId,
+
+		bin.MainRawMaterials AS mainRawMaterials,
+		bin.PeopleNum AS peopleNum,
+		bin.ExistingPlantArea AS existingPlantArea,
+		bin.AnnualOutputValue AS annualOutputValue,
+		bin.TaxAmountYear AS taxAmountYear,
+		clu.PlantTypeDesc AS plantTypeDesc,
+		clu.ReportTeamName AS reportTeamName,
+		clu.TheFirstVisitDate AS theFirstVisitDate,
+		clu.VisitDate AS visitDate,
+		'' AS isThreeOnes,
+		bin.IntentionTypeDesc AS intentionTypeDesc,
+		bin.IntentionalAreaDesc AS intentionalAreaDesc,
+		bin.AcceptPriceDesc AS acceptPriceDesc,
+		bin.IntentionalFloorDesc AS intentionalFloorDesc,
+		clu.CustomerLevel AS customerLevel,
+		DATEDIFF(clu.SalesFollowExpireDate, NOW()) AS disTime,
+		clu.SalesFollowExpireDate AS salesFollowExpireDate,
+		clu.Label as label,
+		clu.SalesAttributionTeamId as salesAttributionTeamId,
+		clu.SalesAttributionTeamName as salesAttributionTeamName,
+		clu.SalesAttributionId as salesAttributionId,
+		clu.SalesAttributionName as salesAttributionName,
+		clu.SalesAttributionTime as salesAttributionTime,
+		if(clu.SalesAttributionId=#{UserId},1,0) isSelf
+
+		FROM b_project_clues clu
+		LEFT JOIN b_project_clues_cache tmp ON clu.ProjectClueId = tmp.ProjectClueId
+		LEFT JOIN b_information bin ON clu.ProjectClueId = bin.ProjectClueId
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus IN (0,11,13) and  clu.IsDel=0
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			and clu.projectId in  (${projectList})
+		</if>
+
+
+		<if test='userIds!=null and userIds.size()>0 and projPermissList=="" and permissionType=="1"'>
+			AND (
+			clu.ReportUserID IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.SalesAttributionId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.CreateUserId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+			<!--创建子任务查询父任务总监导入的客户-->
+		    <if test="pTaskCreateBy != null and pTaskCreateBy != ''">
+				or clu.CreateUserId =#{pTaskCreateBy}
+			</if>
+			<if test='isMapImport != null and isMapImport != "" and isMapImport == "1" and userIdsCreate!=null and userIdsCreate.size()>0 '>
+				or clu.CreateUserId IN (
+				<foreach collection="userIdsCreate" item="item" separator=",">
+					#{item}
+				</foreach>
+				)
+			</if>
+			)
+		</if>
+		<if test='projPermissList != "" and (userIds == null or userIds.size() == 0) and permissionType=="1"'>
+			and clu.projectId in  (${projPermissList})
+		</if>
+		<if test='userIds!=null and userIds.size()>0 and projPermissList != "" and permissionType=="1"'>
+			AND (
+			(
+			clu.ReportUserID IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.SalesAttributionId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.CreateUserId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+			<!--创建子任务查询父任务总监导入的客户-->
+			<if test="pTaskCreateBy != null and pTaskCreateBy != ''">
+				or clu.CreateUserId =#{pTaskCreateBy}
+			</if>
+			<if test='isMapImport != null and isMapImport != "" and isMapImport == "1" and userIdsCreate!=null and userIdsCreate.size()>0 '>
+				or clu.CreateUserId IN (
+				<foreach collection="userIdsCreate" item="item" separator=",">
+					#{item}
+				</foreach>
+				)
+			</if>
+			) OR
+			clu.ProjectClueId IN (
+			SELECT ProjectClueId FROM b_project_clues
+			WHERE projectId IN (${projPermissList})
+			)
+			)
+		</if>
+		<if test="mapType != null and mapType != ''">
+			AND tmp.mapType = #{mapType}
+		</if>
+		<if test="dataRange != null and dataRange != ''">
+			AND tmp.dataRange = #{dataRange}
+		</if>
+		<if test="clueStatus != null and clueStatus != ''">
+			AND clu.ClueStatus = #{clueStatus}
+		</if>
+		<if test="clueStatuss != null and clueStatuss.size() > 0">
+			AND clu.ClueStatus IN
+			<foreach collection="clueStatuss" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test='types!=null and types.size()>0'>
+			AND tmp.StatusType in (
+			<foreach collection="types" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and DATE_ADD(#{endTime},INTERVAL 1 DAY)
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName  like concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile  = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.SalesAttributionName  like concat('%',#{salesAttributionName},'%')
+		</if>
+		<if test="salesAttributionNameS != null and salesAttributionNameS.size() > 0">
+			AND clu.SalesAttributionName IN
+			<foreach collection="salesAttributionNameS" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+<!--		<if test="tagLabel != null and tagLabel != ''">-->
+<!--			AND clu.Label  like concat('%',#{tagLabel},'%')-->
+<!--		</if>-->
+
+		<if test="tagLabelS!=null and tagLabelS.size()>0">
+			AND (
+			<foreach collection="tagLabelS" item="item" separator="or">
+				clu.Label LIKE concat('%',#{item}, '%')
+			</foreach>
+			)
+		</if>
+
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.SalesAttributionTeamId  in
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			and clu.SalesAttributionTeamId not in
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND clu.projectClueId IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId IN (SELECT id FROM b_task bt WHERE taskName LIKE concat('%',#{taskName},'%'))
+			)
+		</if>
+		<if test="taskId != null and taskId != ''">
+			AND clu.projectClueId IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId = #{taskId}
+			)
+		</if>
+		<if test='isMapImport != null and isMapImport != "" and isMapImport == "1"'>
+			AND left(ifnull(flag,''),3)='map'
+		</if>
+		<if test='isMapImport != null and isMapImport != "" and isMapImport == "0"'>
+			AND left(ifnull(flag,''),3)!='map'
+		</if>
+		<if test='isYjtk != null and isYjtk != "" and isYjtk == "1"'>
+			AND left(ifnull(flag,''),4)='yjtk'
+		</if>
+		<if test='isYjtk != null and isYjtk != "" and isYjtk == "0"'>
+			AND left(ifnull(flag,''),4)!='yjtk'
+		</if>
+		<if test="custNature != null and custNature != ''">
+			<if test='custNature == "1"'>
+				AND clu.ProjectClueId IN (
+				SELECT customerId FROM b_task_customer where ifnull(customerType,'')=3
+				)
+			</if>
+			<if test='custNature == "2"'>
+				AND clu.ProjectClueId IN (
+				SELECT customerId FROM b_task_customer where ifnull(customerType,'')=1
+				)
+			</if>
+		</if>
+		<if test="isIntentionStatus != null and isIntentionStatus != ''">
+			AND clu.IsIntentionStatus = #{isIntentionStatus}
+		</if>
+	</select>
+	<select id="getClues" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		SELECT
+		clu.SourceMode as sourceMode,
+		clu.CustomerName as customerName,
+		clu.Longitude as longitude,
+		clu.Latitude as latitude,
+		CASE
+		WHEN clu.location_error IS NOT NULL THEN '9'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '报备'
+		AND a.Status = 2
+		AND a.Creator != clu.SalesAttributionId
+		) THEN '8'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '2'
+		AND a.Status = 2
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay = '报备'
+		) THEN '7'
+		WHEN EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay NOT IN ('导入', '招商专员-新增走访', '导入历史数据', '任务下发')
+		)
+		AND NOT EXISTS (
+		SELECT 1
+		FROM b_followup_record a
+		WHERE a.ProjectClueId = clu.ProjectClueId
+		AND a.FollowUpWay IN ('2','3','4','报备')
+		) THEN '6'
+		ELSE '6'
+		END AS type,
+		clu.projectClueId as businessId,
+		clu.projectClueId as projectClueId,
+		'' as isReferralOk,
+		'' as wqtRefereeTime,
+		'' as wqtRefereeName,
+		'' as isEditOk,
+		clu.Contacts as contacts,
+		clu.CustomerMobile as customerMobile,
+		clu.CustomerMobile as contactWay,
+		clu.CustomerAddress as companyAddress,
+		bin.DetailedAddress as detailAddress,
+		bin.BelongIndustriseDesc as industryCategory,
+		bin.BelongIndustriseTwoDesc as secondaryCategory,
+		clu.MainProducts as mainProduct,
+		clu.ProjectName as intentionProject,
+		clu.ReportCreateTime as entryTime,
+		clu.ReportUserName as entryPerson,
+		CASE
+		WHEN clu.ReportUserRole = '1' THEN '项目招商专员'
+		WHEN clu.ReportUserRole = '2' THEN '区域招商专员'
+		WHEN clu.ReportUserRole = '3' THEN '全民经纪人'
+		ELSE ''
+		END as entryPersonIdentity,
+		CASE WHEN clu.IsPark = 1 THEN '是' ELSE '否' END as isPark,
+		clu.ParkAddress as parkAddress,
+		clu.ParkFloor as parkFloors,
+		clu.ParkName as parkName,
+		clu.ClueStatus,
+		clu.projectId
+		FROM b_project_clues clu
+		LEFT JOIN b_information bin ON clu.ProjectClueId = bin.ProjectClueId
+		WHERE clu.Latitude IS NOT NULL
+		AND clu.Longitude IS NOT NULL
+		AND clu.ClueStatus IN (0,11,13)
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			and clu.projectId in  (${projectList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			AND (
+			clu.ReportUserID IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.CreateUserId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.salesAttributionId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName  like concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile  = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.SalesAttributionName  like concat('%',#{salesAttributionName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND clu.Label  like concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.SalesAttributionTeamId  in
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			and clu.SalesAttributionTeamId not in
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND clu.projectClueId IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId IN (SELECT id FROM b_task bt WHERE taskName LIKE concat('%',#{taskName},'%'))
+			)
+		</if>
+		<if test="taskId != null and taskId != ''">
+			AND clu.projectClueId IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId = #{taskId}
+			)
+		</if>
+	</select>
+
+
+	<select id="getCluesTkdt" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		SELECT
+		clu.SourceMode  sourceMode,
+		clu.CustomerName customerName,
+		clu.Longitude longitude,
+		clu.Latitude latitude,
+		CASE
+
+		WHEN exists ( select 1 from b_followup_record a where a.FollowUpWay in ('2') and a.ProjectClueId = clu.ProjectClueId and a.Status = 2)
+		AND not exists ( select 1 from b_followup_record a where (a.FollowUpWay in ('3','4') or a.IsThreeOnesStatus =1) and a.ProjectClueId = clu.ProjectClueId and a.Status = 2)
+		THEN '3'
+
+		WHEN exists (SELECT 1 FROM b_followup_record a WHERE a.ProjectClueId = clu.ProjectClueId and a.FollowUpWay ='6' and a.Status = 2)
+		THEN '5'
+
+		WHEN  clu.location_error is  not null
+		then '9'
+
+		WHEN EXISTS (SELECT 1 FROM b_followup_record a WHERE a.FollowUpWay = '导入' AND a.ProjectClueId = clu.ProjectClueId)
+		AND  NOT EXISTS (SELECT 1 FROM b_followup_record a WHERE a.FollowUpWay != '导入' AND a.ProjectClueId = clu.ProjectClueId)
+		THEN '8'
+
+		ELSE '8'
+		END as type,
+		clu.projectClueId businessId,
+		clu.projectClueId projectClueId,
+		'' as isReferralOk,
+		'' as wqtRefereeTime,
+		'' as wqtRefereeName,
+		'' as salesTheLatestFollowDate,
+		'' as isEditOk,
+		clu.Contacts contacts,
+		clu.CustomerMobile customerMobile,
+		#{mapType} as mapType,
+		#{dataRange} as dataRange,
+
+		clu.CustomerMobile as contactWay,
+		clu.CustomerAddress as companyAddress,
+		bin.DetailedAddress as detailAddress,
+		bin.BelongIndustriseDesc as industryCategory,
+		bin.BelongIndustriseTwoDesc as secondaryCategory,
+		clu.MainProducts as mainProduct,
+		clu.ProjectName as intentionProject,
+		clu.ReportCreateTime as entryTime,
+		clu.ReportUserName as entryPerson,
+		CASE
+		WHEN clu.ReportUserRole = '1' THEN '项目招商专员'
+		WHEN clu.ReportUserRole = '2' THEN '区域招商专员'
+		WHEN clu.ReportUserRole = '3' THEN '全民经纪人'
+		ELSE ''
+		END as entryPersonIdentity,
+		CASE WHEN clu.IsPark = 1 THEN '是' ELSE '否' END as isPark,
+		clu.ParkAddress as parkAddress,
+		clu.ParkFloor as parkFloors,
+		clu.ParkName as parkName,
+		(case clu.ClueStatus when 0 then '新增' when 11 then '分配' when 13 then '报备失败' else '' end) clueStatus,
+		clu.projectId,
+		tc.customerType,
+
+		crrd.reason,
+		clu.Label label,
+		clu.Level level,
+		clu.TokerTheLatestFollowDate tokerTheLatestFollowDate,
+		clu.DisTime disTime,
+		clu.SalesFollowExpireDate salesFollowExpireDate,
+		clu.salesAttributionId
+
+		FROM b_project_clues clu
+		LEFT JOIN b_information bin ON clu.ProjectClueId = bin.ProjectClueId
+		LEFT JOIN b_task_customer tc ON clu.projectClueId = tc.customerId
+		LEFT JOIN b_task bt ON tc.taskId = bt.id
+		left join b_customer_repeat_report_detail crrd on clu.ProjectClueId=crrd.ProjectClueId
+		WHERE clu.Latitude IS NOT NULL AND clu.Longitude IS NOT NULL AND clu.ClueStatus IN (0,11,13)
+		and  ifnull(clu.SourceMode,'')!='招商地图导入-历史数据'
+		<if test="areaList!=null and areaList.size()>0">
+			AND (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			AND clu.projectId IN (${projectList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			AND (
+				clu.ReportUserID IN (
+				<foreach collection="userIds" item="item" separator=",">
+					#{item}
+				</foreach>
+				) or
+				clu.CreateUserId IN (
+				<foreach collection="userIds" item="item" separator=",">
+					#{item}
+				</foreach>
+				) or
+				clu.salesAttributionId IN (
+				<foreach collection="userIds" item="item" separator=",">
+					#{item}
+				</foreach>
+				)
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			AND clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			AND bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			AND clu.ReportCreateTime BETWEEN #{startTime} AND #{endTime}
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName  LIKE concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile  = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.SalesAttributionName  LIKE concat('%',#{salesAttributionName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND clu.Label  LIKE concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.SalesAttributionTeamId  IN
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			AND clu.SalesAttributionTeamId NOT IN
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<!-- 只在taskName不为空时添加模糊匹配条件 -->
+		<if test="taskName != null and taskName != ''">
+			AND bt.taskName LIKE concat('%', #{taskName}, '%')
+		</if>
+		<if test="taskId != null and taskId != ''">
+			AND clu.projectClueid IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId = #{taskId}
+			)
+		</if>
+	</select>
+
+	<select id="getCluesKhdtHis" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		SELECT
+		clu.SourceMode  sourceMode,
+		clu.CustomerName customerName,
+		clu.Longitude longitude,
+		clu.Latitude latitude,
+		CASE
+		WHEN fr.FollowUpDetail IS NULL THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = 'null' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '目标企业' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '已成交（在本项目）' THEN '1'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '已成交（在其他项目）' THEN '1'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '见到老板（未完成三个一）' THEN '7'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '见到老板（完成三个一）' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '未见到老板' THEN '7'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '仅来访本项目一次' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '来访本项目两次及以上' THEN '6'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '企业不存在' THEN '9'
+		ELSE '6'
+		END as type,
+		clu.projectClueId businessId,
+		clu.projectClueId projectClueId,
+		'' as isReferralOk,
+		'' as wqtRefereeTime,
+		'' as wqtRefereeName,
+		'' as salesTheLatestFollowDate,
+		'' as isEditOk,
+		clu.Contacts contacts,
+		clu.CustomerMobile customerMobile,
+		#{mapType} as mapType,
+		#{dataRange} as dataRange,
+		clu.CustomerMobile as contactWay,
+		clu.CustomerAddress as companyAddress,
+		"" as detailAddress,
+		"" as industryCategory,
+		"" as secondaryCategory,
+		clu.MainProducts as mainProduct,
+		clu.ProjectName as intentionProject,
+		clu.ReportCreateTime as entryTime,
+		clu.ReportUserName as entryPerson,
+		CASE
+		WHEN clu.ReportUserRole = '1' THEN '项目招商专员'
+		WHEN clu.ReportUserRole = '2' THEN '区域招商专员'
+		WHEN clu.ReportUserRole = '3' THEN '全民经纪人'
+		ELSE ''
+		END as entryPersonIdentity,
+		CASE WHEN clu.IsPark = 1 THEN '是' ELSE '否' END as isPark,
+		clu.ParkAddress as parkAddress,
+		clu.ParkFloor as parkFloors,
+		clu.ParkName as parkName,
+		""  customerType,
+		(case clu.ClueStatus when 0 then '新增' when 11 then '分配' when 13 then '报备失败' else '' end) clueStatus,
+		clu.projectId,
+		"" as reason,
+		clu.Label label,
+		clu.Level level,
+		clu.TokerTheLatestFollowDate tokerTheLatestFollowDate,
+		clu.DisTime disTime,
+		clu.SalesFollowExpireDate salesFollowExpireDate,
+		clu.salesAttributionId
+		FROM b_project_clues clu
+		LEFT JOIN b_followup_record fr
+		ON clu.ProjectClueId = fr.ProjectClueId  AND fr.FollowUpWay = '导入历史数据'
+		WHERE clu.Latitude IS NOT NULL AND clu.Longitude IS NOT NULL AND clu.ClueStatus IN (0,11,13) and  clu.SourceMode='招商地图导入-历史数据'
+		<if test="areaList!=null and areaList.size()>0">
+			AND (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			AND clu.projectId IN (${projectList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0 and projPermissList==''">
+			AND (
+			clu.ReportUserID IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.CreateUserId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)	or
+				clu.salesAttributionId IN (
+				<foreach collection="userIds" item="item" separator=",">
+					#{item}
+				</foreach>
+				)
+			)
+		</if>
+		<if test="projPermissList != null and projPermissList != '' and (userIds == null or userIds.size() == 0)">
+			and clu.projectId in  (${projPermissList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0 and projPermissList != null and projPermissList != ''">
+			AND (
+			(
+			clu.ReportUserID IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.CreateUserId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.salesAttributionId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+			) OR clu.projectId in  (${projPermissList})
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			AND clu.ParkName = #{parkName}
+		</if>
+		<!--		<if test="belongIndustrise!=null and belongIndustrise!=''">-->
+		<!--			AND bin.BelongIndustriseTwoDesc = #{belongIndustrise}-->
+		<!--		</if>-->
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			AND clu.ReportCreateTime BETWEEN #{startTime} AND #{endTime}
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName  LIKE concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile  = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.SalesAttributionName  LIKE concat('%',#{salesAttributionName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND clu.Label  LIKE concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.SalesAttributionTeamId  IN
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			AND clu.SalesAttributionTeamId NOT IN
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND bt.taskName LIKE concat('%', #{taskName}, '%')
+		</if>
+		<if test="taskId != null and taskId != ''">
+			AND clu.projectClueid IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId = #{taskId}
+			)
+		</if>
+	</select>
+
+	<select id="getCluesTkdtHis" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		SELECT
+		clu.SourceMode  sourceMode,
+		clu.CustomerName customerName,
+		clu.Longitude longitude,
+		clu.Latitude latitude,
+		CASE
+		WHEN fr.FollowUpDetail IS NULL THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = 'null' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '目标企业' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '已成交（在本项目）' THEN '1'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '已成交（在其他项目）' THEN '2'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '见到老板（未完成三个一）' THEN '3'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '见到老板（完成三个一）' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '未见到老板' THEN '5'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '仅来访本项目一次' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '来访本项目两次及以上' THEN '8'
+		WHEN SUBSTRING_INDEX(fr.FollowUpDetail, '-', -1) = '企业不存在' THEN '9'
+		ELSE '8'
+		END as type,
+		clu.projectClueId businessId,
+		clu.projectClueId projectClueId,
+		'' as isReferralOk,
+		'' as wqtRefereeTime,
+		'' as wqtRefereeName,
+		'' as salesTheLatestFollowDate,
+		'' as isEditOk,
+		clu.Contacts contacts,
+		clu.CustomerMobile customerMobile,
+		#{mapType} as mapType,
+		#{dataRange} as dataRange,
+		clu.CustomerMobile as contactWay,
+		clu.CustomerAddress as companyAddress,
+		"" as detailAddress,
+		"" as industryCategory,
+		"" as secondaryCategory,
+		clu.MainProducts as mainProduct,
+		clu.ProjectName as intentionProject,
+		clu.ReportCreateTime as entryTime,
+		clu.ReportUserName as entryPerson,
+		CASE
+		WHEN clu.ReportUserRole = '1' THEN '项目招商专员'
+		WHEN clu.ReportUserRole = '2' THEN '区域招商专员'
+		WHEN clu.ReportUserRole = '3' THEN '全民经纪人'
+		ELSE ''
+		END as entryPersonIdentity,
+		CASE WHEN clu.IsPark = 1 THEN '是' ELSE '否' END as isPark,
+		clu.ParkAddress as parkAddress,
+		clu.ParkFloor as parkFloors,
+		clu.ParkName as parkName,
+		""  customerType,
+		(case clu.ClueStatus when 0 then '新增' when 11 then '分配' when 13 then '报备失败' else '' end) clueStatus,
+		clu.projectId,
+		"" as reason,
+		clu.Label label,
+		clu.Level level,
+		clu.TokerTheLatestFollowDate tokerTheLatestFollowDate,
+		clu.DisTime disTime,
+		clu.SalesFollowExpireDate salesFollowExpireDate,
+		clu.salesAttributionId
+		FROM b_project_clues clu
+		LEFT JOIN b_followup_record fr
+		ON clu.ProjectClueId = fr.ProjectClueId  AND fr.FollowUpWay = '导入历史数据'
+		WHERE clu.Latitude IS NOT NULL AND clu.Longitude IS NOT NULL AND clu.ClueStatus IN (0,11,13) and  clu.SourceMode='招商地图导入-历史数据'
+		<if test="areaList!=null and areaList.size()>0">
+			AND (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			AND clu.projectId IN (${projectList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0 and projPermissList==''">
+			AND (
+			clu.ReportUserID IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.CreateUserId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.salesAttributionId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+			)
+		</if>
+		<if test="projPermissList != null and projPermissList != '' and (userIds == null or userIds.size() == 0)">
+			and clu.projectid in  (${projPermissList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0 and projPermissList != null and projPermissList != ''">
+			AND (
+			(
+			clu.ReportUserID IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.CreateUserId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			) or
+			clu.salesAttributionId IN (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+			) OR clu.projectid in  (${projPermissList})
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			AND clu.ParkName = #{parkName}
+		</if>
+<!--		<if test="belongIndustrise!=null and belongIndustrise!=''">-->
+<!--			AND bin.BelongIndustriseTwoDesc = #{belongIndustrise}-->
+<!--		</if>-->
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			AND clu.ReportCreateTime BETWEEN #{startTime} AND #{endTime}
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName  LIKE concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile  = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.SalesAttributionName  LIKE concat('%',#{salesAttributionName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND clu.Label  LIKE concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.SalesAttributionTeamId  IN
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			AND clu.SalesAttributionTeamId NOT IN
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND clu.projectClueid IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId IN (SELECT id FROM b_task bt WHERE taskName LIKE concat('%',#{taskName},'%'))
+			)
+		</if>
+		<if test="taskId != null and taskId != ''">
+			AND clu.projectClueid IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId = #{taskId}
+			)
+		</if>
+<!--		<if test='isTaskCreate != null and isTaskCreate != "" and isTaskCreate == "1"'>-->
+<!--			AND clu.projectClueid not IN (-->
+<!--			<![CDATA[-->
+<!--				SELECT customerId FROM b_task_customer-->
+<!--				WHERE taskId IN (SELECT id FROM b_task t  where t.isDel = 0 AND NOW() <= t.endTime AND IFNULL(t.status, 99) != 4)-->
+<!--			]]>-->
+<!--			)-->
+<!--		</if>-->
+	</select>
+
+	<select id="getPublicPool" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		select
+		bcp.id poolId,
+		bcp.CustomerName customerName,
+		clu.Longitude longitude,
+		clu.Latitude latitude,
+		'10' type,
+		clu.OpportunityClueId businessId,
+		clu.CustomerMobile customerMobile,
+		bcp.PoolType poolType,
+		#{mapType} as mapType,
+		#{dataRange} as dataRange,
+
+		clu.CustomerMobile as contactWay,
+		clu.CustomerAddress as companyAddress,
+		bin.DetailedAddress as detailAddress,
+		bin.BelongIndustriseDesc as industryCategory,
+		bin.BelongIndustriseTwoDesc as secondaryCategory,
+		clu.MainProducts as mainProduct,
+		clu.ProjectName as intentionProject,
+		clu.ReportCreateTime as entryTime,
+		clu.ReportUserName as entryPerson,
+		CASE
+		WHEN clu.ReportUserRole = '1' THEN '项目招商专员'
+		WHEN clu.ReportUserRole = '2' THEN '区域招商专员'
+		WHEN clu.ReportUserRole = '3' THEN '全民经纪人'
+		ELSE ''
+		END as entryPersonIdentity,
+		CASE WHEN clu.IsPark = 1 THEN '是' ELSE '否' END as isPark,
+		clu.ParkAddress as parkAddress,
+		clu.ParkFloor as parkFloors,
+		clu.ParkName as parkName,
+		clu.SourceMode sourceMode,
+		clu.Label as label
+		from
+		b_customerpublicpool bcp
+		left join b_project_opportunity clu on bcp.OpportunityClueId = clu.OpportunityClueId
+		LEFT JOIN b_information bin on clu.ProjectClueId = bin.ProjectClueId
+		where  1 = 1
+		AND bcp.is_del = 0
+		and clu.Latitude is not null and clu.Longitude is not null
+		AND clu.ClueStatus in ('0','9','10')
+		<if test="clueStatus != null and clueStatus != ''">
+			<if test='clueStatus == "1"'>
+				AND exists (select 1 from b_followup_record a where FollowUpWay = '报备' and a.OpportunityClueId = clu.OpportunityClueId)
+				AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('2','3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+			<if test='clueStatus == "2"'>
+				AND exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+			<if test='clueStatus == "3"'>
+				AND exists ( select 1 from b_followup_record a where IsThreeOnesStatus =1 and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				and not exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+			<if test='clueStatus == "4"'>
+				AND exists ( select 1 from b_followup_record a where FollowUpWay in ('2') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+			<if test='clueStatus == "8"'>
+				AND exists (select * from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+		</if>
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			and clu.projectId in  (${projectList})
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND clu.TaskId in (select id from b_task bt where taskName like concat('%',#{taskName},'%'))
+		</if>
+		<!--<if test="userIds!=null and userIds.size()>0">
+			and clu.ReportUserID in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>-->
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName  like concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile  = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.SalesAttributionName  like concat('%',#{salesAttributionName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND clu.Label  like concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.SalesAttributionTeamId  in
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			and clu.SalesAttributionTeamId not in
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="poolType != null and poolType != ''">
+			AND bcp.PoolType  = #{poolType}
+		</if>
+<!--		<if test='isTaskCreate != null and isTaskCreate != "" and isTaskCreate == "1"'>-->
+<!--			AND clu.OpportunityClueId not IN (-->
+<!--			<![CDATA[-->
+<!--				SELECT customerId FROM b_task_customer-->
+<!--				WHERE taskId IN (SELECT id FROM b_task t  where t.isDel = 0 AND NOW() <= t.endTime AND IFNULL(t.status, 99) != 4)-->
+<!--			]]>-->
+<!--			)-->
+<!--		</if>-->
+	</select>
+
+	<select id="getPublicPoolPage" resultType="cn.visolink.system.custMap.bo.ZsMapResBO">
+		select
+		clu.SourceMode AS sourceMode,
+		bcp.id poolId,
+		IF(LENGTH(TRIM(IFNULL(clu.diy_hide_customer_name, ''))) = 0, CONCAT(LEFT(clu.CustomerName, 1), '**'), clu.diy_hide_customer_name) AS customerName,
+		bcp.CustomerName AS oldCustomerName,
+		clu.Longitude longitude,
+		clu.Latitude latitude,
+		'10' type,
+		clu.OpportunityClueId businessId,
+		clu.ProjectClueId projectClueId,
+		bcp.PoolType poolType,
+		clu.IsReferralOk isReferralOk,
+		clu.wqt_referee_name wqtRefereeName,
+		clu.wqt_referee_time wqtRefereeTime,
+		clu.SalesTheLatestFollowDate salesTheLatestFollowDate,
+		(select count(1) from b_cust_referral where OpportunityClueId = clu.OpportunityClueId and status  = 1) isEditOk,
+		clu.Contacts contacts,
+		CONCAT(
+		LEFT ( clu.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( clu.CustomerMobile, 4 )) customerMobile,
+		clu.CustomerMobile oldCustomerMobile,
+		clu.CustomerMobile as contactWay,
+		clu.CustomerAddress as companyAddress,
+		bin.DetailedAddress as detailAddress,
+		bin.BelongIndustriseDesc as industryCategory,
+		bin.BelongIndustriseTwoDesc as secondaryCategory,
+		clu.MainProducts as mainProduct,
+		clu.ProjectName as intentionProject,
+		clu.ReportCreateTime as entryTime,
+		clu.ReportUserName as entryPerson,
+		CASE
+		WHEN clu.ReportUserRole = '1' THEN '项目招商专员'
+		WHEN clu.ReportUserRole = '2' THEN '区域招商专员'
+		WHEN clu.ReportUserRole = '3' THEN '全民经纪人'
+		ELSE ''
+		END as entryPersonIdentity,
+		CASE WHEN clu.IsPark = 1 THEN '是' ELSE '否' END as isPark,
+		clu.ParkAddress as parkAddress,
+		clu.ParkFloor as parkFloors,
+		clu.ParkName as parkName,
+		clu.ClueStatus,
+		(
+		CASE
+		WHEN clu.ClueStatus = 0 THEN
+		'走访'
+		WHEN clu.ClueStatus = 9 THEN
+		'丢失'
+		WHEN clu.ClueStatus = 10 THEN
+		'作废'
+		ELSE
+		'作废'
+		END
+		) clueStatusCh,
+		(
+		CASE
+		WHEN clu.IsTaoGuest = 1 THEN
+		'是'
+		ELSE
+		'否'
+		END
+		) isTaoGuest,
+		clu.projectId,
+		bin.MainRawMaterials AS mainRawMaterials,
+		bin.PeopleNum AS peopleNum,
+		bin.ExistingPlantArea AS existingPlantArea,
+		bin.AnnualOutputValue AS annualOutputValue,
+		bin.TaxAmountYear AS taxAmountYear,
+		clu.PlantTypeDesc AS plantTypeDesc,
+		clu.ReportTeamName AS reportTeamName,
+		clu.TheFirstVisitDate AS theFirstVisitDate,
+		clu.VisitDate AS visitDate,
+		clu.IsThreeOnes AS isThreeOnes,
+		bin.IntentionTypeDesc AS intentionTypeDesc,
+		bin.IntentionalAreaDesc AS intentionalAreaDesc,
+		bin.AcceptPriceDesc AS acceptPriceDesc,
+		bin.IntentionalFloorDesc AS intentionalFloorDesc,
+		clu.CustomerLevel AS customerLevel,
+		DATEDIFF(clu.SalesFollowExpireDate, NOW()) AS disTime,
+		clu.SalesFollowExpireDate AS salesFollowExpireDate,
+		clu.Label as label,
+		clu.SalesAttributionTeamId as salesAttributionTeamId,
+		clu.SalesAttributionTeamName as salesAttributionTeamName,
+		clu.SalesAttributionName as salesAttributionName,
+		clu.SalesAttributionTime as salesAttributionTime,
+		if(clu.SalesAttributionId=#{UserId},1,0) isSelf
+		from
+		b_customerpublicpool bcp
+		left join b_project_opportunity clu on bcp.OpportunityClueId = clu.OpportunityClueId
+		LEFT JOIN b_information bin on clu.ProjectClueId = bin.ProjectClueId
+		where  1 = 1
+		AND bcp.is_del = 0
+		and clu.Latitude is not null and clu.Longitude is not null
+		AND clu.ClueStatus in ('0','9','10')
+		<if test="clueStatus != null and clueStatus != ''">
+			<if test='clueStatus == "1"'>
+				AND exists (select 1 from b_followup_record a where FollowUpWay = '报备' and a.OpportunityClueId = clu.OpportunityClueId)
+				AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('2','3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+			<if test='clueStatus == "2"'>
+				AND exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+			<if test='clueStatus == "3"'>
+				AND exists ( select 1 from b_followup_record a where IsThreeOnesStatus =1 and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				and not exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+			<if test='clueStatus == "4"'>
+				AND exists ( select 1 from b_followup_record a where FollowUpWay in ('2') and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = clu.OpportunityClueId and a.Status = 2)
+				and not exists (select 1 from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+			<if test='clueStatus == "8"'>
+				AND exists (select * from b_opportunity_trade where OpportunityClueId = clu.OpportunityClueId)
+			</if>
+		</if>
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clu.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != '' and (taskId == null || taskId =='')">
+			and clu.projectId in  (${projectList})
+		</if>
+<!--		<if test="taskName != null and taskName != ''">-->
+<!--			AND clu.TaskId in (select id from b_task bt where taskName like concat('%',#{taskName},'%'))-->
+<!--		</if>-->
+		<!--<if test="userIds!=null and userIds.size()>0">
+			and clu.ReportUserID in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>-->
+		<if test="parkName!=null and parkName!=''">
+			and clu.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and bin.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clu.ReportCreateTime between #{startTime} and DATE_ADD(#{endTime},INTERVAL 1 DAY)
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clu.CustomerName  like concat('%',#{customerName},'%')
+		</if>
+		<if test="customerMobile != null and customerMobile != ''">
+			AND clu.CustomerMobile  = #{customerMobile}
+		</if>
+		<if test="salesAttributionName != null and salesAttributionName != ''">
+			AND clu.SalesAttributionName  like concat('%',#{salesAttributionName},'%')
+		</if>
+		<if test="salesAttributionNameS != null and salesAttributionNameS.size() > 0">
+			AND clu.SalesAttributionName IN
+			<foreach collection="salesAttributionNameS" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+
+		</if>
+<!--		<if test="tagLabel != null and tagLabel != ''">-->
+<!--			AND clu.Label  like concat('%',#{tagLabel},'%')-->
+<!--		</if>-->
+		<if test="tagLabelS!=null and tagLabelS.size()>0">
+			AND (
+			<foreach collection="tagLabelS" item="item" separator="or">
+				clu.Label LIKE concat('%',#{item}, '%')
+			</foreach>
+			)
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clu.SalesAttributionTeamId  in
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="orgIds!=null and orgIds.size() > 0">
+			and clu.SalesAttributionTeamId not in
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="poolType != null and poolType != ''">
+			AND bcp.PoolType  = #{poolType}
+		</if>
+		<if test="taskId != null and taskId != ''">
+			AND clu.OpportunityClueId  IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId = #{taskId}
+			)
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND clu.OpportunityClueId IN (
+			SELECT customerId FROM b_task_customer
+			WHERE taskId IN (SELECT id FROM b_task bt WHERE taskName LIKE concat('%',#{taskName},'%'))
+			)
+		</if>
+		<if test="custNature != null and custNature != ''">
+			<if test='custNature == "1"'>
+				AND clu.ProjectClueId IN (
+				SELECT customerId FROM b_task_customer where ifnull(customerType,'')=3
+				)
+			</if>
+			<if test='custNature == "2"'>
+				AND clu.ProjectClueId IN (
+				SELECT customerId FROM b_task_customer where ifnull(customerType,'')=1
+				)
+			</if>
+		</if>
+		<if test="isIntentionStatus != null and isIntentionStatus != ''">
+			AND clu.IsIntentionStatus = #{isIntentionStatus}
+		</if>
+		LIMIT #{pageSize} OFFSET #{pageIndex}
+	</select>
+	<select id="getCluesCustomer"
+			resultType="cn.visolink.system.channel.model.vo.ProjectCluesNew">
+		SELECT
+		if(clue.location_error is null,'6','7') type,
+		clue.SourceMode as sourceMode,
+		clue.ProjectClueId projectClueId,
+		if(length(trim(clue.diy_hide_customer_name)) = 0 or clue.diy_hide_customer_name is null,concat(left(clue.CustomerName,1),'**'),clue.diy_hide_customer_name) customerName,
+		clue.CustomerName oldCustomerName,
+		CONCAT(
+		LEFT ( clue.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( clue.CustomerMobile, 4 )) customerMobile,
+		clue.CustomerMobile oldCustomerMobile,
+		clue.ProjectName projectName,
+		clue.ReportCreateTime reportCreateTime,
+		clue.ReportUserName reportUserName,
+		(
+		CASE
+		WHEN clue.ReportUserRole = '1' THEN
+		'项目招商专员'
+		WHEN clue.ReportUserRole = '2' THEN
+		'区域招商专员'
+		WHEN clue.ReportUserRole = '3' THEN
+		'全民经纪人'
+		ELSE
+		''
+		END
+		) reportUserRole,
+		(case clue.IsPark when 1 then '是' when 0 then '否' else '' end  ) isPark,
+		clue.ParkAddress parkAddress,
+		clue.ParkFloor parkFloor,
+		clue.ParkName parkName,
+		clue.CustomerAddress customerAddress,
+		inf.DetailedAddress detailedAddress,
+		inf.BelongIndustriseDesc belongIndustriseDesc,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		inf.IndustryDirectoryChildDesc industryDirectoryChildDesc,
+		clue.MainProducts businessProducts,
+		clue.Longitude longitude,
+		clue.Latitude latitude
+		FROM
+		b_project_clues clue
+		left join b_information inf ON clue.ProjectClueId = inf.ProjectClueId
+		WHERE clue.Latitude is not null and clue.Longitude is not null
+		<if test="clueStatus != null and clueStatus != ''">
+			<if test='clueStatus == "6"'>
+				AND clue.location_error is null
+			</if>
+			<if test='clueStatus == "7"'>
+				AND clue.location_error is not null
+			</if>
+		</if>
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				clue.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			and clue.projectId in  (${projectList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and clue.ReportUserID in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and clue.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and inf.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and clue.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND clue.CustomerName  like concat('%',#{customerName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND clue.Label  like concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND clue.SalesAttributionTeamId  in
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+	<select id="getOpportunityCustomer"
+			resultType="cn.visolink.system.channel.model.vo.ProjectCluesNew">
+		SELECT
+		(case when exists (select 1 from b_followup_record a where FollowUpWay = '报备' and a.OpportunityClueId = opp.OpportunityClueId)
+		AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('2','3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+		and not exists (select 1 from b_opportunity_trade where OpportunityClueId = opp.OpportunityClueId)
+		then 1
+		when  exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+		AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = opp.OpportunityClueId)
+		then 2
+		when exists ( select 1 from b_followup_record a where IsThreeOnesStatus =1 and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+		and not exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+		AND not exists (select 1 from b_opportunity_trade where OpportunityClueId = opp.OpportunityClueId)
+		then 3
+		when exists ( select 1 from b_followup_record a where FollowUpWay in ('2') and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+		AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+		and not exists (select 1 from b_opportunity_trade where OpportunityClueId = opp.OpportunityClueId)
+		then 4
+		when exists (select 1 from b_opportunity_trade where OpportunityClueId = opp.OpportunityClueId)
+		then 8
+		else 0 end) type,
+		opp.OpportunityClueId opportunityClueId,
+		opp.ProjectClueId projectClueId,
+		opp.projectId projectId,
+		opp.ProjectName projectName,
+		if(length(trim(opp.diy_hide_customer_name)) = 0 or opp.diy_hide_customer_name is null,concat(left(opp.CustomerName,1),'**'),opp.diy_hide_customer_name) customerName,
+		opp.CustomerName oldCustomerName,
+		opp.SourceMode sourceMode,
+		inf.BelongIndustriseDesc belongIndustriseDesc,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.Contacts contacts,
+		CONCAT(
+		LEFT ( opp.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( opp.CustomerMobile, 4 )) customerMobile,
+		opp.CustomerMobile oldCustomerMobile,
+
+		opp.ReportCreateTime reportCreateTime,
+		opp.ReportUserName reportUserName,
+		opp.ReportTeamName reportTeamName,
+		(
+		CASE
+		WHEN opp.ReportUserRole = '1' THEN
+		'项目招商专员'
+		WHEN opp.ReportUserRole = '2' THEN
+		'区域招商专员'
+		WHEN opp.ReportUserRole = '3' THEN
+		'全民经纪人'
+		ELSE
+		''
+		END
+		) reportUserRole,
+		opp.TokerTheLatestFollowDate tokerTheLatestFollowDate,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesAttributionTime salesAttributionTime,
+		opp.SalesFollowExpireDate salesFollowExpireDate,
+		opp.TheFirstVisitDate theFirstVisitDate,
+		opp.VisitDate visitDate,
+		opp.CustomerLevel customerLevel,
+		opp.TradeLevel tradeLevel,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesTheLatestFollowDate salesTheLatestFollowDate,
+		(
+		CASE
+		WHEN opp.IsTaoGuest = 1 THEN
+		'是'
+		ELSE
+		'否'
+		END
+		) isTaoGuest,
+		(
+		CASE
+		WHEN opp.ClueStatus = 1 THEN
+		'报备'
+		WHEN opp.ClueStatus = 2 THEN
+		'到访'
+		WHEN opp.ClueStatus = 8 THEN
+		'签约'
+		ELSE
+		'作废'
+		END
+		) clueStatus,
+		(case opp.IsPark when 1 then '是' when 0 then '否' else '' end  ) isPark,
+		opp.ParkName parkName,
+		opp.ParkAddress parkAddress,
+		opp.ParkFloor parkFloor,
+		opp.CustomerAddress customerAddress,
+		inf.DetailedAddress detailedAddress,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.MainProducts businessProducts,
+		inf.MainRawMaterials mainRawMaterials,
+		inf.PeopleNum peopleNum,
+		inf.ExistingPlantArea existingPlantArea,
+		inf.AnnualOutputValue annualOutputValue,
+		inf.TaxAmountYear taxAmountYear,
+		inf.WorkShopTypeDesc workShopTypeDesc,
+		inf.IntentionTypeDesc intentionTypeDesc,
+		inf.IntentionalAreaDesc intentionalAreaDesc,
+		inf.IntentionalPrice acceptPriceDesc,
+		inf.IntentionalFloorDesc intentionalFloorDesc,
+		opp.Longitude longitude,
+		opp.Latitude latitude
+		FROM
+		b_project_opportunity opp
+		LEFT JOIN b_information inf ON opp.OpportunityClueId = inf.OpportunityClueId
+		where opp.Latitude is not null and opp.Longitude is not null
+		AND opp.ClueStatus not in ('0','9','10')
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				opp.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			and opp.projectId in  (${projectList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and opp.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and opp.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and inf.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and opp.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND opp.TaskId in (select id from b_task bt where taskName like concat('%',#{taskName},'%'))
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND opp.CustomerName  like concat('%',#{customerName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND opp.Label  like concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND opp.SalesAttributionTeamId  in
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+	<select id="getPublicCustomer"
+			resultType="cn.visolink.system.channel.model.vo.ProjectCluesNew">
+		SELECT
+		opp.OpportunityClueId opportunityClueId,
+		opp.ProjectClueId projectClueId,
+		opp.projectId projectId,
+		opp.ProjectName projectName,
+		if(length(trim(opp.diy_hide_customer_name)) = 0 or opp.diy_hide_customer_name is null,concat(left(opp.CustomerName,1),'**'),opp.diy_hide_customer_name) customerName,
+		opp.CustomerName oldCustomerName,
+		opp.SourceMode sourceMode,
+		inf.BelongIndustriseDesc belongIndustriseDesc,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.Contacts contacts,
+		CONCAT(
+		LEFT ( opp.CustomerMobile, 3 ),
+		'****',
+		RIGHT ( opp.CustomerMobile, 4 )) customerMobile,
+		opp.CustomerMobile oldCustomerMobile,
+
+		opp.ReportCreateTime reportCreateTime,
+		opp.ReportUserName reportUserName,
+		opp.ReportTeamName reportTeamName,
+		(
+		CASE
+		WHEN opp.ReportUserRole = '1' THEN
+		'项目招商专员'
+		WHEN opp.ReportUserRole = '2' THEN
+		'区域招商专员'
+		WHEN opp.ReportUserRole = '3' THEN
+		'全民经纪人'
+		ELSE
+		''
+		END
+		) reportUserRole,
+		opp.TokerTheLatestFollowDate tokerTheLatestFollowDate,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesAttributionTime salesAttributionTime,
+		opp.SalesFollowExpireDate salesFollowExpireDate,
+		opp.TheFirstVisitDate theFirstVisitDate,
+		opp.VisitDate visitDate,
+		opp.CustomerLevel customerLevel,
+		opp.TradeLevel tradeLevel,
+		opp.SalesAttributionName salesAttributionName,
+		opp.SalesTheLatestFollowDate salesTheLatestFollowDate,
+		(
+		CASE
+		WHEN opp.IsTaoGuest = 1 THEN
+		'是'
+		ELSE
+		'否'
+		END
+		) isTaoGuest,
+		(
+		CASE
+		WHEN opp.ClueStatus = 1 THEN
+		'报备'
+		WHEN opp.ClueStatus = 2 THEN
+		'到访'
+		WHEN opp.ClueStatus = 8 THEN
+		'签约'
+		ELSE
+		'作废'
+		END
+		) clueStatus,
+		(case opp.IsPark when 1 then '是' when 0 then '否' else '' end  ) isPark,
+		opp.ParkName parkName,
+		opp.ParkAddress parkAddress,
+		opp.ParkFloor parkFloor,
+		opp.CustomerAddress customerAddress,
+		inf.DetailedAddress detailedAddress,
+		inf.BelongIndustriseTwoDesc belongIndustriseTwoDesc,
+		opp.MainProducts businessProducts,
+		inf.MainRawMaterials mainRawMaterials,
+		inf.PeopleNum peopleNum,
+		inf.ExistingPlantArea existingPlantArea,
+		inf.AnnualOutputValue annualOutputValue,
+		inf.TaxAmountYear taxAmountYear,
+		inf.WorkShopTypeDesc workShopTypeDesc,
+		inf.IntentionTypeDesc intentionTypeDesc,
+		inf.IntentionalAreaDesc intentionalAreaDesc,
+		inf.IntentionalPrice acceptPriceDesc,
+		inf.IntentionalFloorDesc intentionalFloorDesc,
+		opp.Longitude longitude,
+		opp.Latitude latitude
+		FROM
+		b_customerpublicpool bcp
+		left join b_project_opportunity opp on bcp.OpportunityClueId = opp.OpportunityClueId
+		LEFT JOIN b_information inf ON opp.OpportunityClueId = inf.OpportunityClueId
+		where opp.Latitude is not null and opp.Longitude is not null and bcp.is_del = 0
+		AND opp.ClueStatus in ('0','9','10')
+		<if test="clueStatus != null and clueStatus != ''">
+			<if test='clueStatus == "1"'>
+				AND exists (select 1 from b_followup_record a where FollowUpWay = '报备' and a.OpportunityClueId = opp.OpportunityClueId)
+				AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('2','3','4') or IsThreeOnesStatus =1) and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+			</if>
+			<if test='clueStatus == "2"'>
+				AND exists ( select 1 from b_followup_record a where FollowUpWay in ('3','4') and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+				AND not exists ( select 1 from b_followup_record a where (FollowUpWay in ('2') or IsThreeOnesStatus =1) and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+			</if>
+			<if test='clueStatus == "3"'>
+				AND exists ( select 1 from b_followup_record a where IsThreeOnesStatus =1 and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+				and not exists ( select 1 from b_followup_record a where FollowUpWay in ('2') and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+			</if>
+			<if test='clueStatus == "4"'>
+				AND exists ( select 1 from b_followup_record a where FollowUpWay in ('2') and a.OpportunityClueId = opp.OpportunityClueId and a.Status = 2)
+			</if>
+			<if test='clueStatus == "8"'>
+				AND exists (select * from b_opportunity_trade where OpportunityClueId = opp.OpportunityClueId)
+			</if>
+		</if>
+		<if test="areaList!=null and areaList.size()>0">
+			and (
+			<foreach collection="areaList" item="item" separator="or">
+				opp.CustomerAddress like concat('%',#{item},'%')
+			</foreach>
+			)
+		</if>
+		<if test="projectList!=null and projectList != ''">
+			and opp.projectId in  (${projectList})
+		</if>
+		<if test="userIds!=null and userIds.size()>0">
+			and opp.SalesAttributionId in (
+			<foreach collection="userIds" item="item" separator=",">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="parkName!=null and parkName!=''">
+			and opp.ParkName = #{parkName}
+		</if>
+		<if test="belongIndustrise!=null and belongIndustrise!=''">
+			and inf.BelongIndustriseTwoDesc = #{belongIndustrise}
+		</if>
+		<if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			and opp.ReportCreateTime between #{startTime} and #{endTime}
+		</if>
+		<if test="taskName != null and taskName != ''">
+			AND opp.TaskId in (select id from b_task bt where taskName like concat('%',#{taskName},'%'))
+		</if>
+		<if test="customerName != null and customerName != ''">
+			AND opp.CustomerName  like concat('%',#{customerName},'%')
+		</if>
+		<if test="tagLabel != null and tagLabel != ''">
+			AND opp.Label  like concat('%',#{tagLabel},'%')
+		</if>
+		<if test="teamIds != null and teamIds.size() > 0">
+			AND opp.SalesAttributionTeamId  in
+			<foreach collection="teamIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<!-- 查询 flag 以 '_1' 结尾的数据 -->
+	<select id="selectFlagEndWith1" resultType="java.util.Map">
+		SELECT * FROM b_project_clues WHERE flag LIKE '%\_1'
+	</select>
+
+	<!-- 查询 flag 以 '_1' 结尾的数据 -->
+	<select id="selectFlagEndWith1AndUserId" resultType="java.util.Map">
+		SELECT * FROM b_project_clues WHERE flag LIKE '%\_1' and CreateUserId=#{userId}
+	</select>
+
+	<!-- 通过CustomerName和projectId查b_project_opportunity_cache -->
+	<select id="selectOpportunityCacheByNameAndProjectId" resultType="java.util.Map">
+		SELECT * FROM b_project_opportunity_cache WHERE CustomerName = #{customerName} AND ProjectId = #{projectId}
+	</select>
+	<!-- 通过CustomerName和projectId查b_project_clues_cache -->
+	<select id="selectCluesCacheByNameAndProjectId" resultType="java.util.Map">
+		SELECT * FROM b_project_clues_cache WHERE CustomerName = #{customerName} AND ProjectId = #{projectId}
+	</select>
+
+	<!-- 通过ProjectClueId更新b_project_clues_cache表StatusType -->
+	<update id="updateCluesCacheStatusTypeById">
+		UPDATE b_project_clues_cache
+		SET StatusType = #{statusType},UpdateTime=now()
+		WHERE ProjectClueId = #{projectClueId}
+	</update>
+
+	<!-- 通过OpportunityClueId和mapType更新b_project_opportunity_cache表StatusType -->
+	<update id="updateOpportunityCacheStatusTypeByIdAndMapType">
+		UPDATE b_project_opportunity_cache
+		SET StatusType = #{statusType},UpdateTime=now()
+		WHERE OpportunityClueId = #{opportunityClueId} AND mapType = #{mapType}
+	</update>
+	<!-- 通过ProjectClueId和mapType更新b_project_clues_cache表StatusType -->
+	<update id="updateCluesCacheStatusTypeByIdAndMapType">
+		UPDATE b_project_clues_cache
+		SET StatusType = #{statusType},UpdateTime=now()
+		WHERE ProjectClueId = #{projectClueId} AND mapType = #{mapType}
+	</update>
+
+</mapper>

@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.common.security.dao.AuthMapper">
+
+    <select id="getUserPhone" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            UserName userName,
+            Mobile mobile
+        FROM
+            b_account
+        WHERE
+            UserName = #{userName}
+           OR Mobile = #{userName} limit 1
+    </select>
+    <select id="getCSE" resultType="java.util.Map">
+        SELECT
+            A.ID,
+            A.OrgName,
+            A.PID
+        FROM
+            S_Organization A
+        WHERE
+            A.IsDel = 0
+          AND A.`Status` = 1
+          AND A.OrgName IS NOT NULL
+          AND PID is not null
+        ORDER BY
+            A.PID ASC
+    </select>
+    <select id="mGetAccountType" resultType="java.util.Map">
+        SELECT
+		  a.ID,
+		  a.`UserName`,
+		  a.`Gender`,
+		  a.`EmployeeName`,
+		  CONCAT(a.AccountType,'') AS AccountType,
+		  a.`Password`,
+		  a.`Status`,
+		  a.IsDel,
+		  r.IsAudit,
+		  r.`ID` AS AuditID
+		FROM
+		  b_account a
+		  LEFT JOIN b_proxyregister r
+		    ON r.`UserID` = a.`ID`
+		WHERE (UserName = #{UserName} or mobile = #{UserName}) and a.AccountType!=4 and a.IsDel=0
+    </select>
+
+    <select id="getIsAdmin" resultType="java.util.Map">
+        SELECT
+            jobs.`ID`,
+            scj.`JobCode`,
+            jobs.`JobName`,
+            jobs.`JobDesc`,
+            jobs.`JobPID`,
+            jobs.`CommonJobID`,
+            jobs.`JobOrgID`,
+            jobs.`AuthCompanyID`,
+            jobs.`ProductID`,
+            jobs.`Creator`,
+            jobs.`CreateTime`,
+            jobs.`Editor`,
+            jobs.`EditTime`,
+            jobs.`Status`,
+            jobs.`IsDel`
+        FROM
+            S_JobsUserRel rel
+                LEFT JOIN S_Jobs jobs ON rel.JobID = jobs.ID
+                LEFT JOIN s_commonjobs scj ON jobs.CommonJobID = scj.ID
+        WHERE
+            rel.AccountID = #{userId}
+          and rel.status = 1
+          AND jobs.IsDel = 0
+          AND scj.IsDel = 0
+          AND jobs.STATUS = 1
+          AND scj.STATUS = 1
+          AND scj.`JobCode` = '10001'
+        ORDER BY
+            jobs.`CreateTime` desc
+            LIMIT 0,1
+    </select>
+
+    <select id="mGetIdByUserName" resultType="java.lang.String">
+		select id from b_account where userName=#{UserName} where IsDel=0
+	</select>
+
+<!--
+    <select id="mLastTimeLogin" resultType="java.util.Map">
+        select log.* from s_account_login_logs log
+        left JOIN b_account ba on log.AccountID=ba.id where  ba.UserName=#{UserName}
+    </select>
+
+    <insert id="mInsertLastTimeLogin">
+		INSERT INTO s_account_login_logs(id,accountId,jobId,projectId,loginTime)
+		 VALUES (#{id},#{UserName},
+		#{jobId},#{projectId},NOW() )
+	</insert>-->
+
+
+    <select id="mGetUserInfo" resultType="java.util.Map">
+        SELECT
+        sa.id,
+        sa.username,
+        sa.password,
+        sa.AccountType,
+        sa.EmployeeCode,
+        sa.EmployeeName,
+        sa.Gender,
+        sa.Mobile,
+        sa.Address,
+        sa.UserOrgID,
+        sa.AuthCompanyID,
+        sa.ProductID,
+        sa.Creator,
+        sa.CreateTime,
+        sa.Status,
+        sa.IsDel,
+        scj.JobCode,
+        sj.id JobID
+        FROM
+        b_account sa
+        left join s_jobsuserrel jur on sa.ID = jur.AccountID
+        left join s_jobs sj on  jur.JobID = sj.ID
+        left join s_commonjobs scj on sj.CommonJobID = scj.ID
+        where 1=1
+        and (sa.UserName=#{UserName} or sa.Mobile=#{UserName}) and sa.IsDel=0 and sj.IsDel=0 and scj.IsDel=0
+        <if test="JobID != null and !''.equals(JobID.trim())">
+            and jur.JobID=#{JobID}
+        </if>
+        order by JobCode
+        LIMIT 1;
+    </select>
+    <select id="mJobsListByUserId" resultType="java.util.Map">
+SELECT
+            jobs.`ID`, scj.`JobCode`, jobs.`JobName`, jobs.`JobDesc`, jobs.`JobPID`, jobs.`CommonJobID`, jobs.`JobOrgID`,
+            jobs.`AuthCompanyID`, jobs.`ProductID`, jobs.`Creator`,
+            jobs.`CreateTime`, jobs.`Editor`, jobs.`EditTime`, jobs.`Status`, jobs.`IsDel`
+            FROM
+            S_JobsUserRel rel
+            LEFT JOIN S_Jobs jobs ON rel.JobID = jobs.ID
+            left join s_commonjobs scj on jobs.CommonJobID = scj.ID
+            WHERE
+            rel.AccountID = #{UserId}
+              and rel.status = 1
+            and jobs.IsDel=0 and scj.IsDel=0 and jobs.Status=1 and scj.Status=1 and scj.`JobCode` not in ('khds','nqgw')
+            ORDER BY rel.CurrentJob desc limit 0,1
+	</select>
+
+    <select id="mMenusListByUserIdAndJobId" resultType="java.util.Map">
+        SELECT
+            menu.`ID`, menu.`PID`, menu.`MenuName` title, menu.`Url` path, menu.MenuSysName as name,menu.`ImageUrl` icon, menu.`IsShow` isshow,
+            menu.`redirect`, menu.`component`, menu.`alwaysShow`
+                ,menu.menusType,menu.ListIndex,menu.ApiAddress
+        from s_menus menu
+        where menu.IsLast = 0 and menusType = 2 and menu.status=1 and menu.IsDel=0
+        union
+        select     menu.`ID`, menu.`PID`, menu.MenuName title, menu.Url path, menu.MenuSysName name,menu.ImageUrl icon, menu.IsShow isshow,
+                   menu.`redirect`, menu.`component`, menu.`alwaysShow`
+                ,menu.menusType,menu.ListIndex,menu.ApiAddress
+        from s_menus menu where menu.id in (
+            SELECT t.MenuID FROM (
+                                     SELECT jm.MenuID FROM v_user_menuid_job  jm
+                                     WHERE accountid = #{UserId}
+                                     UNION
+                                     SELECT jm.MenuID FROM v_user_menuid_cjob jm
+                                     WHERE accountid = #{UserId}
+                                 ) t
+        ) and menu.status=1 and menu.IsDel=0
+        union
+            -- 查询上级岗位权限
+        SELECT
+            menu.`ID`, menu.`PID`, menu.`MenuName` title, menu.`Url` path, menu.MenuSysName as name,menu.`ImageUrl` icon, menu.`IsShow` isshow,
+            menu.`redirect`, menu.`component`, menu.`alwaysShow`
+                ,menu.menusType,menu.ListIndex,menu.ApiAddress
+        from s_menus menu where menu.id in (select pid from s_menus where id in (
+            SELECT t.MenuID FROM (
+                                     SELECT jm.MenuID FROM v_user_menuid_job  jm
+                                     WHERE accountid = #{UserId}
+                                     UNION
+                                     SELECT jm.MenuID FROM v_user_menuid_cjob jm
+                                     WHERE accountid = #{UserId}
+                                 ) t) and menu.status=1 and menu.IsDel=0
+        ) order by ListIndex
+
+
+	</select>
+
+    <!--
+    SELECT
+    menu.`ID`, menu.`PID`, menu.`MenuName` title, menu.`Url` path, menu.MenuSysName as name,menu.`ImageUrl` icon, menu.`IsShow` isshow,
+     menu.`redirect`, menu.`component`, menu.`alwaysShow`
+    ,menu.menusType,menu.ListIndex
+          from s_menus menu
+             where menu.IsLast = 0 and menusType = 2 and menu.status=1 and menu.IsDel=0
+union
+select     menu.`ID`, menu.`PID`, menu.title, menu.path, menu.name,menu.icon, menu.isshow,
+     menu.`redirect`, menu.`component`, menu.`alwaysShow`
+    ,menu.menusType,menu.ListIndex
+    from v_user_mune_manage menu where menu.accountid = #{UserId} and menu.status=1 and menu.IsDel=0
+union
+ 查询上级岗位权限
+SELECT
+    menu.`ID`, menu.`PID`, menu.`MenuName` title, menu.`Url` path, menu.MenuSysName as name,menu.`ImageUrl` icon, menu.`IsShow` isshow,
+     menu.`redirect`, menu.`component`, menu.`alwaysShow`
+    ,menu.menusType,menu.ListIndex
+    from s_menus menu where menu.id in (
+    select pid from v_user_mune_manage where accountid = #{UserId} and status=1 and IsDel=0
+  )
+  order by ListIndex
+    -->
+
+
+
+    <select id="mFindByProjectIdByOrgId" resultType="java.util.Map">
+		select a.*,b.ProjectName ,b.IsPrintStatus,b.ID ProjectID from s_organization a
+        left join b_project b on a.ProjectID=b.id
+        where a.id =#{OrgId}
+        and b.IsStages=0 and a.IsDel=0 and b.IsDel=0
+	</select>
+
+    <select id="getUserOrgLevel" resultType="java.lang.String" >
+        SELECT
+            org.OrgCategory	orgLevel
+        FROM
+            s_jobsuserrel rel
+                LEFT JOIN s_jobs job ON rel.JobID = job.id
+                Left join s_organization org on org.id= job.JobOrgID
+        WHERE
+            rel.AccountID = #{userId} and rel.status = 1 and job.JobOrgID is not null and org.OrgCategory	is not null  order by org.OrgCategory asc limit 1
+
+    </select>
+
+    <select id="getJobsListByUserId" resultType="java.util.Map">
+        SELECT job.id jobId,job.JobName,concat(bp.ProjectName,'-',job.JobName) name
+        from s_jobs job LEFT JOIN s_jobsuserrel jur on jur.JobID = job.ID
+	LEFT JOIN s_organization so on so.ID= job.JobOrgID
+	LEFT JOIN b_project bp on bp.id=so.ProjectID
+	where
+	1=1
+	and bp.IsStages=0
+	and jur.AccountID=#{UserId} and job.IsDel=0 and so.IsDel=0 and bp.IsDel=0
+    </select>
+
+    <select id="userPath" parameterType="java.util.Map" resultType="java.lang.String">
+        select so.FullPath from b_account ac join s_jobsuserrel sjr on ac.ID=sjr.AccountID join s_jobs job on job.ID=sjr.JobID and job.isIdm = 0 join s_organization so on job.JobOrgID=so.ID where ac.UserName=#{UserName} and so.FullPath is not null and job.IsDel = 0 ORDER BY so.OrgCategory
+    </select>
+
+    <insert id="insertLogs" parameterType="cn.visolink.message.model.SysLog">
+        insert into s_timetaslogs(ID, TaskName, StartTime, ExecutTime, ResultStatus, Note)
+        values (UUID(), #{TaskName}, #{StartTime}, #{ExecutTime}, #{ResultStatus}, #{Note})
+    </insert>
+</mapper>

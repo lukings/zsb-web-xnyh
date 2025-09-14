@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.salesmanager.projectmouthmanager.dao.MouthManagerMapper">
+
+<!--通过具体的项目ID和对应的月份，找出对应的月度计划明细-->
+    <select id="listTwoSelect" resultType="java.util.Map" parameterType="java.util.Map">
+ SELECT
+    compiler_account_id,
+	small_card,
+	big_card,
+	come_client_quantity,
+	come_client_cost,
+	cost,
+	turnover_rate,
+	rate,
+	transaction_cost,
+	subscription_number,
+	subscription_funds,
+	sign_number_set,
+	sign_funds,
+	risk_point,
+	countermeasures,
+	core_action
+
+ FROM mm_monthly_plan_index_detail WHERE guid=#{guid}  AND months=#{months}
+    </select>
+
+	<!--查找所有的招揽客人的渠道-->
+	<select id="allChannelSelect" resultType="java.util.Map" >
+		SELECT
+  id,
+  guid,
+  sort_code,
+  matter_name,
+  action_name,
+  creator,
+  create_time,
+  is_del,
+  editor,
+  edite_time
+FROM
+mm_channel
+	</select>
+
+	<!--若某个项目的某个月份没有渠道费用明细，就先初始化该渠道并将它显示到表三-->
+<insert id="insertMouthChannelDetail">
+INSERT INTO mm_monthly_plan_index_channel_cost_detail (
+
+  guid,
+  creator,
+  create_time,
+  is_del,
+  editor,
+  edite_time,
+  months,
+  monthly_plan_id,
+  version,
+  monthly_plan_index_id,
+  compiler_account_id,
+  matter,
+  action,
+  subscription_number,
+  subscription_amount,
+  first_three_months_average_monthly_turnover,
+  come_client_quantity,
+  first_three_months_monthly_average_coming_proportion,
+  coming_proportion,
+  first_three_months_monthly_average_turnover_rate,
+  turnover_rate,
+  contract_amount,
+  contract_cost_rate,
+  right_responsibility_amount,
+  right_responsibility_cost_rate,
+  first_three_months_average_monthly_transaction_cost,
+  transaction_cost,
+  first_three_months_monthly_average_coming_cost,
+  coming_cost,
+  first_three_months_average_monthly_sets,
+  first_three_months_monthly_average_monthly_coming_amount,
+  project_id,
+  channel_id
+) 
+VALUES
+  (
+    #{guid},
+    0,
+   null,
+    0,
+    0,
+     null,
+    #{months},
+    0,
+    0,
+    0,
+    0,
+    #{matter},
+    #{action},
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    #{projectId},
+    #{channelId}
+  ) ;
+</insert>
+
+	<!--通过项目ID和月份来查找项目渠道费用等明细-->
+<select id="selectMouthChannelDetail" resultType="java.util.Map">
+	
+SELECT
+  id,
+  guid,
+  creator,
+  create_time,
+  is_del,
+  editor,
+  edite_time,
+  months,
+  monthly_plan_id,
+  version,
+  monthly_plan_index_id,
+  compiler_account_id,
+  matter,
+  action,
+  subscription_number,
+  subscription_amount,
+  first_three_months_average_monthly_turnover,
+  come_client_quantity,
+  first_three_months_monthly_average_coming_proportion,
+  coming_proportion,
+  first_three_months_monthly_average_turnover_rate,
+  turnover_rate,
+  contract_amount,
+  contract_cost_rate,
+  right_responsibility_amount,
+  right_responsibility_cost_rate,
+  first_three_months_average_monthly_transaction_cost,
+  transaction_cost,
+  first_three_months_monthly_average_coming_cost,
+  coming_cost,
+  first_three_months_average_monthly_sets,
+  first_three_months_monthly_average_monthly_coming_amount,
+  project_id,
+  channel_id
+FROM
+  mm_monthly_plan_index_channel_cost_detail
+  where
+  project_id=#{projectId} AND months=#{months}
+
+</select>
+
+
+  <!--跟新项目渠道费用等明细-->
+  <update id="updateChannelDetail">
+    UPDATE
+  mm_monthly_plan_index_channel_cost_detail
+SET
+  creator = #{creator},
+  create_time = #{createTime},
+  is_del = #{isDel},
+  editor = #{editor},
+  edite_time = #{editeTime},
+  monthly_plan_id = #{monthly_plan_id},
+  version = #{version},
+  monthly_plan_index_id = #{monthlyPlanIndexId},
+  compiler_account_id = #{compilerAccountId},
+  subscription_number = #{subscriptionNumber},
+  subscription_amount = #{subscriptionAmount},
+  first_three_months_average_monthly_turnover = #{firstThreeMonthsAverageMonthlyTurnover},
+  come_client_quantity = #{comeClientQuantity},
+  first_three_months_monthly_average_coming_proportion = #{firstThreeMonthsMonthlyAverageComingProportion},
+  coming_proportion = #{comingProportion},
+  first_three_months_monthly_average_turnover_rate = #{firstThreeMonthsMonthlyAverageTurnoverRate},
+  turnover_rate = #{turnoverRate},
+  contract_amount = #{contractAmount},
+  contract_cost_rate = #{contractCostRate},
+  right_responsibility_amount = #{rightResponsibilityAmount},
+  right_responsibility_cost_rate = #{rightResponsibilityCostRate},
+  first_three_months_average_monthly_transaction_cost = #{firstThreeMonthsAverageMonthlyTransactionCost},
+  transaction_cost = #{transactionCost},
+  first_three_months_monthly_average_coming_cost = #{firstThreeMonthsMonthlyAverageComingCost},
+  coming_cost = #{comingCost},
+  first_three_months_average_monthly_sets = #{firstThreeMonthsAverageMonthlySets},
+  first_three_months_monthly_average_monthly_coming_amount = #{firstThreeMonthsMonthlyAverageMonthlyComingAmount}
+WHERE project_id = #{projectId} AND months = #{months}
+
+  </update>
+
+
+</mapper>

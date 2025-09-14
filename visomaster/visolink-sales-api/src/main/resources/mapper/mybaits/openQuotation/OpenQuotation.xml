@@ -1,0 +1,1069 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.openQuotation.dao.OpenQuotationDao">
+    <!--查询项目下楼盘信息-->
+    <select id="getProBuild" resultType="java.util.Map" parameterType="java.lang.String">
+        select ID id,BuildBookName name from a_build_book
+        where ProjectID = #{projectId}
+          and IsShowHeadImg = 1 and `Status` = 1 and IsDel = 0 and IsPublish = 1;
+    </select>
+    <!--查询开盘活动-->
+    <select id="getOpenActivityList" resultType="cn.visolink.system.openQuotation.model.OpenActivity" parameterType="java.util.Map">
+        select op.project_name projectName,op.id,
+               op.sx_choose_room_id sxChooseRoomId,
+               op.sx_activity_name sxActivityName,
+                DATE_FORMAT(op.sx_release_time,'%Y-%m-%d %H:%i:%s') sxReleaseTime,
+               DATE_FORMAT(op.sx_activity_begintime,'%Y-%m-%d %H:%i:%s') sxActivityBegintime,
+               DATE_FORMAT(op.sx_activity_endtime,'%Y-%m-%d %H:%i:%s') sxActivityEndtime,
+                (case when op.is_online_pay = 1 then '是'
+                else '否'
+                end) isOnlinePay,
+               ba.EmployeeName creator,
+               DATE_FORMAT(op.create_time,'%Y-%m-%d %H:%i:%s') createTime,
+               ba1.EmployeeName disableor,DATE_FORMAT(op.disabletime,'%Y-%m-%d %H:%i:%s') disabletime,
+               (case when op.`status`= 0 then '已禁用'
+                     when op.act_status = 1 then '草稿'
+                     when op.act_status = 2 and op.`status` = 1 and now()&lt; op.sx_release_time then '未发布'
+                     when op.act_status = 2 and op.`status` = 1 and now()&gt;= op.sx_release_time and now()&lt; op.sx_activity_begintime then '已发布'
+                     when op.act_status = 2 and op.`status` = 1 and now()&gt;= op.sx_activity_begintime and now()&lt;op.sx_activity_endtime then '已开始'
+                     when op.act_status = 2 and op.`status` = 1 and now()&gt;= op.sx_activity_endtime then '已结束'
+                   end) actStatus
+        from x_open_activity op
+                 INNER JOIN b_account ba on ba.ID = op.creator
+                 left join b_account ba1 on ba1.ID = op.disableor
+         where op.del_status = 0
+        <if test="search!=null and search!=''">
+            and (op.sx_activity_name like concat('%',#{search},'%') or op.sx_choose_room_id like concat('%',#{search},'%') )
+        </if>
+        <if test="projectIds != null and projectIds.size() > 0">
+            and op.project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="isOnlinePay!=null and isOnlinePay!=''">
+            and op.is_online_pay = #{isOnlinePay}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '1'.toString()">
+            and op.act_status = #{actStatus}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+            and op.act_status = 2 and op.sx_release_time &lt;= now() and op.sx_activity_begintime &gt; now() and
+            op.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+            and op.`status` = 0
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+            and op.sx_activity_begintime &lt;= now() and op.sx_activity_endtime &gt; now() and op.act_status = 2 and
+            op.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+            and op.sx_activity_endtime &lt;= now() and op.act_status = 2 and op.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '5'.toString()">
+            and op.sx_release_time &gt; now() and op.act_status = 2 and op.`status` = 1
+        </if>
+        order by op.create_time desc
+    </select>
+    <!--查询活动当前状态-->
+    <select id="queryOpenActivityStatus" parameterType="java.util.Map" resultType="java.lang.String">
+        select (case when `status`= 0 then '已禁用'
+                     when act_status = 1 then '草稿'
+                     when act_status = 2 and `status` = 1 and now()&lt; sx_release_time then '未发布'
+                     when act_status = 2 and `status` = 1 and now()&gt;= sx_release_time and now()&lt; sx_activity_begintime then '已发布'
+                     when act_status = 2 and `status` = 1 and now()&gt;= sx_activity_begintime and now()&lt;sx_activity_endtime then '已开始'
+                     when act_status = 2 and `status` = 1 and now()&gt;= sx_activity_endtime then '已结束'
+            end) actStatus
+        from x_open_activity
+        where id = #{activityId}
+    </select>
+
+    <!--查询开盘活动（导出）-->
+    <select id="getOpenActivityExport" resultType="cn.visolink.system.openQuotation.model.OpenActivity" parameterType="java.util.Map">
+        select bp.AreaName areaName,op.project_name projectName,op.id,
+        op.sx_choose_room_id sxChooseRoomId,
+        op.sx_activity_name sxActivityName,
+        DATE_FORMAT(op.sx_activity_begintime,'%Y-%m-%d %H:%i:%s') sxActivityBegintime,
+        DATE_FORMAT(op.sx_activity_endtime,'%Y-%m-%d %H:%i:%s') sxActivityEndtime,
+        DATE_FORMAT(op.sx_release_time,'%Y-%m-%d %H:%i:%s') sxReleaseTime,
+        op.bank_card_id bankCardId,
+        ba.EmployeeName creator,
+        DATE_FORMAT(op.create_time,'%Y-%m-%d %H:%i:%s') createTime,
+        ba1.EmployeeName disableor,
+        DATE_FORMAT(op.disabletime,'%Y-%m-%d %H:%i:%s') disabletime,
+        (case when op.`status`= 0 then '已禁用'
+        when op.act_status = 1 then '草稿'
+        when op.act_status = 2 and op.`status` = 1 and now()&lt; op.sx_release_time then '未发布'
+        when op.act_status = 2 and op.`status` = 1 and now()&gt;= op.sx_release_time and now()&lt; op.sx_activity_begintime then '已发布'
+        when op.act_status = 2 and op.`status` = 1 and now()&gt;= op.sx_activity_begintime and now()&lt;op.sx_activity_endtime then '已开始'
+        when op.act_status = 2 and op.`status` = 1 and now()&gt;= op.sx_activity_endtime then '已结束'
+        end) actStatus,
+        (case when op.is_online_pay = 1 then '是'
+          else '否'
+        end) isOnlinePay
+        from x_open_activity op
+        INNER JOIN b_project bp on bp.ID = op.project_id
+        INNER JOIN b_account ba on ba.ID = op.creator
+        left join b_account ba1 on ba1.ID = op.disableor
+        where op.del_status = 0
+        <if test="search!=null and search!=''">
+            and (op.sx_activity_name like concat('%',#{search},'%') or op.sx_choose_room_id like concat('%',#{search},'%') )
+        </if>
+        <if test="projectIds != null and projectIds.size() > 0">
+            and op.project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="isOnlinePay!=null and isOnlinePay!=''">
+            and op.is_online_pay = #{isOnlinePay}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '1'.toString()">
+            and op.act_status = #{actStatus}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+            and op.act_status = 2 and op.sx_release_time &lt;= now() and op.sx_activity_begintime &gt; now() and
+            op.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+            and op.`status` = 0
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+            and op.sx_activity_begintime &lt;= now() and op.sx_activity_endtime &gt; now() and op.act_status = 2 and
+            op.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+            and op.sx_activity_endtime &lt;= now() and op.act_status = 2 and op.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '5'.toString()">
+            and op.sx_release_time &gt; now() and op.act_status = 2 and op.`status` = 1
+        </if>
+        order by op.create_time desc
+    </select>
+
+    <!--保存开盘活动楼栋信息-->
+    <insert id="addOpenBuilds" parameterType="java.util.List">
+        insert into x_activity_build_rel (id,project_id,project_name,activity_id,build_id,build_name,create_time,creator)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            uuid(),#{item.projectId},#{item.projectName},#{item.activityId},#{item.buildId},#{item.buildName},now(),#{item.creator}
+            )
+        </foreach>
+    </insert>
+    <!--查询开盘活动楼盘信息-->
+    <select id="getOpenBooks" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OpenBuildBook">
+      select id, activity_id activityId,
+             project_id projectId,
+             book_id bookId
+      from x_activity_book_rel
+      where activity_id = #{activityId}
+    </select>
+    <!--保存开盘活动楼盘信息-->
+    <insert id="addOpenBooks" parameterType="java.util.List">
+        insert into x_activity_book_rel (id,activity_id,project_id,book_id,creator,create_time)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            uuid(),#{item.activityId},#{item.projectId},#{item.bookId},#{item.creator},now()
+            )
+        </foreach>
+    </insert>
+    <!--查询开盘活动概览图坐标信息-->
+    <select id="getOpenBuildSite" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OpenBuildSite">
+      select  ID,activity_id activityId,materialid,
+              projectid,projectname,buildname,
+              buildguid,buildsite_x buildsiteX,
+              buildsite_y buildsiteY
+      from a_intention_place_buildsite
+      where activity_id = #{activityId}
+    </select>
+    <!--保存开盘活动概览图坐标信息-->
+    <insert id="addOpenBuildSite" parameterType="java.util.List">
+        insert into a_intention_place_buildsite (ID,activity_id,materialid,projectid,projectname,buildname,buildguid,buildsite_x,buildsite_y)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            uuid(),#{item.activityId},#{item.materialid},#{item.projectid},#{item.projectname},#{item.buildname},#{item.buildguid},#{item.buildsiteX},#{item.buildsiteY}
+            )
+        </foreach>
+    </insert>
+    <!--保存开盘活动不可设置房间-->
+    <insert id="addOpenNotRoom" parameterType="java.util.List">
+        insert into x_housing_control (id,project_id,project_name,activity_id,build_id,room_state,room_id,create_time,creator)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            uuid(),#{item.projectId},#{item.projectName},#{item.activityId},#{item.buildId},0,#{item.roomId},now(),#{item.creator}
+            )
+        </foreach>
+    </insert>
+    <!--查询开盘活动不可设置房间-->
+    <select id="getNotShowRoom" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OpenNotRoom">
+        select activity_id activityId,build_id buildId,room_id roomId from x_housing_control
+        where activity_id = #{activityId} and room_state = 0;
+    </select>
+
+    <select id="getNotShowRoomID" parameterType="java.lang.String" resultType="java.lang.String">
+        select room_id from x_housing_control
+        where activity_id = #{activityId} and build_id = #{bldId} and room_state = 0;
+    </select>
+    <!--查询开盘活动折扣信息-->
+    <select id="getOpenDiscount" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OpenDiscount">
+        select id, project_id projectId,
+               project_name projectName,
+               activity_id activityId,
+               discount_id discountId,
+               discount_name discountName
+        from x_activity_discount_rel
+        where activity_id = #{activityId}
+    </select>
+    <!--保存开盘活动折扣信息-->
+    <insert id="addOpenDiscount" parameterType="java.util.List">
+        insert into x_activity_discount_rel (id,project_id,project_name,activity_id,discount_id,discount_name,create_time,creator)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            uuid(),#{item.projectId},#{item.projectName},#{item.activityId},#{item.discountId},#{item.discountName},now(),#{item.creator}
+            )
+        </foreach>
+    </insert>
+    <!--删除开盘活动折扣信息-->
+    <delete id="delOpenDiscount" parameterType="java.lang.String">
+        delete from x_activity_discount_rel where activity_id = #{id};
+    </delete>
+    <!--删除开盘活动设置房间-->
+    <delete id="delOpenNotRoom" parameterType="java.util.Map">
+        delete from x_housing_control
+        where activity_id = #{id}
+        <if test="bldId!=null and bldId!=''">
+          and build_id = #{bldId}
+        </if>
+    </delete>
+    <!--删除开盘活动概览图坐标-->
+    <delete id="delOpenBuildSite" parameterType="java.lang.String">
+        delete from a_intention_place_buildsite where activity_id = #{id};
+    </delete>
+    <!--删除开盘活动楼盘信息-->
+    <delete id="delOpenBooks" parameterType="java.lang.String">
+        delete from x_activity_book_rel where activity_id = #{id};
+    </delete>
+    <!--删除开盘活动楼栋-->
+    <delete id="delOpenBuilds" parameterType="java.util.Map">
+        delete from x_activity_build_rel
+        where activity_id = #{id}
+        <if test="bldId!=null and bldId!=''">
+            and build_id = #{bldId}
+        </if>
+    </delete>
+    <!--查询开盘基本信息-->
+    <select id="getOpenActivity" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OpenActivity">
+        select id,area_id areaId,project_id projectId,
+               project_name projectName,
+               sx_choose_room_id sxChooseRoomId,
+               sx_activity_name sxActivityName,
+               sx_release_time sxReleaseTime,
+               sx_activity_begintime sxActivityBegintime,
+               sx_activity_endtime sxActivityEndtime,
+               sx_activity_desc sxActivityDesc,
+               is_online_pay isOnlinePay,
+               bank_name bankName,
+               bank_card_id bankCardId,
+               fail_minute failMinute,
+               order_sign_type orderSignType,
+               house_area_show_type houseAreaShowType,
+               act_status actStatus,
+               status,
+               choose_pattern choosePattern
+        from x_open_activity
+        where id = #{activityId}
+    </select>
+    <!--保存开盘基本信息-->
+    <insert id="addOpenActivity" parameterType="cn.visolink.system.openQuotation.model.OpenActivity">
+      insert into x_open_activity(id,area_id,project_id,project_name,choose_room_type,sx_choose_room_id,sx_activity_name
+      ,sx_release_time,sx_activity_begintime,sx_activity_endtime,sx_activity_desc,is_online_pay,bank_name,
+       bank_card_id,fail_minute,order_sign_type,house_area_show_type,del_status,act_status,status,creator,create_time,choose_pattern)
+      values(#{id},#{areaId},#{projectId},#{projectName},'1',#{sxChooseRoomId},#{sxActivityName},#{sxReleaseTime},
+             #{sxActivityBegintime},#{sxActivityEndtime},#{sxActivityDesc},#{isOnlinePay},#{bankName},#{bankCardId},
+             #{failMinute},#{orderSignType},#{houseAreaShowType},0,#{actStatus},1,
+             #{creator},now(),#{choosePattern})
+    </insert>
+    <!--更新开盘基本信息-->
+    <update id="updateOpenActivity" parameterType="cn.visolink.system.openQuotation.model.OpenActivity">
+        update x_open_activity
+        <set>
+            <if test="areaId!=null and areaId!=''">
+                area_id = #{areaId},
+            </if>
+            <if test="projectId!=null and projectId!=''">
+                project_id = #{projectId},
+            </if>
+            <if test="projectName!=null and projectName!=''">
+                project_name = #{projectName},
+            </if>
+            <if test="chooseRoomType!=null and chooseRoomType!=''">
+                choose_room_type = #{chooseRoomType},
+            </if>
+            <if test="sxChooseRoomId!=null and sxChooseRoomId!=''">
+                sx_choose_room_id = #{sxChooseRoomId},
+            </if>
+            <if test="sxActivityName!=null and sxActivityName!=''">
+                sx_activity_name = #{sxActivityName},
+            </if>
+            <if test="sxReleaseTime!=null and sxReleaseTime!=''">
+                sx_release_time = #{sxReleaseTime},
+            </if>
+            <if test="sxActivityBegintime!=null and sxActivityBegintime!=''">
+                sx_activity_begintime = #{sxActivityBegintime},
+            </if>
+            <if test="sxActivityEndtime!=null and sxActivityEndtime!=''">
+                sx_activity_endtime = #{sxActivityEndtime},
+            </if>
+            <if test="sxActivityDesc!=null and sxActivityDesc!=''">
+                sx_activity_desc = #{sxActivityDesc},
+            </if>
+            is_online_pay = #{isOnlinePay},
+            choose_pattern = #{choosePattern},
+            <if test="bankName!=null and bankName!=''">
+                bank_name = #{bankName},
+            </if>
+            <if test="bankCardId!=null and bankCardId!=''">
+                bank_card_id = #{bankCardId},
+            </if>
+            <if test="failMinute!=null and failMinute!=''">
+                fail_minute = #{failMinute},
+            </if>
+            <if test="orderSignType!=null and orderSignType!=''">
+                order_sign_type = #{orderSignType},
+            </if>
+            <if test="houseAreaShowType!=null and houseAreaShowType!=''">
+                house_area_show_type = #{houseAreaShowType},
+            </if>
+            <if test="actStatus!=null and actStatus!=''">
+                act_status = #{actStatus},
+            </if>
+            <if test="delStatus!=null and delStatus!=''">
+                del_status = #{delStatus},
+            </if>
+            <if test="disableor!=null and disableor!=''">
+                disableor = #{disableor},
+            </if>
+            <if test="disabletime!=null and disabletime!=''">
+                disabletime = #{disabletime},
+            </if>
+            edit_time = now(),
+            editor = #{creator}
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--获取活动楼栋-->
+    <select id="getActivityBuilds" parameterType="java.util.Map" resultType="cn.visolink.system.openQuotation.model.OpenActivityBuild">
+        select build_id buildId,build_name buildName,activity_id activityId,project_id projectId,project_name projectName
+        from x_activity_build_rel
+        where activity_id = #{id}
+        <if test="bldId!=null and bldId!=''">
+            and build_id = #{bldId}
+        </if>
+    </select>
+
+    <!--获取楼栋是否存在订单-->
+    <select id="getBuildOrderCount" parameterType="java.util.Map" resultType="_int">
+        select count(1) from x_order
+        where activity_id = #{activityId} and bld_guid = #{bldId} and status in ('1','2');
+    </select>
+
+    <!--获取销控房间ID-->
+    <select id="getControl" parameterType="java.lang.String" resultType="java.lang.String">
+        select DISTINCT RoomGUID from b_housing_sales_control
+        where BldGUID = #{bldGUID} and IsDel = 0
+    </select>
+
+    <select id="getControls" parameterType="java.lang.String" resultType="java.lang.String">
+        select DISTINCT RoomGUID from b_housing_sales_control
+        where BldGUID in (${bldIds}) and IsDel = 0
+    </select>
+    <!--更新活动状态-->
+    <update id="updateOpenActivityStatus" parameterType="java.util.Map">
+        update x_open_activity
+        <set>
+            editor = #{editor},
+            edit_time = now(),
+            <if test="status!=null">
+                status = 0,
+            </if>
+            <if test="delStatus!=null">
+                del_status = 1,
+            </if>
+            <if test="release!=null">
+                sx_release_time = now(),
+            </if>
+            <if test="disableor!=null">
+                disableor = #{disableor},
+                disabletime = now(),
+            </if>
+        </set>
+          where id = #{activityId}
+    </update>
+    <!--查询完成的订单房间ID-->
+    <select id="getOrderOkRoomIds" parameterType="java.lang.String" resultType="java.lang.String">
+        select room_id from x_order
+        where bld_guid = #{bldId} and status = 2 and performance_time is not null
+    </select>
+    <!--查询未完成的订单房间ID-->
+    <select id="getOrderRoomIds" parameterType="java.lang.String" resultType="java.lang.String">
+        select room_id from x_order
+        where bld_guid = #{bldId} and status = 1 and performance_time is null
+    </select>
+    <!--查询开盘明细-->
+    <select id="getOpenActivityResult" parameterType="java.util.Map" resultType="cn.visolink.system.openQuotation.model.OpenActivityResult">
+        SELECT
+            bp.AreaName areaName,ac.project_name projectName,
+            ac.sx_choose_room_id sxChooseRoomId,ac.sx_activity_name sxActivityName,
+            DATE_FORMAT(ac.sx_release_time,'%Y-%m-%d %H:%i:%s') sxReleaseTime,
+            DATE_FORMAT(ac.sx_activity_begintime,'%Y-%m-%d %H:%i:%s') sxActivityBegintime,
+            DATE_FORMAT(ac.sx_activity_endtime,'%Y-%m-%d %H:%i:%s') sxActivityEndtime,
+            ifnull(d.notPayCount,0) notPayCount,
+            ifnull(d.payCount,0) payCount,
+            ifnull(d.okCount,0) okCount,
+            ifnull(d.closeCount,0) closeCount,
+            ifnull(d.signCount,0) signCount,
+            (case when ac.is_online_pay = 1 then '是'
+            else '否'
+            end) isOnlinePay,
+            ba.EmployeeName creator,
+            DATE_FORMAT(ac.create_time,'%Y-%m-%d %H:%i:%s') createTime,
+            ba1.EmployeeName disableor,
+            DATE_FORMAT(ac.disabletime,'%Y-%m-%d %H:%i:%s') disabletime,
+            (case when ac.`status`= 0 then '已禁用'
+            when ac.act_status = 1 then '草稿'
+            when ac.act_status = 2 and ac.`status` = 1 and now()&lt; ac.sx_release_time then '未发布'
+            when ac.act_status = 2 and ac.`status` = 1 and now()&gt;= ac.sx_release_time and now()&lt; ac.sx_activity_begintime then '已发布'
+            when ac.act_status = 2 and ac.`status` = 1 and now()&gt;= ac.sx_activity_begintime and now()&lt;ac.sx_activity_endtime then '已开始'
+            when ac.act_status = 2 and ac.`status` = 1 and now()&gt;= ac.sx_activity_endtime then '已结束'
+            end) actStatus
+        FROM
+            x_open_activity ac
+                INNER JOIN b_project bp ON ac.project_id =  bp.id
+                INNER JOIN b_account ba on ba.ID = ac.creator
+                left join b_account ba1 on ba1.ID = ac.disableor
+                LEFT JOIN (
+                SELECT
+                    activity_id,
+                    sum( CASE WHEN `status` = 1 AND pay_status = 1 THEN 1 ELSE 0 END ) notPayCount,
+                    sum( CASE WHEN `status` in ('1','2') AND pay_status = 2 THEN 1 ELSE 0 END ) payCount,
+                    sum( CASE WHEN `status` != 1 AND `status` != 2 THEN 1 ELSE 0 END ) closeCount,
+                    sum( CASE WHEN `status` = 2 THEN 1 ELSE 0 END ) okCount,
+                    sum( CASE WHEN electronic_seal_status != 1 THEN 1 ELSE 0 END ) signCount
+                    FROM
+                        x_order
+                    GROUP BY
+                        activity_id
+                    ) d ON ac.id = d.activity_id
+        where ac.del_status = 0
+        <if test="search!=null and search!=''">
+            and (ac.sx_activity_name like concat('%',#{search},'%') or ac.sx_choose_room_id like concat('%',#{search},'%') )
+        </if>
+        <if test="projectIds != null and projectIds.size() > 0">
+            and ac.project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="isOnlinePay!=null and isOnlinePay!=''">
+            and ac.is_online_pay = #{isOnlinePay}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+            and ac.`status` = 0
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '1'.toString()">
+            and ac.act_status = #{actStatus}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+            and ac.act_status = 2 and ac.sx_release_time &lt;= now() and ac.sx_activity_begintime &gt; now() and
+            ac.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+            and ac.act_status = 2 and ac.sx_activity_begintime &lt;= now() and ac.sx_activity_endtime &gt; now() and
+            ac.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+            and ac.sx_activity_endtime &lt;= now() and ac.`status` = 1
+        </if>
+        order by ac.create_time desc
+    </select>
+    <!--查询订单明细-->
+    <select id="getOrderList" parameterType="java.util.Map" resultType="cn.visolink.system.openQuotation.model.OrderList">
+        select d.id,bp.ProjectName projectName,d.order_no orderNo,
+               (case when rel.cstName is not null then concat(d.main_cst_name,',',rel.cstName) else d.main_cst_name end) cstName,
+               d.main_phone cstPhoneAll,
+              concat(left(d.main_phone,3),'****',RIGHT(d.main_phone,4)) as cstPhone,
+               DATE_FORMAT(d.create_time,'%Y-%m-%d %H:%i:%s') createTime,
+               DATE_FORMAT(d.fail_time,'%Y-%m-%d %H:%i:%s') failTime,
+               (case when d.actual_pay_type = 1 then '线上'
+                                else '线下'  '' end) actualPayType,
+               (case when d.`status` in ('1','2') AND d.pay_status = 2 THEN '已支付' else '未支付' end) payStatus,
+               (case when d.electronic_seal_status = 1 then '已签署'
+                        when d.electronic_seal_status = 2 then '已解除'
+                        when d.electronic_seal_status = 3 then '已作废'
+                     else '未签署' end) electronicSealStatus,
+               d.amount_payable amountPayable,
+               DATE_FORMAT(d.reality_pay_time,'%Y-%m-%d %H:%i:%s') realityPayTime,
+               DATE_FORMAT(d.trade_close_time,'%Y-%m-%d %H:%i:%s') tradeCloseTime,
+               d.trade_close_reason tradeCloseReason,
+              (case when  d.order_type = 1 THEN '旭客家' else '旭客汇' end) orderType,
+              d.open_id as openId,
+              d.unbind_reason  as unbindReason
+        from x_order d
+                 INNER JOIN b_project bp on d.project_id = bp.id
+                 LEFT JOIN (select GROUP_CONCAT(cst_name) cstName,order_no
+                            from x_join_buyer_rel GROUP BY order_no) rel on d.order_no = rel.order_no
+        where 1 = 1
+        <if test="projectIds != null and projectIds.size() > 0">
+            and d.project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="orderNo!=null and orderNo!=''">
+          and d.order_no like concat('%',#{orderNo},'%')
+        </if>
+        <if test="roomName!=null and roomName!=''">
+            and d.room_name like concat('%',#{roomName},'%')
+        </if>
+        <if test="search!=null and search!=''">
+            and (d.main_cst_name like concat('%',#{search},'%') or d.main_phone like concat('%',#{search},'%'))
+        </if>
+        <if test="payStatus!=null and payStatus!=''">
+            and d.pay_status = #{payStatus}
+        </if>
+        <if test="orderType!=null and orderType.size() > 0">
+            and d.order_type in
+            <foreach collection="orderType" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="tradeStatus!=null and tradeStatus!='' and tradeStatus == '1'.toString()">
+            and d.`status` in ('1','2')
+        </if>
+        <if test="tradeStatus!=null and tradeStatus!='' and tradeStatus == '2'.toString()">
+            and d.`status` not in ('1','2')
+        </if>
+        <if test="actualPayType!=null and actualPayType!=''">
+            and d.actual_pay_type = #{actualPayType}
+        </if>
+        <if test="tradeCloseReason!=null and tradeCloseReason!=''">
+            and d.trade_close_reason like concat('%',#{tradeCloseReason},'%')
+        </if>
+        <if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+            and d.create_time BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and d.reality_pay_time BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==3  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and d.trade_close_time BETWEEN #{date1} AND #{date2}
+        </if>
+        order by d.create_time desc
+    </select>
+    <!--获取订单详情-->
+    <select id="getOrderDetail" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OrderDetail">
+        SELECT
+            d.order_no orderNo,
+            (
+                CASE
+
+                    WHEN rel.cstName IS NOT NULL THEN
+                        concat( d.main_cst_name, ',', rel.cstName ) ELSE d.main_cst_name
+                    END
+                ) cstName,
+            concat( LEFT ( d.main_phone, 3 ), '****', RIGHT ( d.main_phone, 4 ) ) AS cstPhone,
+            DATE_FORMAT( d.create_time, '%Y-%m-%d %H:%i:%s' ) createTime,
+            DATE_FORMAT( d.fail_time, '%Y-%m-%d %H:%i:%s' ) failTime,
+            ( CASE WHEN d.actual_pay_type = 1 THEN '线上' else '线下' END ) actualPayType,
+            (
+                CASE
+                    WHEN d.`status` IN ( '1', '2' )
+                        AND d.pay_status = 2 THEN
+                        '已支付' ELSE '未支付'
+                    END
+                ) payStatus,
+            (case when d.electronic_seal_status = 1 then '已签署'
+                  when d.electronic_seal_status = 2 then '已解除'
+                  when d.electronic_seal_status = 3 then '已作废'
+                  else '未签署' end) electronicSealStatus,
+            DATE_FORMAT( d.reality_pay_time, '%Y-%m-%d %H:%i:%s' ) realityPayTime,
+            opp.SalesAttributionName salesName,
+            d.trade_close_reason tradeCloseReason,
+            d.room_name roomName,
+            d.amount_money amountMoney,
+            d.amount_payable amountPayable,
+            d.card_account cardAccount,
+            d.address address,
+            d.main_card_type_name cstCardTypeName,
+            d.main_card_id cstCardId,
+            d.main_opp_id mainOppId,
+            opp.IntentionID oppId,
+            d.room_id roomId,
+            d.rel_card_id relCardId,
+            d.rel_card_name relCardName,
+            ac.sx_choose_room_id sxChooseRoomId,
+            ac.sx_activity_name sxActivityName,
+            (case when d.`status` in ('1','2') then '激活' else '关闭' end) status,
+            concat( LEFT (d.sales_mobile, 3 ), '****', RIGHT (d.sales_mobile, 4 ) ) AS salesMobile,
+            bu.Name as brokerName,
+            d.order_type as orderType,
+            d.creator,
+            t.mobile as bindingMobile
+        FROM
+            x_order d
+                left JOIN x_open_activity ac ON d.activity_id = ac.id
+                LEFT JOIN b_project_opportunity opp ON d.main_opp_id = opp.OpportunityClueId
+                LEFT JOIN ( SELECT GROUP_CONCAT( cst_name ) cstName, order_no FROM x_join_buyer_rel GROUP BY order_no ) rel ON d.order_no = rel.order_no
+                left join a_broker_user bu on bu.OpenId = d.open_id
+                left join
+                (select GROUP_CONCAT(DISTINCT mobile) as mobile,order_no
+                    from x_order_node_record where node_type = 8 group by order_no) t on t.order_no = d.order_no
+        WHERE
+            d.order_no = #{orderNo};
+    </select>
+    <!--获取订单关联购房人-->
+    <select id="getRelationBuyers" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.Buyers">
+        SELECT
+            rel.cst_name cstName,
+            concat( LEFT ( rel.cst_mobile, 3 ), '****', RIGHT ( rel.cst_mobile, 4 ) ) cstPhone,
+            rel.cst_card_type_name cstCardTypeName,
+            rel.cst_card_id cstCardId,
+            rel.address,
+            opp.SalesAttributionName salesName
+        FROM
+            x_join_buyer_rel rel
+                LEFT JOIN b_project_opportunity opp ON rel.cst_opp_id = opp.OpportunityClueId
+        WHERE
+            rel.order_no = #{orderNo}
+            order by list_index;
+    </select>
+    <!--获取订单编号-->
+    <select id="getRoomOrder" parameterType="java.util.Map" resultType="java.lang.String">
+        select order_no orderNo from x_order where room_id = #{roomId} and status in ('1','2') limit 1;
+    </select>
+    <!--获取订单节点-->
+    <select id="getOrderNodes" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OrderNode">
+        select order_no orderNo,
+               node_type_name nodeTypeName,
+               record_time recordTime,
+               reason,
+               node_type as nodeType,
+               bind_person as bindPerson,
+               unbind_person AS unbindPerson,
+               unbind_reason AS unbindReason,
+               mobile
+               from x_order_node_record where order_no = #{orderNo} and is_del = 0 order by record_time desc
+    </select>
+    <insert id="addActivityBank" parameterType="java.util.List">
+        insert into x_open_activity_bank(id,open_activity_id,project_fid,project_fname,bank_id,creator,create_time)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            uuid(),#{item.openActivityId},#{item.projectFid},#{item.projectFname},#{item.bankId},#{item.creator},now()
+            )
+        </foreach>
+    </insert>
+    <delete id="delActivityBank" parameterType="java.lang.String">
+        delete from x_open_activity_bank where open_activity_id = #{activityId}
+    </delete>
+    <!--获取活动商户信息-->
+    <select id="getActivityBank" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OpenActivityBank">
+        SELECT
+            bak.project_fid projectFid,
+            bak.project_fname projectFname,
+            bak.bank_id bankId
+        FROM
+            x_open_activity_bank bak
+        WHERE
+            bak.open_activity_id = #{activityId}
+          AND bak.is_del = 0;
+    </select>
+    <!--获取分期项目商户信息-->
+    <select id="getBankByPros" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.ProBank">
+        select
+            project_fid projectFid,
+            coll_bank collBank,
+            id bankId
+        from x_pro_collection
+        where project_fid = #{proFid};
+    </select>
+
+    <select id="getIsTimeOk" parameterType="java.util.Map" resultType="_int">
+        select count(1) from  x_activity_book_rel rel
+        INNER JOIN x_open_activity op on rel.activity_id = op.id
+        where rel.book_id in (${bookIds}) and op.act_status = 2 and op.`status` = 1 and op.del_status = 0
+        and op.sx_activity_endtime &gt; #{sxReleaseTime} and op.sx_release_time &lt; #{sxActivityEndtime}
+        <if test="activityId!=null and activityId!=''">
+            and op.id != #{activityId}
+        </if>
+    </select>
+    <!--删除开盘活动精选房-->
+    <delete id="delOpenActivityRoom" parameterType="java.lang.String">
+        delete from x_open_activity_room where activity_id = #{activityId}
+    </delete>
+    <!--保存开盘活动房间-->
+    <insert id="addOpenActivityRoom" parameterType="cn.visolink.system.openQuotation.model.OpenActivityRoom">
+        insert into x_open_activity_room(id,activity_id,project_id,project_fid,build_id,room_id,room_no,room_info,
+        room_status,hx_id,hx_name,bld_area,price,tn_area,tn_price,total,room_type,room_classification,floor,floor_no,
+        hx_photo_name,hx_photo_url,unit_no,unit_name,build_name,creator,create_time,choose_reason,room_statusdesc)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            uuid(),#{item.activityId},#{item.projectId},#{item.projectFid},#{item.buildId},#{item.roomId},#{item.roomNo},
+            #{item.roomInfo},#{item.roomStatus},#{item.hxId},#{item.hxName},#{item.bldArea},#{item.price},#{item.tnArea},#{item.tnPrice},
+            #{item.total},#{item.roomType},#{item.roomClassification},#{item.floor},#{item.floorNo},#{item.hxPhotoName},#{item.hxPhotoUrl},
+            #{item.unitNo},#{item.unitName},#{item.buildName},#{item.creator},now(),#{item.chooseReason},#{item.roomStatusdesc}
+            )
+        </foreach>
+    </insert>
+    <!--获取活动房间-->
+    <select id="getOpenActivityRoom" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OpenActivityRoom">
+        select id,activity_id activityId,project_id projectId,project_fid projectFid,build_id buildId,room_id roomId,room_no roomNo,room_info roomInfo,
+               room_status roomStatus,hx_id hxId,hx_name hxName,bld_area bldArea,price,tn_area tnArea,tn_price tnPrice,total,room_type roomType,room_classification roomClassification,floor,floor_no floorNo,
+               hx_photo_name hxPhotoName,hx_photo_url hxPhotoUrl,unit_no unitNo,unit_name unitName,build_name buildName,creator,create_time createTime,choose_reason chooseReason,room_statusdesc roomStatusdesc
+        from x_open_activity_room where activity_id = #{activityId}
+    </select>
+    <!--判断房间是否可以删除-->
+    <select id="queryRoomIsDel" parameterType="java.lang.String" resultType="_int">
+        select count(1) count from x_order where room_id = #{roomId} and `status` !='3'
+    </select>
+
+    <!--查询旭客汇认购规则-->
+    <select id="getProjectRuleByPojId" parameterType="java.lang.String" resultType="java.util.Map">
+        select
+            ProjectID projectId,
+            id,
+            subscribe_status as subscribeStatus,
+            is_online_pay as isOnlinePay,
+            fail_minute as failMinute,
+            house_area_show_type as houseAreaShowType
+        from
+            b_project_protect_rule
+        where ProjectID = #{projectId}
+        and SourceType = 2
+        limit 1
+    </select>
+
+    <!--新增旭客汇认购规则-->
+    <insert id="saveProjectRule" parameterType="java.util.Map">
+        insert into b_project_protect_rule
+        (ID,ProjectID,SourceType,subscribe_status,is_online_pay,fail_minute,house_area_show_type)
+        VALUES
+        (uuid(),#{projectId},2,#{subscribeStatus},#{isOnlinePay},#{failMinute},#{houseAreaShowType})
+    </insert>
+
+    <!--修改旭客汇认购规则-->
+    <update id="editProjectRule" parameterType="java.util.Map">
+        update b_project_protect_rule
+        <set>
+            <if test="subscribeStatus != null">
+                subscribe_status = #{subscribeStatus},
+            </if>
+            <if test="isOnlinePay != null">
+                is_online_pay = #{isOnlinePay},
+            </if>
+            <if test="failMinute != null and failMinute != ''">
+                fail_minute = #{failMinute},
+            </if>
+            <if test="houseAreaShowType != null and houseAreaShowType != ''">
+                house_area_show_type = #{houseAreaShowType},
+            </if>
+        </set>
+        where
+            ID = #{id}
+    </update>
+
+    <!--判断项目是否配置商户号-->
+    <select id="getIsCollBank" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(*) from x_pro_collection where project_id = #{projectId} and status = 1
+    </select>
+
+    <!--解除绑定-->
+    <update id="editOrder" parameterType="java.util.Map">
+        update x_order
+            set unbind_reason = #{unbindReason},
+                open_id = null,
+                editor = #{userId},
+                edit_time = now()
+        where
+            order_no = #{orderNo}
+    </update>
+
+    <!--查询置业顾问名称-->
+    <select id="getAccountName" parameterType="java.lang.String" resultType="java.lang.String">
+        select EmployeeName from b_account where id = #{id}
+    </select>
+
+    <!--查询经纪人名称-->
+    <select id="getBrokerName" parameterType="java.lang.String" resultType="java.lang.String">
+        select Name from a_broker_user where OpenId = #{openId}
+    </select>
+
+    <!--保存节点记录-->
+    <insert id="saveOrderNode" parameterType="java.util.Map">
+        insert into x_order_node_record
+        (id,order_no,node_type,node_type_name,record_time,creator,create_time,unbind_person,unbind_reason)
+        values
+        (uuid(),#{orderNo},#{nodeType},#{nodeTypeName},now(),#{userId},now(),#{userName},#{unbindReason})
+    </insert>
+
+    <sql id="certificateFields">
+        select id, region, project_id, project_name, activity_id, activity_name, room_id, room_name, client_name, client_mobile, submit, card_on_pic,
+        card_dn_pic, certificate_pic, `status`, status_name, create_time, approve_time, approve_id, approve_name, trade_guid, rejection_reason
+    </sql>
+
+    <select id="offlinePayCheckList" parameterType="map" resultType="map">
+        select a.id, a.region, a.project_id, a.project_name, a.activity_id, a.activity_name, a.room_id, a.room_name, a.client_name, a.client_mobile, b.Name as submit, a.card_on_pic,
+        a.card_dn_pic, a.certificate_pic, a.`status`, a.status_name, a.create_time, a.approve_time, a.approve_id, a.approve_name, a.trade_guid, a.rejection_reason
+        from b_opportunity_offline_certificate a
+        left join a_broker_user b ON a.submit = b.ID
+        where a.is_del = 0
+        AND a.project_id in ${project_id}
+        <if test="room_name != null and room_name != ''">AND a.room_name = #{room_name}</if>
+        <if test="client_name != null and client_name != ''">AND a.client_name = #{client_name}</if>
+        order by a.create_time DESC
+    </select>
+
+    <select id="getOfflinePay" parameterType="map" resultType="cn.visolink.system.openQuotation.model.OfflineCertificate">
+        select a.id,  a.project_id, a.project_name, a.room_name, a.client_name, a.client_mobile, a.submit,
+                a.`status`,  a.trade_guid
+        from b_opportunity_offline_certificate a
+        where a.id = #{id}
+    </select>
+
+    <update id="checkCertificate" parameterType="map">
+        update b_opportunity_offline_certificate
+        set `status` = #{status},
+        status_name = #{status_name},
+        approve_time = NOW()
+        <if test="status == 3">, rejection_reason = #{rejection_reason}</if>
+        <if test="approve_id != null and approve_id != ''">, approve_id = #{approve_id}</if>
+        <if test="approve_name != null and approve_name != ''">, approve_name = #{approve_name}</if>
+        where id = #{id}
+    </update>
+
+    <select id="getRecordById" parameterType="map" resultType="map">
+        <include refid="certificateFields"/>
+        from b_opportunity_offline_certificate
+        where is_del = 0
+        AND id = #{id}
+    </select>
+
+    <select id="selectCertificateList" parameterType="map" resultType="cn.visolink.system.openQuotation.model.OfflineCertificate">
+        select a.id, a.region, a.project_id, a.project_name, a.activity_id, a.activity_name, a.room_id, a.room_name, a.client_name, a.client_mobile, b.Name as submit, a.card_on_pic,
+        a.card_dn_pic, a.certificate_pic, a.`status`, a.status_name, a.create_time, a.approve_time, a.approve_id, a.approve_name, a.trade_guid, a.rejection_reason
+        from b_opportunity_offline_certificate a
+        left join a_broker_user b ON a.submit = b.ID
+        where a.is_del = 0
+        AND a.project_id = #{project_id}
+    </select>
+
+    <update id="updateOrder" parameterType="java.util.Map">
+        update x_order
+        <set>
+            <if test="TradeStatus!=null and TradeStatus!=''">
+                trade_status = #{TradeStatus},
+            </if>
+
+            <if test="status!=null and status!=''">
+                status = #{status},
+            </if>
+
+            <if test="pay_type != null">
+                pay_type = #{pay_type},
+            </if>
+
+            <if test="performanceTime!=null and performanceTime!=''">
+                performance_time = #{performanceTime},
+            </if>
+
+            <if test="pay_status != null and payStatus !='' ">
+                pay_status = #{payStatus},
+            </if>
+            <if test="isLockRoom != null">
+                is_lock_room = #{isLockRoom},
+            </if>
+            edit_time = NOW(),
+            performance_time = NOW()
+        </set>
+        where trade_id = #{tradeGuid}
+    </update>
+
+    <update id="updateOppTradeVo" parameterType="java.util.Map">
+        update b_opportunity_trade
+        set
+        <if test="OrderYwgsDate!= null and OrderYwgsDate != ''">
+            OrderYwgsDate = #{OrderYwgsDate},
+        </if>
+        UpdateTime = #{UpdateTime}
+        where TradeGUID = #{TradeGUID}
+    </update>
+
+    <select id="getOppTradeVo" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OppTradeVo">
+        select OpportunityClueId opportunityClueId,
+        TradeGUID tradeGUID,
+        IntentionID intentionID,
+        ContractGuid contractGuid,
+        RoomID roomID,
+        RoomName roomName,
+        IsClosed isClosed,
+        IsDeleted isDeleted,
+        ContractDate contractDate,
+        CreateTime createTime,
+        UpdateTime updateTime,
+        CstName cstName,
+        CstMobile cstMobile,
+        CjBldArea cjBldArea,
+        CjBldPrice cjBldPrice,
+        PrjectGUID prjectGUID,
+        ProjectFQGUID projectFQGUID,
+        OrderGUID orderGUID,
+        OrderDate orderDate,
+        OrderYwgsDate orderYwgsDate,
+        ContractYwGsDate contractYwGsDate,
+        ClueStatus clueStatus,
+        SourceType sourceType,
+        TradeStatus tradeStatus,
+        CloseReason closeReason,
+        TnArea tnArea,
+        BuyerAllCardIds buyerAllCardIds,
+        HtTotal htTotal,
+        Zygw zygw,
+        CjTnPrice cjTnPrice,
+        remarks
+        from b_opportunity_trade
+        where TradeGUID = #{tradeGUID}
+    </select>
+
+    <select id="getOppData" parameterType="java.lang.String" resultType="java.util.Map">
+        select * from b_project_opportunity where OpportunityClueId =#{opportunityClueId}
+    </select>
+
+    <select id="getOldOppTradeVoList" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OppTradeVo">
+        select opportunityClueId,
+               clueStatus
+        from b_opportunity_trade
+        where OpportunityClueId = #{opportunityClueId}
+              and TradeGUID != #{tradeGUID} and TradeStatus = "激活"
+    </select>
+
+    <select id="getCardType" parameterType="java.lang.String" resultType="java.lang.String">
+        select max(TransactionType) from b_customer_row_card
+        where OpportunityClueId = #{opportunityClueId} and IsDel = 0
+    </select>
+
+    <update id="updateOppTStatus" parameterType="java.lang.String">
+        update b_project_clues set ClueStatus = #{clueStatus} where ProjectClueId = #{projectClueId};
+        update b_project_opportunity set ClueStatus = #{clueStatus} where ProjectClueId = #{projectClueId};
+    </update>
+
+    <select id="getOrderInfoByTradeGuid" resultType="map" parameterType="string">
+        select * from x_order where trade_id = #{trade_id}
+    </select>
+
+    <!--保存订单节点记录-->
+    <insert id="saveOrderNodeRecord" parameterType="cn.visolink.system.openQuotation.model.OrderNodeRecord">
+        INSERT INTO `x_order_node_record`
+        (`id`, `order_no`, `node_type`, `node_type_name`, `reason`,
+         `record_time`, `is_del`, `creator`, `create_time`,bind_person,unbind_person,unbind_reason,mobile,receive_person)
+         VALUES
+        (uuid(), #{orderNo},  #{nodeType},  #{nodeTypeName},  #{reason}, now(), 0,  #{creator}, now(),
+        #{bindPerson},#{unbindPerson},#{unbindReason},#{mobile},#{receivePerson})
+    </insert>
+
+    <!--查询所有认购，签约消息-->
+    <select id="selectMessageALL" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+            id,
+            MessageType
+        FROM
+            s_message
+        WHERE
+            ProjectClueId = #{ProjectClueId}
+          AND MessageType IN ( '2110', '21101', '21102', '21103','21104', '21105', '2111', '21111', '21112', '21113', '21114', '21115')
+          AND IsDel = 0
+        GROUP BY
+            MessageType
+    </select>
+
+    <!--查询销售经理-->
+    <select id="findXSJL" parameterType="java.lang.String" resultType="java.util.Map">
+        select ba.id,ba.UserName,ba.EmployeeName,sjo.JobName,sorg.ID as orgId,
+               sorg.OrgName,sorg.Levels,sorg.PID,sjo.CommonJobID
+        from b_account ba
+                 left join s_jobsuserrel sju
+                           on sju.AccountID = ba.id
+                 left join s_jobs sjo
+                           on sjo.id = sju.JobID
+                 left join s_organization sorg
+                           on sorg.ID = sjo.JobOrgID
+                 left join s_commonjobs sc
+                           on sc.id = sjo.CommonJobID
+        where  sorg.ProjectID = #{projectId}
+          and ba.IsDel = 0
+          and sjo.IsDel = 0
+          and sorg.IsDel = 0
+          and sc.IsDel = 0
+          and sjo.Status = 1
+          and ba.Status = 1
+          and sorg.Status = 1
+          and sc.Status = 1
+          and sc.jobCode = 'xsjl'
+    </select>
+
+    <!--新增消息-->
+    <insert id="insertMessage" parameterType="java.util.List">
+        insert into s_message (
+        ID,Subject,Content,Sender,SendTime,MessageType,IsDel,Receiver,IsRead,ReadTime,IsPush,IsNeedPush,ProjectClueId
+        )
+        values
+        <foreach collection="list" item="message" index="index" open="" close="" separator=",">
+            (
+            UUID(),#{message.subject},#{message.content},'系统自动',now(),#{message.messageType},0,
+            #{message.receiver},0,now(),#{message.isPush},#{message.isNeedPush},#{message.projectClueId}
+            )
+        </foreach>
+
+    </insert>
+
+    <update id="updateReturnedMoneyByTradeGUID" parameterType="map">
+        update b_returned_money a
+        set a.SsAmount = a.YsAmount,
+        a.refund_amount = a.YsAmount,
+        a.PayDate = NOW(),
+        a.UpdateTime = NOW(),
+        a.ReceivableStatus = '已收齐'
+        <if test="client_mobile != null and client_mobile != ''">, a.bank_cst_mobile = #{client_mobile}</if>
+        WHERE a.TradeGUID = #{trade_guid}
+
+    </update>
+
+    <select id="getNameByusername" parameterType="string" resultType="string">
+        select EmployeeName from b_account where IsDel = 0 and `Status` = 1 and UserName = #{username}
+    </select>
+
+    <update id="updateHousingSalesControl" parameterType="java.lang.String">
+        update b_housing_sales_control set IsDel = 1 where RoomGUID = #{roomId}
+    </update>
+
+    <!--添加跟进记录表-->
+    <insert id="savaFollowupRecord" parameterType="java.util.Map">
+        insert into b_followup_record(FollowRecordId,FollowUpWay,CommunicationContent,FollowUpDetail,UserId,
+             FollowUpDate,ProjectId,FollowUpType,IsDel,ProjectClueId,OpportunityClueId,SaleCustomerId,CreateTime,CreateUserId,JobOrgID,EmployeeName,orgName)
+        values
+        (uuid(),#{followUpWay},#{CommunicationContent},#{FollowUpDetail},#{userId},
+            #{followUpDate},#{projectId},2,0,#{clueId},#{oppoId},#{customerId},now(),#{userId},#{JobOrgID},#{EmployeeName},#{orgName})
+    </insert>
+</mapper>

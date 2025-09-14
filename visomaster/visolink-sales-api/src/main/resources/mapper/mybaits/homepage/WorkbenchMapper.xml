@@ -1,0 +1,1873 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.homepage.dao.WorkbenchMapper">
+    <select id="findUserJobAllInfo" resultType="java.util.Map">
+        SELECT scj.JobCode  jobCode,
+               so.ProjectID projectId,
+               so.ID orgId,so.OrgName orgName,
+               jur.is_post isPost
+        FROM b_account ac
+                 INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID
+                 INNER JOIN s_jobs job ON job.ID = jur.JobID
+            AND job.STATUS = 1
+            AND job.IsDel = 0
+            and job.isIdm = 0
+                 INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+            AND scj.IsDel = 0
+            AND scj.STATUS = 1
+            and scj.isIdm = 0
+                 INNER JOIN s_organization so ON job.JobOrgID = so.ID
+            AND so.STATUS = 1
+            AND so.IsDel = 0
+        WHERE ac.UserName = #{userName}
+          AND scj.JobCode NOT IN ('khds', 'nqgw')
+          <if test="folPprojectId != null and folPprojectId != ''">
+              and so.ProjectID = #{folPprojectId}
+          </if>
+    </select>
+
+    <select id="getPendingList" resultType="java.util.Map">
+        select t.* from (
+        select ''       projectName,
+            ''          opportunityClueId,
+            ''          createTime,
+            ''          id,
+            ''          clueStatus,
+            ''          status,
+            ''          employeeName,
+            ''          followUpWay,
+            ''          jobCode,
+            ''          projectId,
+            ''          userId,
+            ''          pendingType,
+            ''          pendingTitle
+        from b_cust_referral where false
+        <if test="zyProList != null and zyProList.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.createTime         createTime,
+                re.id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.status = 1 then '发起申请'
+                when re.status = 2 then '已接收'
+                when re.status = 3 then '已驳回'
+                when re.status = 6 then '自动驳回'
+                when re.status = 7 then '撤回' else '' end)     status,
+                ba.EmployeeName       employeeName,
+                ''                    followUpWay,
+                'zygw'                jobCode,
+                re.ReceiverProjectId  projectId,
+                #{userId}             userId,
+                '1'                   pendingType,
+                concat(ifnull(opp.ProjectName, ''), '的转介客户')
+            from b_cust_referral re
+         inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+         inner join b_account ba on re.ReferralUserID = ba.ID
+            where re.ReceiverUserID = #{userId}
+                and re.status = 1
+                and re.ReceiverProjectId in
+                <foreach collection="zyProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+        </if>
+        <if test="qyProList != null and qyProList.size() > 0">
+            union
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.createTime         createTime,
+                re.id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.status = 1 then '发起申请'
+                when re.status = 2 then '已接收'
+                when re.status = 3 then '已驳回'
+                when re.status = 6 then '自动驳回'
+                when re.status = 7 then '撤回' else '' end)     status,
+                ba.EmployeeName       employeeName,
+                ''                    followUpWay,
+                'qyzygw'              jobCode,
+                re.ReceiverProjectId  projectId,
+                #{userId}             userId,
+                '1'                   pendingType,
+                concat(ifnull(opp.ProjectName, ''), '的转介客户')
+            from b_cust_referral re
+         inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+         inner join b_account ba on re.ReferralUserID = ba.ID
+            where re.ReceiverUserID = #{userId}
+                and re.status = 1
+                and re.ReceiverProjectId in
+            <foreach collection="qyProList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="jlProList != null and jlProList.size() > 0 and userIds != null and userIds.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.EmployeeName       employeeName,
+                FollowUpWayDesc       followUpWay,
+                'xsjl'                jobCode,
+                re.ProjectId          projectId,
+                #{userId}             userId,
+                '2'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+            from b_followup_record re
+                    inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            where re.FollowUpType = 1
+                and re.Status = 1
+                and re.ProjectId in
+                <foreach collection="jlProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                and re.UserId in
+                <foreach collection="userIds" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and FollowUpUserRole in (1, 2)
+                and (re.FollowRecordId not in (
+                select follow_record_id
+                from b_followup_node where is_success = 0
+                                       and isdel = 0 and status = 1 and old_sales_id = #{userId}
+                                       and node_type = 3 and node_time > ifnull(re.ApprovalTime, re.FollowUpDate)
+                                     order by node_time) and re.Status in (1,4,5))
+        </if>
+        <if test="qyjlProList != null and qyjlProList.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.EmployeeName       employeeName,
+                FollowUpWayDesc       followUpWay,
+                'qyxsjl'              jobCode,
+                re.ProjectId          projectId,
+                #{userId}             userId,
+                '2'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+            from b_followup_record re
+                    inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            where re.FollowUpType = 1
+                and re.Status = 1
+                and re.ProjectId in
+                <foreach collection="qyjlProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                and re.UserId in
+                <foreach collection="qyUserIds" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and FollowUpUserRole in (1, 2)
+                and (re.FollowRecordId not in (
+                    select follow_record_id
+                    from b_followup_node where is_success = 0
+                        and isdel = 0 and status = 1 and old_sales_id = #{userId}
+                        and node_type = 3 and node_time > ifnull(re.ApprovalTime, re.FollowUpDate)
+                    order by node_time) and re.Status in (1,4,5))
+        </if>
+        <if test="yxProList != null and yxProList.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.createTime         createTime,
+                re.id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.status = 1 then '发起申请'
+                when re.status = 2 then '已接收'
+                when re.status = 3 then '已驳回'
+                when re.status = 6 then '自动驳回'
+                when re.status = 7 then '撤回' else '' end)     status,
+                ba.EmployeeName       employeeName,
+                ''                    followUpWay,
+                'yxjl'                jobCode,
+                re.ReceiverProjectId  projectId,
+                #{userId}             userId,
+                '1'                   pendingType,
+                concat(ifnull(opp.ProjectName, ''), '的转介客户')
+            from b_cust_referral re
+         inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+         inner join b_account ba on re.ReferralUserID = ba.ID
+            where re.ReceiverUserID = #{userId}
+                and re.status = 1
+                and re.ReceiverProjectId in
+                <foreach collection="yxProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.EmployeeName       employeeName,
+                FollowUpWayDesc       followUpWay,
+                'yxjl'                jobCode,
+                re.childProjectId     projectId,
+                #{userId}             userId,
+                '2'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+            from b_followup_record re
+                    inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            where re.FollowUpType = 1
+                and ((re.Status = 5
+                and re.childProjectId in
+                <foreach collection="yxProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and FollowUpUserRole in (1, 2, 5, 6, 7)
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and (case when re.MainFollowProjectId is not null and re.ProjectId != re.MainFollowProjectId
+                    then re.MainFollowProjectId in
+                    <foreach collection="yxProList" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                    else opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                    end)
+                </if>
+                    )
+                    or
+                (re.Status = 4
+                and re.ProjectId in
+                <foreach collection="yxProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+              <if test="orgIds!=null and orgIds.size() > 0">
+                and opp.SalesAttributionTeamId in
+                <foreach collection="orgIds" index="index" item="item" open="("
+                  separator="," close=")">
+                  #{item}
+                </foreach>
+              </if>
+                and FollowUpUserRole in (1, 2)))
+                and (re.FollowRecordId not in (
+                select follow_record_id
+                from b_followup_node where is_success = 0
+                and isdel = 0 and status = 1 and old_sales_id = #{userId}
+                and node_type = 3 and node_time > ifnull(re.ApprovalTime, re.FollowUpDate)
+                order by node_time) and re.Status in (1,4,5))
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                '报备'                 clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end)      status,
+                ba.EmployeeName       employeeName,
+                '相似客户'              followUpWay,
+                'zszj'                jobCode,
+                re.ProjectId          projectId,
+                #{userId}             userId,
+                '4'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''),'的报备客户的相似客户', '审批')
+            from b_followup_record re
+                inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+                inner join b_account ba on re.UserId = ba.ID
+            where re.FollowUpType = 2
+                and FollowUpWay = '报备' and re.Status = 1
+                and re.ProjectId in
+                <foreach collection="yxProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            union all
+            select opp.ProjectName        projectName,
+                opp.OpportunityClueId  opportunityClueId,
+                re.apply_date          createTime,
+                re.approval_process_id id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)      clueStatus,
+                (case
+                when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end)      status,
+                re.employee_name       employeeName,
+                '客户信息变更'               followUpWay,
+                'yxjl'                 jobCode,
+                re.project_id          projectId,
+                #{userId}             userId,
+                '6'                    pendingType,
+                concat(ifnull(re.employee_name, ''), '的', ifnull((case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end), ''), '客户的客户信息变更审批')
+            from b_approval_process_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.opportunity_clue_id
+            where re.approval_process_type = 1
+                and (re.status = 1 and re.project_id in
+                <foreach collection="yxProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and apply_user_role in (1, 2, 5, 6, 7))
+                and (re.approval_process_id not in (
+                select if(old_sales_id = #{userId}, approval_process_id, '')
+                from b_approval_process_node
+                where is_success = 0
+                and isdel = 0
+                and status = 1
+                and node_type = 3
+                and node_time > ifnull(re.approval_time, re.apply_date)
+                order by node_time) and re.status = 1)
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+        </if>
+        <if test="zjProList != null and zjProList.size() > 0">
+            union
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.createTime         createTime,
+                re.id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.status = 1 then '发起申请'
+                when re.status = 2 then '已接收'
+                when re.status = 3 then '已驳回'
+                when re.status = 6 then '自动驳回'
+                when re.status = 7 then '撤回' else '' end)     status,
+                ba.EmployeeName       employeeName,
+                ''                    followUpWay,
+                'zszj'                jobCode,
+                re.ReceiverProjectId  projectId,
+                #{userId}             userId,
+                '1'                   pendingType,
+                concat(ifnull(opp.ProjectName, ''), '的转介客户')
+            from b_cust_referral re
+         inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+         inner join b_account ba on re.ReferralUserID = ba.ID
+            where re.ReceiverUserID = #{userId}
+                and re.status = 1
+                and re.ReceiverProjectId in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.EmployeeName       employeeName,
+                FollowUpWayDesc       followUpWay,
+                'zszj'                jobCode,
+                (case re.Status when 1 then re.ProjectId
+                    when 5 then re.childProjectId else '' end)     projectId,
+                #{userId}             userId,
+                '2'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+            from b_followup_record re
+                    inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            where re.FollowUpType = 1
+                and ((re.Status = 5
+                and re.childProjectId in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and (case when re.MainFollowProjectId is not null and re.ProjectId != re.MainFollowProjectId
+                    then re.MainFollowProjectId in
+                    <foreach collection="zjProList" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                    else opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                    end)
+                </if>
+                and FollowUpUserRole in (1, 2, 5, 6, 7))
+                or (re.Status = 1
+                and re.ProjectId in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and FollowUpUserRole in (5, 6))
+                )
+              and (re.FollowRecordId not in (
+                select follow_record_id
+                from b_followup_node where is_success = 0
+                and isdel = 0 and status = 1 and old_sales_id = #{userId}
+                and node_type = 3 and node_time > ifnull(re.ApprovalTime, re.FollowUpDate)
+                order by node_time) and re.Status in (1,4,5))
+            union all
+            select app.obtain_project_name       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                app.create_time       createTime,
+                app.id                id,
+                '公客池'               clueStatus,
+                (case approve_status
+                when 1 then '发起申请'
+                when 2 then '审核通过'
+                when 3 then '审核驳回'
+                when 4 then '自动驳回'
+                else '' end)          status,
+                app.obtain_user_name  employeeName,
+                '捞取'                 followUpWay,
+                'zszj'                jobCode,
+                app.obtain_project_id projectId,
+                #{userId}             userId,
+                '3'                   pendingType,
+                concat(ifnull(app.obtain_user_name, ''), '的公客池客户的捞取审批')
+            from b_customerpunlicpool_approve app
+                    left join b_project_opportunity opp on app.opportunity_clue_id = opp.OpportunityClueId
+            where approve_status = 1 and obtain_project_id in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                '报备'                 clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                    when re.Status = 2 then '审核通过'
+                    when re.Status = 3 then '驳回'
+                    when re.Status = 4 then '待复审'
+                    when re.Status = 5 then '待复审'
+                    else '' end)      status,
+                    ba.EmployeeName       employeeName,
+                    '相似客户'              followUpWay,
+                    'zszj'                jobCode,
+                    re.ProjectId          projectId,
+                    #{userId}             userId,
+                    '4'                   pendingType,
+            concat(ifnull(re.EmployeeName, ''),'的报备客户的相似客户', '审批')
+            from b_followup_record re
+                inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+                inner join b_account ba on re.UserId = ba.ID
+            where re.FollowUpType = 2
+                and FollowUpWay = '报备' and re.Status = 1
+                and re.ProjectId in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and (case when re.ProjectId != re.MainFollowProjectId then 1=1
+                    else opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                    end)
+                </if>
+            union all
+            select opp.ProjectName        projectName,
+                opp.OpportunityClueId  opportunityClueId,
+                re.apply_date          createTime,
+                re.approval_process_id id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)      clueStatus,
+                (case
+                when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end)      status,
+                re.employee_name       employeeName,
+                '客户信息变更'               followUpWay,
+                'zszj'                 jobCode,
+                re.project_id          projectId,
+                #{userId}             userId,
+                '6'                    pendingType,
+                concat(ifnull(re.employee_name, ''), '的', ifnull((case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end), ''), '客户的客户信息变更审批')
+            from b_approval_process_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.opportunity_clue_id
+            where re.approval_process_type = 1
+                and (re.status = 1 and re.project_id in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and apply_user_role in (1, 2, 5, 6, 7))
+                and (re.approval_process_id not in (
+                select if(old_sales_id = #{userId}, approval_process_id, '')
+                from b_approval_process_node
+                where is_success = 0
+                and isdel = 0
+                and status = 1
+                and node_type = 3
+                and node_time > ifnull(re.approval_time, re.apply_date)
+                order by node_time) and re.status = 1)
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+        </if>
+        <if test="qyZjProList != null and qyZjProList.size() > 0">
+            union all
+            select app.obtain_project_name       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                app.create_time       createTime,
+                app.id                id,
+                '公客池'               clueStatus,
+                (case approve_status
+                when 1 then '发起申请'
+                when 2 then '审核通过'
+                when 3 then '审核驳回'
+                when 4 then '自动驳回'
+                else '' end)          status,
+                app.obtain_user_name  employeeName,
+                '捞取'                 followUpWay,
+                'qyzszj'                jobCode,
+                app.obtain_project_id projectId,
+                #{userId}             userId,
+                '3'                   pendingType,
+                concat(ifnull(app.obtain_user_name, ''), '的公客池客户的捞取审批')
+            from b_customerpunlicpool_approve app
+                left join b_project_opportunity opp on app.opportunity_clue_id = opp.OpportunityClueId
+            where approve_status = 1 and obtain_project_id in
+                <foreach collection="qyZjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                      separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            union all
+            select opp.ProjectName        projectName,
+                opp.OpportunityClueId  opportunityClueId,
+                re.apply_date          createTime,
+                re.approval_process_id id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)      clueStatus,
+                (case
+                when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end)      status,
+                re.employee_name       employeeName,
+                '客户信息变更'       followUpWay,
+                'qyzszj'                jobCode,
+                re.project_id          projectId,
+                #{userId}             userId,
+                '6'                    pendingType,
+                concat(ifnull(re.employee_name, ''), '的', ifnull((case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end), ''), '客户的客户信息变更审批')
+            from b_approval_process_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.opportunity_clue_id
+            where re.approval_process_type = 1
+                and (re.status = 1 and re.project_id in
+                <foreach collection="qyZjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and apply_user_role in (1, 2, 5, 6, 7))
+                and (re.approval_process_id not in (
+                select if(old_sales_id = #{userId}, approval_process_id, '')
+                from b_approval_process_node
+                where is_success = 0
+                and isdel = 0
+                and status = 1
+                and node_type = 3
+                and node_time > ifnull(re.approval_time, re.apply_date)
+                order by node_time) and re.status = 1)
+                <if test="orgIds!=null and orgIds.size() > 0">
+                    and opp.SalesAttributionTeamId in
+                    <foreach collection="orgIds" index="index" item="item" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+        </if>
+        union all
+        select opp.ProjectName       projectName,
+            opp.OpportunityClueId opportunityClueId,
+            re.FollowUpDate       createTime,
+            re.FollowRecordId     id,
+            (case
+            when opp.ClueStatus = 1 then '报备'
+            when opp.ClueStatus = 2 then '到访'
+            when opp.ClueStatus = 8 then '签约'
+            else '' end)     clueStatus,
+            (case when re.Status = 1 then '发起申请'
+            when re.Status = 2 then '审核通过'
+            when re.Status = 3 then '驳回'
+            when re.Status = 4 then '待复审'
+            when re.Status = 5 then '待复审'
+            else '' end) status,
+            re.EmployeeName       employeeName,
+            FollowUpWayDesc       followUpWay,
+            node.sales_job  jobCode,
+            node.sales_project  projectId,
+            #{userId}             userId,
+            '2'                   pendingType,
+            concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+        from b_followup_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            inner join b_followup_node node on re.FollowRecordId = node.follow_record_id
+                                                   and sales_id = #{userId}
+                                                   and is_success = 0
+                                                   and node.isdel = 0
+                                                   and node.status = 1
+                                                   and node_type = 3
+                                                   and version_status = 1
+                                                   and node_time > ifnull(re.ApprovalTime, re.FollowUpDate)
+        where re.Status in (1,4,5)
+        <if test="orgIds!=null and orgIds.size() > 0">
+            and (case when re.MainFollowProjectId is not null and re.ProjectId != re.MainFollowProjectId
+                then 1=1
+            else opp.SalesAttributionTeamId in
+            <foreach collection="orgIds" index="index" item="item" open="("
+              separator="," close=")">
+                #{item}
+            </foreach>
+            end)
+        </if>
+        union all
+        select opp.ProjectName       projectName,
+            opp.OpportunityClueId opportunityClueId,
+            re.apply_date       createTime,
+            re.approval_process_id     id,
+            (case
+            when opp.ClueStatus = 1 then '报备'
+            when opp.ClueStatus = 2 then '到访'
+            when opp.ClueStatus = 8 then '签约'
+            else '' end)     clueStatus,
+            (case when re.Status = 1 then '发起申请'
+            when re.Status = 2 then '审核通过'
+            when re.Status = 3 then '驳回'
+            when re.Status = 4 then '待复审'
+            when re.Status = 5 then '待复审'
+            else '' end) status,
+            re.employee_name       employeeName,
+            '客户信息变更'       followUpWay,
+            node.sales_job  jobCode,
+            node.sales_project  projectId,
+            #{userId}             userId,
+            '6'                   pendingType,
+            concat(ifnull(re.employee_name, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的客户信息变更审批')
+        from b_approval_process_record re
+        inner join b_project_opportunity opp on opp.OpportunityClueId = re.opportunity_clue_id
+        inner join b_approval_process_node node on re.approval_process_id = node.approval_process_record_id
+            and sales_id = #{userId}
+            and is_success = 0
+            and node.isdel = 0
+            and node.status = 1
+            and node_type = 3
+            and version_status = 1
+            and node_time > ifnull(re.approval_time, re.apply_date)
+        where re.status = 1
+        union all
+        select
+            opp.ProjectName                    projectName,
+            opp.OpportunityClueId              opportunityClueId,
+            fr.apply_time                      createTime,
+            fr.id                              id,
+            (case
+            when opp.ClueStatus = 1 then '报备'
+            when opp.ClueStatus = 2 then '到访'
+            when opp.ClueStatus = 8 then '签约'
+            else '' end)                       clueStatus,
+            '待复核'                            status,
+            ba.EmployeeName                    employeeName,
+            (select DictName
+            from s_dictionary
+            where pid = '0001041f-8f43-4cb2-a5c3-4444d0559111'
+            and DictCode = fol.FollowUpWay) followUpWay,
+            ''                                 jobCode,
+            fol.ProjectId                      projectId,
+            #{userId}                          userId,
+            '5'                                pendingType,
+            concat(ifnull(ba.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '整改审批')                                 pendingTitle
+        from b_followup_rectification_record fr
+            left join b_followup_verification_record fv on fr.follow_verification_record_id = fv.id
+            left join b_followup_record fol on fv.follow_record_id = fol.FollowRecordId
+            left join b_project_opportunity opp on fol.OpportunityClueId = opp.OpportunityClueId
+            left join b_account ba on fr.creator = ba.ID
+        where fr.status = 1
+            and fr.approval_reason is null
+            and fv.creator = #{userId}
+        ) t
+        <if test="searchName != '' and searchName != null">
+            where t.pendingTitle LIKE '%${searchName}%'
+        </if>
+        order by createTime desc
+    </select>
+
+    <select id="getPendingListClue" resultType="java.util.Map">
+        SELECT t.* FROM (
+        <!-- 基础空查询（确保至少有一个子查询） -->
+        SELECT
+        '' AS projectName,
+        '' AS opportunityClueId,
+        '' AS createTime,
+        '' AS id,
+        '' AS jobCode,
+        '' AS clueStatus,
+        '' AS status,
+        '' AS employeeName,
+        '' AS followUpWay,
+        '' AS projectId,
+        '' AS userId,
+        '' AS pendingType,
+        '' AS pendingTitle
+        FROM b_cust_referral
+        WHERE 1=0
+
+        <!-- 销售经理项目列表查询 -->
+        <if test="jlProList != null and jlProList.size() > 0 and userIds != null and userIds.size() > 0">
+            UNION ALL
+            SELECT
+            opp.ProjectName AS projectName,
+            opp.ProjectClueId AS opportunityClueId,
+            re.FollowUpDate AS createTime,
+            re.FollowRecordId AS id,
+            'xsjl' AS jobCode,
+            <include refid="commonFields"/>
+            FROM b_followup_record re
+            INNER JOIN b_project_clues opp
+            ON opp.ProjectClueId = re.ProjectClueId
+            WHERE
+            re.FollowUpType = 1
+            AND ifnull(re.OpportunityClueId,'')=''
+            AND re.Status = 1
+            AND re.ProjectId IN
+            <foreach collection="jlProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            <if test="orgIds != null and orgIds.size() > 0">
+                AND opp.SalesAttributionTeamId IN
+                <foreach collection="orgIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            AND re.UserId IN
+            <foreach collection="userIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            AND re.FollowUpUserRole IN (1, 2)
+            AND re.FollowRecordId NOT IN (
+            SELECT follow_record_id
+            FROM b_followup_node
+            WHERE
+            is_success = 0
+            AND isdel = 0
+            AND status = 1
+            AND old_sales_id = #{userId}
+            AND node_type = 3
+            AND node_time > IFNULL(re.ApprovalTime, re.FollowUpDate)
+            )
+            AND re.Status IN (1, 4, 5)
+        </if>
+
+        <!-- 区域经理项目列表查询 -->
+        <if test="qyjlProList != null and qyjlProList.size() > 0">
+            UNION ALL
+            SELECT
+            opp.ProjectName AS projectName,
+            opp.ProjectClueId AS opportunityClueId,
+            re.FollowUpDate AS createTime,
+            re.FollowRecordId AS id,
+            'qyxsjl' AS jobCode,
+            <include refid="commonFields"/>
+            FROM b_followup_record re
+            INNER JOIN b_project_clues opp
+            ON opp.ProjectClueId = re.ProjectClueId
+            WHERE
+            re.FollowUpType = 1
+            AND ifnull(re.OpportunityClueId,'')=''
+            AND re.Status = 1
+            AND re.ProjectId IN
+            <foreach collection="qyjlProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            <if test="orgIds != null and orgIds.size() > 0">
+                AND opp.SalesAttributionTeamId IN
+                <foreach collection="orgIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            AND re.UserId IN
+            <foreach collection="qyUserIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            AND re.FollowUpUserRole IN (1, 2)
+            AND re.FollowRecordId NOT IN (
+            SELECT follow_record_id
+            FROM b_followup_node
+            WHERE
+            is_success = 0
+            AND isdel = 0
+            AND status = 1
+            AND old_sales_id = #{userId}
+            AND node_type = 3
+            AND node_time > IFNULL(re.ApprovalTime, re.FollowUpDate)
+            )
+            AND re.Status IN (1, 4, 5)
+        </if>
+
+        <!-- 营销经理项目列表查询 -->
+        <if test="yxProList != null and yxProList.size() > 0">
+            UNION ALL
+            SELECT
+            opp.ProjectName AS projectName,
+            opp.ProjectClueId AS opportunityClueId,
+            re.FollowUpDate AS createTime,
+            re.FollowRecordId AS id,
+            'yxjl' AS jobCode,
+            <include refid="commonFields"/>
+            FROM b_followup_record re
+            INNER JOIN b_project_clues opp
+            ON opp.ProjectClueId = re.ProjectClueId
+            WHERE
+            re.FollowUpType = 1
+            AND ifnull(re.OpportunityClueId,'')=''
+            AND (
+            (
+            re.Status = 5
+            AND re.childProjectId IN
+            <foreach collection="yxProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            AND re.FollowUpUserRole IN (1, 2, 5, 6, 7)
+            <if test="orgIds != null and orgIds.size() > 0">
+                AND (
+                CASE
+                WHEN re.MainFollowProjectId IS NOT NULL AND re.ProjectId != re.MainFollowProjectId
+                THEN re.MainFollowProjectId IN
+                <foreach collection="yxProList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                ELSE opp.SalesAttributionTeamId IN
+                <foreach collection="orgIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                END
+                )
+            </if>
+            )
+            OR
+            (
+            re.Status = 4
+            AND re.ProjectId IN
+            <foreach collection="yxProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            <if test="orgIds != null and orgIds.size() > 0">
+                AND opp.SalesAttributionTeamId IN
+                <foreach collection="orgIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            AND re.FollowUpUserRole IN (1, 2)
+            )
+            )
+            AND re.FollowRecordId NOT IN (
+            SELECT follow_record_id
+            FROM b_followup_node
+            WHERE
+            is_success = 0
+            AND isdel = 0
+            AND status = 1
+            AND old_sales_id = #{userId}
+            AND node_type = 3
+            AND node_time > IFNULL(re.ApprovalTime, re.FollowUpDate)
+            )
+            AND re.Status IN (1, 4, 5)
+        </if>
+
+        <!-- 招商总监项目列表查询 -->
+        <if test="zjProList != null and zjProList.size() > 0">
+            UNION ALL
+            SELECT
+            opp.ProjectName AS projectName,
+            opp.ProjectClueId AS opportunityClueId,
+            re.FollowUpDate AS createTime,
+            re.FollowRecordId AS id,
+            'zszj' AS jobCode,
+            <include refid="commonFields"/>
+            FROM b_followup_record re
+            INNER JOIN b_project_clues opp
+            ON opp.ProjectClueId = re.ProjectClueId
+            WHERE
+            re.FollowUpType = 1
+            AND ifnull(re.OpportunityClueId,'')=''
+            AND (
+            (
+            re.Status = 5
+            AND re.childProjectId IN
+            <foreach collection="zjProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            <if test="orgIds != null and orgIds.size() > 0">
+                AND (
+                CASE
+                WHEN re.MainFollowProjectId IS NOT NULL AND re.ProjectId != re.MainFollowProjectId
+                THEN re.MainFollowProjectId IN
+                <foreach collection="zjProList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                ELSE opp.SalesAttributionTeamId IN
+                <foreach collection="orgIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                END
+                )
+            </if>
+            AND re.FollowUpUserRole IN (1, 2, 5, 6, 7)
+            )
+            OR
+            (
+            re.Status = 1
+            AND re.ProjectId IN
+            <foreach collection="zjProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            AND re.FollowUpUserRole IN (5, 6)
+            )
+            )
+            AND re.FollowRecordId NOT IN (
+            SELECT follow_record_id
+            FROM b_followup_node
+            WHERE
+            is_success = 0
+            AND isdel = 0
+            AND status = 1
+            AND old_sales_id = #{userId}
+            AND node_type = 3
+            AND node_time > IFNULL(re.ApprovalTime, re.FollowUpDate)
+            )
+            AND re.Status IN (1, 4, 5)
+        </if>
+        ) t
+        ORDER BY t.createTime DESC
+    </select>
+
+    <!-- 公共字段片段 -->
+    <sql id="commonFields">
+        (CASE
+            WHEN opp.ClueStatus = 0 THEN '新增'
+            WHEN opp.ClueStatus = 11 THEN '分配'
+            ELSE ''
+            END) AS clueStatus,
+    (CASE
+        WHEN re.Status = 1 THEN '发起申请'
+        WHEN re.Status = 2 THEN '审核通过'
+        WHEN re.Status = 3 THEN '驳回'
+        WHEN re.Status = 4 THEN '待复审'
+        WHEN re.Status = 5 THEN '待复审'
+        ELSE ''
+    END) AS status,
+    re.EmployeeName AS employeeName,
+    re.FollowUpWayDesc AS followUpWay,
+    re.ProjectId AS projectId,
+        #{userId} AS userId,
+        '2' AS pendingType,
+        CONCAT(
+        IFNULL(re.EmployeeName, ''), '的',
+        IFNULL(
+        (CASE
+        WHEN opp.ClueStatus = 0 THEN '新增'
+        WHEN opp.ClueStatus = 11 THEN '分配'
+        ELSE ''
+        END),
+        ''
+        ),
+        '客户的',
+        IFNULL(re.FollowUpWayDesc, ''),
+        '审批'
+        ) AS pendingTitle
+    </sql>
+    <select id="getPendingOkList" resultType="java.util.Map">
+        select t.* from (
+        select ''       projectName,
+            ''          opportunityClueId,
+            ''          createTime,
+            ''          id,
+            ''          clueStatus,
+            ''          status,
+            ''          employeeName,
+            ''          followUpWay,
+            ''          jobCode,
+            ''          pendingType,
+            ''          pendingTitle
+        from b_cust_referral where false
+        <if test="zyProList != null and zyProList.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.createTime         createTime,
+                re.id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.status = 1 then '发起申请'
+                when re.status = 2 then '已接收'
+                when re.status = 3 then '已驳回'
+                when re.status = 6 then '自动驳回'
+                when re.status = 7 then '撤回' else '' end)     status,
+                ba.EmployeeName       employeeName,
+                ''                    followUpWay,
+                'zygw'                jobCode,
+                '1'                   pendingType,
+                concat(ifnull(opp.ProjectName, ''), '的转介客户')
+            from b_cust_referral re
+         inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+         inner join b_account ba on re.ReferralUserID = ba.ID
+            where re.ReceiverUserID = #{userId}
+                and re.status != 1
+                and re.ReceiverProjectId in
+                <foreach collection="zyProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+        </if>
+        <if test="qyProList != null and qyProList.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.createTime         createTime,
+                re.id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.status = 1 then '发起申请'
+                when re.status = 2 then '已接收'
+                when re.status = 3 then '已驳回'
+                when re.status = 6 then '自动驳回'
+                when re.status = 7 then '撤回' else '' end)     status,
+                ba.EmployeeName       employeeName,
+                ''                    followUpWay,
+                'qyzygw'              jobCode,
+                '1'                   pendingType,
+                concat(ifnull(opp.ProjectName, ''), '的转介客户')
+            from b_cust_referral re
+         inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+         inner join b_account ba on re.ReferralUserID = ba.ID
+            where re.ReceiverUserID = #{userId}
+                and re.status != 1
+                and re.ReceiverProjectId in
+                <foreach collection="qyProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+        </if>
+        <if test="jlProList != null and jlProList.size() > 0 and userIds != null and userIds.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.EmployeeName       employeeName,
+                FollowUpWayDesc       followUpWay,
+                'xsjl'                jobCode,
+                '2'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+            from b_followup_record re
+                    inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            where  re.ApprovalUser = #{userId}
+                and re.Status in (2,3,5) and re.FollowUpType = 1
+                and re.ProjectId in
+                <foreach collection="jlProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+        </if>
+        <if test="qyjlProList != null and qyjlProList.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.EmployeeName       employeeName,
+                FollowUpWayDesc       followUpWay,
+                'qyxsjl'              jobCode,
+                '2'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+            from b_followup_record re
+                    inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            where re.ApprovalUser = #{userId}
+                and  re.Status in (2,3,5) and re.FollowUpType = 1
+                and re.ProjectId in
+                <foreach collection="qyjlProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+        </if>
+        <if test="yxProList != null and yxProList.size() > 0">
+            union all
+                select opp.ProjectName       projectName,
+                    opp.OpportunityClueId opportunityClueId,
+                    re.createTime         createTime,
+                    re.id,
+                    (case
+                    when opp.ClueStatus = 1 then '报备'
+                    when opp.ClueStatus = 2 then '到访'
+                    when opp.ClueStatus = 8 then '签约'
+                    else '' end)     clueStatus,
+                    (case when re.status = 1 then '发起申请'
+                    when re.status = 2 then '已接收'
+                    when re.status = 3 then '已驳回'
+                    when re.status = 6 then '自动驳回'
+                    when re.status = 7 then '撤回' else '' end)     status,
+                    ba.EmployeeName       employeeName,
+                    ''                    followUpWay,
+                    'yxjl'                jobCode,
+                    '1'                   pendingType,
+                    concat(ifnull(opp.ProjectName, ''), '的转介客户')
+            from b_cust_referral re
+         inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+         inner join b_account ba on re.ReferralUserID = ba.ID
+            where re.ReceiverUserID = #{userId}
+                and re.status != 1
+                and re.ReceiverProjectId in
+                <foreach collection="yxProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.EmployeeName       employeeName,
+                FollowUpWayDesc       followUpWay,
+                'yxjl'                jobCode,
+                '2'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+            from b_followup_record re
+                    inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            where ((re.TwoApprovalUser = #{userId}
+                    and re.childProjectId in
+                    <foreach collection="yxProList" index="index" item="item" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>)
+                    or
+                    (re.ThreeApprovalUser = #{userId}
+                    and re.ProjectId in
+                    <foreach collection="yxProList" index="index" item="item" open="("
+                             separator="," close=")">
+                        #{item}
+                    </foreach>)
+                )
+                and re.Status in (2,3) and re.FollowUpType = 1
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.apply_date       createTime,
+                re.approval_process_id     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.employee_name       employeeName,
+                '客户信息变更'       followUpWay,
+                'yxjl'                jobCode,
+                '6'                   pendingType,
+                concat(ifnull(re.employee_name, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的客户信息变更审批')
+            from b_approval_process_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.opportunity_clue_id
+            where re.approval_user = #{userId}
+                and re.project_id in
+                <foreach collection="yxProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and re.status in (2,3) and re.approval_process_type = 1
+        </if>
+        <if test="zjProList != null and zjProList.size() > 0">
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.createTime         createTime,
+                re.id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.status = 1 then '发起申请'
+                when re.status = 2 then '已接收'
+                when re.status = 3 then '已驳回'
+                when re.status = 6 then '自动驳回'
+                when re.status = 7 then '撤回' else '' end)     status,
+                ba.EmployeeName       employeeName,
+                ''                    followUpWay,
+                'zszj'                jobCode,
+                '1'                   pendingType,
+                concat(ifnull(opp.ProjectName, ''), '的转介客户')
+            from b_cust_referral re
+                     inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+                     inner join b_account ba on re.ReferralUserID = ba.ID
+            where re.ReceiverUserID = #{userId}
+                and re.status != 1
+                and re.ReceiverProjectId in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.FollowUpDate       createTime,
+                re.FollowRecordId     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.EmployeeName       employeeName,
+                FollowUpWayDesc       followUpWay,
+                'zszj'                jobCode,
+                '2'                   pendingType,
+                concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+            from b_followup_record re
+                    inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            where re.TwoApprovalUser = #{userId}
+                and re.Status in (2,3) and re.FollowUpType = 1
+                and re.childProjectId in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            union all
+            select app.obtain_project_name       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                app.create_time       createTime,
+                app.id                id,
+                '公客池'               clueStatus,
+                (case approve_status
+                when 1 then '发起申请'
+                when 2 then '审核通过'
+                when 3 then '审核驳回'
+                when 4 then '自动驳回'
+                else '' end)          status,
+                app.obtain_user_name  employeeName,
+                '捞取'                 followUpWay,
+                'zszj'                jobCode,
+                '3'                   pendingType,
+                concat(ifnull(app.obtain_user_name, ''), '的公客池客户的捞取审批')
+            from b_customerpunlicpool_approve app
+                    left join b_project_opportunity opp on app.opportunity_clue_id = opp.OpportunityClueId
+            where approve_status in (2,3,4) and obtain_project_id in
+            <foreach collection="zjProList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+            union all
+            select opp.ProjectName       projectName,
+                    opp.OpportunityClueId opportunityClueId,
+                    re.FollowUpDate       createTime,
+                    re.FollowRecordId     id,
+                    '报备'                 clueStatus,
+                    (case when re.Status = 1 then '发起申请'
+                    when re.Status = 2 then '审核通过'
+                    when re.Status = 3 then '驳回'
+                    when re.Status = 4 then '待复审'
+                    when re.Status = 5 then '待复审'
+                    else '' end)      status,
+                    ba.EmployeeName       employeeName,
+                    '相似客户'              followUpWay,
+                    'zszj'                jobCode,
+                    '4'                   pendingType,
+                    concat(ifnull(re.EmployeeName, ''),'的报备客户的相似客户', '审批')
+            from b_followup_record re
+                inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+                inner join b_account ba on re.UserId = ba.ID
+            where re.FollowUpType = 2 and FollowUpWay = '报备'
+                and re.Status in (2,3) and re.ApprovalUser = #{userId}
+                and re.ProjectId in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.apply_date       createTime,
+                re.approval_process_id     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.employee_name       employeeName,
+                '客户信息变更'       followUpWay,
+                'zszj'                jobCode,
+                '6'                   pendingType,
+                concat(ifnull(re.employee_name, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的客户信息变更审批')
+            from b_approval_process_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.opportunity_clue_id
+            where re.approval_user = #{userId}
+                and re.project_id in
+                <foreach collection="zjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and re.status in (2,3) and re.approval_process_type = 1
+        </if>
+        <if test="qyZjProList != null and qyZjProList.size() > 0">
+            union all
+            select app.obtain_project_name       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                app.create_time       createTime,
+                app.id                id,
+                '公客池'               clueStatus,
+                (case approve_status
+                when 1 then '发起申请'
+                when 2 then '审核通过'
+                when 3 then '审核驳回'
+                when 4 then '自动驳回'
+                else '' end)          status,
+                app.obtain_user_name  employeeName,
+                '捞取'                 followUpWay,
+                'qyzszj'                jobCode,
+                '3'                   pendingType,
+                concat(ifnull(app.obtain_user_name, ''), '的公客池客户的捞取审批')
+            from b_customerpunlicpool_approve app
+                left join b_project_opportunity opp on app.opportunity_clue_id = opp.OpportunityClueId
+            where approve_status in (2,3,4) and obtain_project_id in
+                <foreach collection="qyZjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            union all
+            select opp.ProjectName       projectName,
+                opp.OpportunityClueId opportunityClueId,
+                re.apply_date       createTime,
+                re.approval_process_id     id,
+                (case
+                when opp.ClueStatus = 1 then '报备'
+                when opp.ClueStatus = 2 then '到访'
+                when opp.ClueStatus = 8 then '签约'
+                else '' end)     clueStatus,
+                (case when re.Status = 1 then '发起申请'
+                when re.Status = 2 then '审核通过'
+                when re.Status = 3 then '驳回'
+                when re.Status = 4 then '待复审'
+                when re.Status = 5 then '待复审'
+                else '' end) status,
+                re.employee_name       employeeName,
+                '客户信息变更'       followUpWay,
+                'qyzszj'                jobCode,
+                '6'                   pendingType,
+                concat(ifnull(re.employee_name, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的客户信息变更审批')
+            from b_approval_process_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.opportunity_clue_id
+            where re.approval_user = #{userId}
+                and re.project_id in
+                <foreach collection="qyZjProList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+                and re.status in (2,3) and re.approval_process_type = 1
+        </if>
+        union all
+        select opp.ProjectName       projectName,
+            opp.OpportunityClueId opportunityClueId,
+            re.FollowUpDate       createTime,
+            re.FollowRecordId     id,
+            (case
+            when opp.ClueStatus = 1 then '报备'
+            when opp.ClueStatus = 2 then '到访'
+            when opp.ClueStatus = 8 then '签约'
+            else '' end)     clueStatus,
+            (case when re.Status = 1 then '发起申请'
+            when re.Status = 2 then '审核通过'
+            when re.Status = 3 then '驳回'
+            when re.Status = 4 then '待复审'
+            when re.Status = 5 then '待复审'
+            else '' end) status,
+            re.EmployeeName       employeeName,
+            FollowUpWayDesc       followUpWay,
+            node.sales_job        jobCode,
+            '2'                   pendingType,
+            concat(ifnull(re.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '审批')
+        from b_followup_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.OpportunityClueId
+            inner join b_followup_node node on node.follow_record_id = re.FollowRecordId
+        where node.is_success = 1
+            and node.isdel = 0
+            and node.status = 1
+            and node.sales_id = #{userId}
+            and node_type = 3
+        union all
+        select opp.ProjectName       projectName,
+            opp.OpportunityClueId opportunityClueId,
+            re.apply_date       createTime,
+            re.approval_process_id     id,
+            (case
+            when opp.ClueStatus = 1 then '报备'
+            when opp.ClueStatus = 2 then '到访'
+            when opp.ClueStatus = 8 then '签约'
+            else '' end)     clueStatus,
+            (case
+            when re.Status = 1 then '发起申请'
+            when re.Status = 2 then '审核通过'
+            when re.Status = 3 then '驳回'
+            when re.Status = 4 then '待复审'
+            when re.Status = 5 then '待复审'
+            else '' end)     status,
+            re.employee_name       employeeName,
+            '客户信息变更'       followUpWay,
+            node.sales_job        jobCode,
+            '6'                   pendingType,
+            concat(ifnull(re.employee_name, ''), '的', ifnull((case
+            when opp.ClueStatus = 1 then '报备'
+            when opp.ClueStatus = 2 then '到访'
+            when opp.ClueStatus = 8 then '签约'
+            else '' end), ''), '客户的客户信息变更审批')
+        from b_approval_process_record re
+            inner join b_project_opportunity opp on opp.OpportunityClueId = re.opportunity_clue_id
+            inner join b_approval_process_node node on node.approval_process_record_id = re.approval_process_id
+        where node.is_success = 1
+            and node.isdel = 0
+            and node.status = 1
+            and node.sales_id = #{userId}
+            and node_type = 3
+        union all
+        select
+            opp.ProjectName                    projectName,
+            opp.OpportunityClueId              opportunityClueId,
+            fr.apply_time                      createTime,
+            fr.id                              id,
+            (case
+            when opp.ClueStatus = 1 then '报备'
+            when opp.ClueStatus = 2 then '到访'
+            when opp.ClueStatus = 8 then '签约'
+            else '' end)                       clueStatus,
+            (case
+            when fr.status = 1 then '审核通过'
+            when fr.status = 0 then '驳回'
+            else '' end)                       status,
+            ba.EmployeeName                    employeeName,
+            (select DictName
+            from s_dictionary
+            where pid = '0001041f-8f43-4cb2-a5c3-4444d0559111'
+            and DictCode = fol.FollowUpWay) followUpWay,
+            ''                                 jobCode,
+            '5'                                pendingType,
+            concat(ifnull(ba.EmployeeName, ''), '的', ifnull( (case when opp.ClueStatus = 1 then '报备' when opp.ClueStatus = 2 then '到访' when opp.ClueStatus = 8 then '签约' else '' end), ''), '客户的', ifnull(FollowUpWayDesc, ''), '整改审批')                                 pendingTitle
+        from b_followup_rectification_record fr
+            left join b_followup_verification_record fv on fr.follow_verification_record_id = fv.id
+            left join b_followup_record fol on fv.follow_record_id = fol.FollowRecordId
+            left join b_project_opportunity opp on fol.OpportunityClueId = opp.OpportunityClueId
+            left join b_account ba on fr.creator = ba.ID
+        where ((fr.status = 1 and fr.approval_reason is not null) or fv.status = 0)
+            and fr.approval_user = #{userId}
+        ) t
+        <if test="searchName != '' and searchName != null">
+            where t.pendingTitle LIKE '%${searchName}%'
+        </if>
+        order by createTime desc
+    </select>
+
+    <select id="getPendingOkListClue" resultType="java.util.Map">
+        SELECT t.* FROM (
+        <!-- 基础空查询（确保至少有一个子查询） -->
+        SELECT
+        '' AS projectName,
+        '' AS opportunityClueId,
+        '' AS createTime,
+        '' AS id,
+        '' AS jobCode,
+        '' AS clueStatus,
+        '' AS status,
+        '' AS employeeName,
+        '' AS followUpWay,
+        '' AS projectId,
+        '' AS userId,
+        '' AS pendingType,
+        '' AS pendingTitle
+        FROM b_cust_referral
+        WHERE 1=0
+
+        <!-- 销售经理项目列表查询 -->
+        <if test="jlProList != null and jlProList.size() > 0 and userIds != null and userIds.size() > 0">
+            UNION ALL
+            SELECT
+            opp.ProjectName AS projectName,
+            opp.ProjectClueId AS opportunityClueId,
+            re.FollowUpDate AS createTime,
+            re.FollowRecordId AS id,
+            'xsjl' AS jobCode,
+            <include refid="commonFields"/>
+            FROM b_followup_record re
+            INNER JOIN b_project_clues opp
+            ON opp.ProjectClueId = re.ProjectClueId
+            WHERE re.ApprovalUser = #{userId}
+                AND re.Status in (2,3,5) 
+                AND re.FollowUpType = 1
+                AND ifnull(re.OpportunityClueId,'')=''
+                AND re.ProjectId IN
+            <foreach collection="jlProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <!-- 区域经理项目列表查询 -->
+        <if test="qyjlProList != null and qyjlProList.size() > 0">
+            UNION ALL
+            SELECT
+            opp.ProjectName AS projectName,
+            opp.ProjectClueId AS opportunityClueId,
+            re.FollowUpDate AS createTime,
+            re.FollowRecordId AS id,
+            'qyxsjl' AS jobCode,
+            <include refid="commonFields"/>
+            FROM b_followup_record re
+            INNER JOIN b_project_clues opp
+            ON opp.ProjectClueId = re.ProjectClueId
+            WHERE re.ApprovalUser = #{userId}
+                AND re.Status in (2,3,5) 
+                AND re.FollowUpType = 1
+                AND ifnull(re.OpportunityClueId,'')=''
+                AND re.ProjectId IN
+            <foreach collection="qyjlProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <!-- 销售总监项目列表查询 -->
+        <if test="yxProList != null and yxProList.size() > 0">
+            UNION ALL
+            SELECT
+            opp.ProjectName AS projectName,
+            opp.ProjectClueId AS opportunityClueId,
+            re.FollowUpDate AS createTime,
+            re.FollowRecordId AS id,
+            'yxjl' AS jobCode,
+            <include refid="commonFields"/>
+            FROM b_followup_record re
+            INNER JOIN b_project_clues opp
+            ON opp.ProjectClueId = re.ProjectClueId
+            WHERE ((re.TwoApprovalUser = #{userId}
+                    AND re.childProjectId IN
+                    <foreach collection="yxProList" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>)
+                    OR
+                    (re.ThreeApprovalUser = #{userId}
+                    AND re.ProjectId IN
+                    <foreach collection="yxProList" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>)
+                )
+                AND re.Status in (2,3) 
+                AND re.FollowUpType = 1
+                AND ifnull(re.OpportunityClueId,'')=''
+        </if>
+
+        <!-- 总监助理项目列表查询 -->
+        <if test="zjProList != null and zjProList.size() > 0">
+            UNION ALL
+            SELECT
+            opp.ProjectName AS projectName,
+            opp.ProjectClueId AS opportunityClueId,
+            re.FollowUpDate AS createTime,
+            re.FollowRecordId AS id,
+            'zszj' AS jobCode,
+            <include refid="commonFields"/>
+            FROM b_followup_record re
+            INNER JOIN b_project_clues opp
+            ON opp.ProjectClueId = re.ProjectClueId
+            WHERE re.TwoApprovalUser = #{userId}
+                AND re.Status in (2,3) 
+                AND re.FollowUpType = 1
+                AND ifnull(re.OpportunityClueId,'')=''
+                AND re.childProjectId IN
+            <foreach collection="zjProList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <!-- 审批节点关联的记录查询 -->
+        UNION ALL
+        SELECT
+        opp.ProjectName AS projectName,
+        opp.ProjectClueId AS opportunityClueId,
+        re.FollowUpDate AS createTime,
+        re.FollowRecordId AS id,
+        node.sales_job        jobCode,
+        <include refid="commonFields"/>
+        FROM b_followup_record re
+        INNER JOIN b_project_clues opp
+        ON opp.ProjectClueId = re.ProjectClueId
+        INNER JOIN b_followup_node node
+        ON node.follow_record_id = re.FollowRecordId
+        WHERE node.is_success = 1
+            AND node.isdel = 0
+            AND node.status = 1
+            AND node.sales_id = #{userId}
+            AND node_type = 3
+        ) t
+        <if test="searchName != '' and searchName != null">
+            WHERE t.pendingTitle LIKE '%${searchName}%'
+        </if>
+        ORDER BY t.createTime DESC
+    </select>
+
+    <select id="getMessageList" resultType="cn.visolink.message.model.form.MessageForm">
+        select sm.ID id,
+               sm.Subject subject,
+               sm.Content content,
+               sm.BusinessId,
+               (case when sm.Receiver = opp.SalesAttributionId and opp.ClueStatus &lt; 9 then sm.ProjectClueId
+                     when sm.Receiver = bpc.SalesAttributionId and bpc.ClueStatus in (2,11) then sm.ProjectClueId
+                     else '' end) projectClueId,
+               (case when sm.Receiver = opp.SalesAttributionId and opp.ClueStatus &lt; 9 then sm.OpportunityClueId
+                     when sm.Receiver = bpc.SalesAttributionId and bpc.ClueStatus in (2,11) then sm.OpportunityClueId
+                     else '' end) opportunityClueId,
+               sm.Receiver,
+               sm.Sender,
+               ifnull(ba.EmployeeName,'系统') senderName,
+               sm.IsRead isRead,
+               sm.SendTime sendTime,
+               sm.MessageType,
+               sm.Ext2,
+               sm.Ext3,
+               sm.Ext4,
+               sm.MessageData,
+               sm.ProjectID,
+               if(bpc.ClueStatus = 11,'clueCst','oppCst') cstType
+        from s_message sm left join b_account ba on sm.Sender = ba.ID
+                          left join b_project_clues  bpc on bpc.ProjectClueId = sm.ProjectClueId
+                          left join b_project_opportunity opp on opp.OpportunityClueId = sm.OpportunityClueId
+        where sm.Receiver = #{userId}
+          and sm.IsShow = 1
+        order by sm.SendTime desc
+    </select>
+
+    <select id="getUserMessageNum" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select
+            count(*) as messageSize
+        from s_message
+        where Receiver = #{userId}
+          and IsRead = 0
+          and IsShow = 1
+    </select>
+
+    <update id="updMessIsRead" parameterType="java.util.Map">
+        update s_message set IsRead = 1
+        where Receiver = #{userId} and IsRead = 0 and IsShow = 1
+        <if test="id != null and id != ''">
+            and id = #{id}
+        </if>
+    </update>
+
+    <!--修改已读-->
+    <update id="updateMessage" parameterType="java.util.Map">
+        update s_message
+        set IsRead = 1
+        where
+            id = #{id}
+    </update>
+</mapper>

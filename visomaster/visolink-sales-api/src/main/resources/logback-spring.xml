@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+    <property name="LOG_HOME" value="/Users/logs"/>
+    <property name="LOG_PREFIX" value="visolink-sales"/>
+
+    <!-- SQL控制台输出Appender -->
+    <appender name="SQL_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date [%level] [%thread] %logger{60} %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- SQL文件输出Appender -->
+    <appender name="SQL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_HOME}/${LOG_PREFIX}-sql.log</File>
+        <encoder>
+            <pattern>%date [%level] [%thread] %logger{60} %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/daily/${LOG_PREFIX}-sql-%d{yyyy-MM-dd}.log.%i.gz</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 关键：关闭MyBatis的ResultSet日志 -->
+    <logger name="org.apache.ibatis.logging.jdbc.ResultSetLogger" level="OFF" additivity="false">
+        <appender-ref ref="SQL_CONSOLE"/>
+        <appender-ref ref="SQL_FILE"/>
+    </logger>
+
+    <!-- 关键：关闭Druid的ResultSet和Row日志 -->
+    <logger name="druid.sql.ResultSet" level="OFF" additivity="false">
+        <appender-ref ref="SQL_CONSOLE"/>
+        <appender-ref ref="SQL_FILE"/>
+    </logger>
+    <logger name="druid.sql.Row" level="OFF" additivity="false">
+        <appender-ref ref="SQL_CONSOLE"/>
+        <appender-ref ref="SQL_FILE"/>
+    </logger>
+
+    <!-- Druid SQL and parameter logging -->
+    <logger name="druid.sql.Statement" level="DEBUG" additivity="false">
+        <appender-ref ref="SQL_CONSOLE"/>
+        <appender-ref ref="SQL_FILE"/>
+    </logger>
+
+    <!-- MyBatis SQL语句日志（仅记录SQL，不记录结果集） -->
+    <logger name="cn.visolink" level="INFO" additivity="false">
+        <appender-ref ref="SQL_CONSOLE"/>
+        <appender-ref ref="SQL_FILE"/>
+    </logger>
+
+    <!-- 原有FILE Appender配置 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_HOME}/${LOG_PREFIX}-info.log</File>
+        <encoder>
+            <pattern>%date [%level] [%thread] %logger{60} [%file : %line] %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/daily/${LOG_PREFIX}-info-%d{yyyy-MM-dd}.log.%i.gz</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

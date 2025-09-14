@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.usermanager.dao.UserManagerDao">
+
+<!--    统计全部用户的数量-->
+<!--    <select id="findMessageCount" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+              count(1) as count
+      FROM    b_account A left join s_jobsuserrel sj on A.Id=sj.AccountID
+		  left join s_jobs job on job.ID=sj.JobID
+			left join s_organization org  on org.ID=job.JobOrgID
+			left join b_project bp on bp.ID=org.ProjectID
+			left join s_organization so on so.ID=org.PID
+WHERE   A.AuthCompanyID = #{AuthCompanyID}
+          AND (job.JobOrgID =#{OrgID} or ''=#{OrgID})
+              AND (#{Key} = '' OR A.UserName LIKE '%${Key}%' OR A.EmployeeName LIKE '%${Key}%')
+              AND A.AccountType!=4
+              AND A.IsDel = 0
+    </select>-->
+     <!-- 查询全部用户的信息 -->
+     <select id="findMessage" resultType="java.util.Map" parameterType="java.util.Map">
+  select @rownum:=@rownum+1 AS RowNum,t.* from (SELECT @rownum:=0) r,(
+         select DISTINCT act.ID,act.UserName,act.EmployeeName,act.OfficeTel,act.EmployeeCode,
+         CASE WHEN(act.Gender=1) THEN '男' WHEN(act.Gender=2) THEN '女' ELSE 'X' END AS Gender,
+         act.UserOrgID,org.FullPath OrgName,
+         act.Mobile,
+         act.Address,
+         CASE WHEN(jsr.Status=1) THEN '启用' WHEN(jsr.Status=0) THEN '禁用' ELSE 'X' END AS Status,
+         CASE WHEN(act.AccountType=1) THEN 'Saas账号' WHEN(act.AccountType=2) THEN '普通账号' ELSE '未知' END AS AccountType,
+         job.JobName,jsr.id relId,com.JobCode jobCode
+        from s_organization org
+        inner join s_jobs job on job.JobOrgID = org.id and job.Status = 1 and job.IsDel = 0 and job.isIdm = 0
+        inner join s_jobsuserrel jsr on jsr.JobID = job.id
+        inner join b_account act on act.id = jsr.AccountID and act.IsDel = 0
+        inner join s_commonjobs com on job.CommonJobID = com.ID
+        where act.IsDel = 0
+         <if test="OrgID!=null and OrgID!=''">
+             AND org.FullPath like concat((select FullPath from s_organization where ID = #{OrgID}),'%')
+         </if>
+         <if test="Key!=null and Key!=''">
+             AND (act.UserName LIKE '${Key}%' OR act.EmployeeName LIKE '${Key}%')
+         </if>) t
+              LIMIT #{pageIndex},#{pageSize}
+ </select>
+
+
+    <!-- 查询全部用户的信息 -->
+    <select id="findMessageCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+        select COUNT(1) as total
+        from (
+        select DISTINCT act.ID,
+        org.OrgName,
+        job.JobName
+        from s_organization org
+        inner join s_jobs job on job.JobOrgID = org.id and job.Status = 1 and job.IsDel = 0 and job.isIdm = 0
+        inner join s_jobsuserrel jsr on jsr.JobID = job.id
+        inner join b_account act on act.id = jsr.AccountID and act.IsDel = 0
+        where act.IsDel = 0
+        <if test="OrgID!=null and OrgID!=''">
+            AND org.FullPath like concat((select FullPath from s_organization where ID = #{OrgID}),'%')
+        </if>
+        <if test="Key!=null and Key!=''">
+            AND (act.UserName LIKE '${Key}%' OR act.EmployeeName LIKE '${Key}%')
+        </if> ) t
+    </select>
+   <!-- 修改用户账号的状态 -->
+    <update id="updateUserStatus" parameterType="java.util.Map">
+          UPDATE b_account SET Status = #{Status},EditTime=now() WHERE ID = #{ID}
+    </update>
+ <!-- 移除用户 -->
+    <!--<delete id="deleteUser" parameterType="java.util.Map">-->
+         <!--UPDATE b_account SET IsDel = 1,EditTime=now() WHERE ID = #{ID}-->
+    <!--</delete>-->
+    <!-- 移除用户 -->
+    <delete id="deleteUser" parameterType="java.util.Map">
+        delete from s_jobsuserrel WHERE ID = #{ID}
+    </delete>
+    <update id="updateUser" parameterType="java.util.Map">
+       update s_jobsuserrel
+       set `status` = #{status}
+       where  ID = #{ID}
+    </update>
+    <update id="updateUserJob" parameterType="java.util.Map">
+        update s_jobsuserrel
+        set `status` = #{status}
+        where JobID = #{JobID} AND AccountID = #{UserID}
+    </update>
+
+    <!--查询用户是否存在-->
+    <select id="userNameExists" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT COUNT(1) AS A FROM b_account WHERE UserName = #{UserName} AND IsDel = 0  and `AccountType` !=4
+    </select>
+    <!-- 从C——User表中查询用户数据-->
+<!--    <select id="SelectGetUserFromCuser" resultType="java.util.Map" parameterType="java.util.Map">-->
+<!--        select COUNT(1) AS A from C_User c where c.code = #{UserName}-->
+<!--    </select>-->
+    <!-- 岗位人员新增 -->
+    <insert id="insertSystemJobUser" parameterType="java.util.Map">
+         INSERT INTO b_account
+		  ( ID ,
+		    UserName ,
+		    Password ,
+		    AccountType ,
+		    EmployeeCode ,
+		    EmployeeName ,
+		    Gender ,
+		    OfficeTel ,
+		    OfficeMail ,
+		    Mobile ,
+		    PostCode ,
+		    Address ,
+		    UserOrgID ,
+		    AuthCompanyID ,
+		    ProductID ,
+		    Creator ,
+		    CreateTime ,
+		    Editor ,
+		    EditTime ,
+		    Status ,
+		    IsDel,
+		    AccountAttr,
+		    SubordCompanyID
+		  )
+      VALUES
+      ( #{ID},
+		    #{UserName} ,
+		    UPPER(MD5(#{Password})),
+		    #{AccountType} ,
+		    #{EmployeeCode} ,
+		    #{EmployeeName} ,
+		    #{Gender} ,
+		      #{OfficeTel}  ,
+		   #{OfficeMail},
+		    #{Mobile} ,
+		   #{PostCode} ,
+            #{Address} ,
+		    #{UserOrgID} ,
+		    #{AuthCompanyID} ,
+		    #{ProductID} ,
+		    #{Creator} ,
+		    now() ,
+		    NULL ,
+		    NULL ,
+		    #{Status},
+		    0,
+		    #{AccountAttr},
+		    #{SubordCompanyID}
+
+      );
+    </insert>
+	<!-- 岗位人员新增 -->
+<!--	<insert id="">-->
+<!--		 INSERT INTO S_JobsUserRel( ID, AccountID, JobID ) VALUES(uuid(), #{ID}, #{JobID});-->
+<!--	</insert>-->
+    <!-- excel导出测试 -->
+    <select id="userComomJobCodeByJobId" resultType="java.util.Map" parameterType="java.util.Map">
+         select sc.* from s_jobs sj left join s_commonjobs sc on sc.ID=sj.CommonJobID where sj.ID=#{JobID};
+    </select>
+    <!-- excel导出测试 -->
+    <select id="userProxyRegisterByUserId" resultType="java.util.Map" parameterType="java.util.Map">
+         select * from b_proxyregister where UserID=#{ID};
+    </select>
+    <!-- excel导出测试 -->
+    <insert id="userProxyRegisterInvitationCode" parameterType="java.util.Map">
+         INSERT INTO b_proxyregister(ID,UserID,InvitationCode,IsEffect,IsAudit)
+    VALUES(UUID(),#{ID},#{InvitationCode},1,1);
+    </insert>
+    <!-- excle表导出测试 -->
+    <insert id="saleAccountLogInsert">
+         INSERT INTO s_sale_account_log ( ID, sub_front_json, sub_return_json, account_id, user_name, creator_id, create_time )
+    VALUES(UUID(),#{sub_front_json},#{sub_return_json},#{saleAccountId},#{saleAccount},#{UserID},now());
+    </insert>
+	<!-- 人员信息更新  -->
+	<update id="systemUserUpdate">
+		   UPDATE b_account
+      SET
+        UserName = #{UserName},
+		    AccountType = #{AccountType},
+		    EmployeeCode = #{EmployeeCode},
+		    EmployeeName = #{EmployeeName},
+		    Gender = #{Gender},
+		    OfficeTel = #{OfficeTel},
+		    OfficeMail = #{OfficeMail},
+		    Mobile = #{Mobile},
+		    PostCode = #{PostCode},
+		    Address = #{Address},
+		    UserOrgID = #{UserOrgID},
+		    Editor = #{Editor},
+		    EditTime = NOW(),
+		    Status = #{Status},
+		    Password = UPPER(MD5(#{Password})),
+		    AccountAttr=#{AccountAttr},
+		    SubordCompanyID=#{SubordCompanyID}
+      WHERE ID = #{ID}
+	</update>
+	<!-- 人员信息更新  -->
+	<update id="systemUserUpdateTwo" parameterType="java.util.Map">
+		 UPDATE b_account
+      SET
+        UserName = #{UserName},
+		    AccountType = #{AccountType},
+		    EmployeeCode = #{EmployeeCode},
+		    EmployeeName = #{EmployeeName},
+		    Gender = #{Gender},
+		    OfficeTel = #{OfficeTel},
+		    OfficeMail = #{OfficeMail},
+		    Mobile = #{Mobile},
+		    PostCode = #{PostCode},
+		    Address = #{Address},
+		    Editor = #{Editor},
+		    EditTime = NOW(),
+		    Status = #{Status},
+		    AccountAttr=#{AccountAttr},
+		    SubordCompanyID=#{SubordCompanyID}
+      WHERE ID = #{ID};
+	</update>
+	<!--  添加操作日志列表 -->
+	<insert id="systemLogInsert" parameterType="java.util.Map">
+		INSERT INTO S_SystemLogs
+      ( ID ,
+        Name ,
+        Type ,
+        TargetID ,
+        TargetType ,
+        MuduleID ,
+        OperationID ,
+        IP ,
+        Remark ,
+        OperatorID ,
+        Ext1 ,
+        Ext2 ,
+        Ext3 ,
+        Ext4 ,
+        AuthCompanyID ,
+        ProductID ,
+        Creator ,
+        CreateTime ,
+        Editor ,
+        EditTime ,
+        Status ,
+        IsDel
+      )
+      VALUES
+      ( uuid() ,
+        #{Name} ,
+        #{Type} ,
+        #{TargetID} ,
+        #{TargetType} ,
+        #{MuduleID} ,
+        #{OperationID} ,
+        #{IP} ,
+        #{Remark} ,
+        #{OperatorID} ,
+        #{Ext1} ,
+        #{Ext2} ,
+        #{Ext3},
+        #{Ext4},
+        #{AuthCompanyID} ,
+        #{ProductID},
+        #{Creator} ,
+        now() ,
+        NULL ,
+        NULL ,
+        1 ,
+        0
+      )
+	</insert>
+
+    <!--更新用户信息-->
+    <update id="modifySystemUser" parameterType="java.util.Map">
+        UPDATE b_account
+      SET
+          <if test="Password!=null and Password !=''">
+              Password=UPPER(MD5(#{Password})),
+          </if>
+            UserName = #{UserName},
+		    AccountType = #{AccountType},
+		    EmployeeCode = #{EmployeeCode},
+		    EmployeeName = #{EmployeeName},
+		    Gender = #{Gender},
+		    OfficeTel = #{OfficeTel},
+		    OfficeMail = #{OfficeMail},
+		    Mobile = #{Mobile},
+		    PostCode = #{PostCode},
+		    Address = #{Address},
+		    Editor = #{Editor},
+		    EditTime = NOW(),
+		    Status = #{Status}
+      WHERE ID = #{ID};
+    </update>
+
+    <!--更新用户名片信息-->
+    <update id="updateCardByAccountId" parameterType="java.util.Map">
+        UPDATE c_user_card SET
+        name = #{EmployeeName},
+        mobile = #{Mobile},
+        gender = #{Gender}
+        WHERE account_id = #{ID};
+    </update>
+
+    <!--获取同步开始时间-->
+    <select id="getSynStartTime" parameterType="java.lang.String" resultType="java.util.Date">
+        select StartTime from s_timetaslogs where TaskName = #{TaskName} order by StartTime desc limit 1;
+    </select>
+    <!--获取同步结束时间-->
+    <select id="getSynExecutTime" parameterType="java.lang.String" resultType="java.util.Date">
+        select ExecutTime from s_timetaslogs where ${s}
+        order by ExecutTime desc limit 1;
+    </select>
+
+    <!--新增消息-->
+    <insert id="insertMessage" parameterType="java.util.Map">
+        insert into s_message (
+        ID,Subject,Content,Sender,SendTime,MessageType,IsDel,Receiver,IsRead,ReadTime,IsPush,IsNeedPush
+        )
+        values
+            (
+            UUID(),#{subject},#{content},#{sender},now(),#{messageType},0,
+            #{receiver},0,now(),2,2
+            )
+    </insert>
+
+    <!--查询全民经纪人账号-->
+    <select id="getBrokerId" parameterType="java.lang.String" resultType="java.lang.String">
+        select id from a_broker_user where AccountId = #{id} limit 1
+    </select>
+    <!--接触绑定-->
+    <update id="updateBroker" parameterType="java.lang.String">
+        update a_broker_user set AccountId = null where id = #{id}
+    </update>
+    <!--查询岗位是否对接了第三方-->
+    <select id="getJobSales" parameterType="java.lang.String" resultType="java.util.Map">
+        select org.ProjectID projectId,ba.id salesId,ba.EmployeeName salesName,ba.Mobile salesMobile,bt.third_party_account wlkAccount from s_jobsuserrel rel
+          INNER JOIN s_jobs job on job.id = rel.jobid
+          INNER JOIN s_commonjobs com on com.id = job.CommonJobID
+          INNER JOIN s_organization org on org.id = job.JobOrgID
+          INNER JOIN b_account ba on ba.id = rel.AccountID
+          INNER JOIN b_account_third_party bt on bt.xk_sales_id = ba.id and bt.third_party = #{thirdParty}
+          INNER JOIN b_account_third_party_pro pro on pro.xk_pro_id = org.ProjectID and pro.xk_sales_id = ba.id and pro.third_party = #{thirdParty}
+        where rel.id = #{relId} and com.JobCode = 'zygw' and pro.is_del = 0 and bt.is_del = 0 limit 1;
+    </select>
+    <!--查询账号是否对接了第三方-->
+    <select id="getSalesThirdPro" parameterType="java.lang.String" resultType="java.util.Map">
+        select pro.xk_pro_id projectId,ba.id salesId,ba.EmployeeName salesName,ba.Mobile salesMobile,pro.third_party_account wlkAccount,ba.`Status` status from b_account ba
+          INNER JOIN b_account_third_party_pro pro on pro.xk_sales_id = ba.id and pro.third_party = #{thirdParty}
+        where ba.id = #{userId} and pro.is_del = 0;
+    </select>
+    <!--更新第三方账号信息-->
+    <update id="updateSalesThird" parameterType="java.util.Map">
+        update b_account_third_party_pro set third_party_account = #{salesMobile} where xk_sales_id = #{salesId} and third_party = #{thirdParty};
+        update b_account_third_party set third_party_account = #{salesMobile} where xk_sales_id = #{salesId} and third_party = #{thirdParty};
+    </update>
+
+    <select id="getQwUserId" parameterType="java.lang.String" resultType="java.lang.String">
+        select userid
+        from b_qw_user
+        where account_id = #{id}
+          and is_del = 0;
+    </select>
+
+    <select id="getQwUserCst" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.QuitUserCst">
+        select userid useridOld,external_userid externalUserid
+        from b_qw_user_cst_rel
+        where userid = #{userid} and is_del = 0
+    </select>
+    <select id="getUserJob" resultType="java.util.Map">
+        select JobID,AccountID from s_jobsuserrel WHERE ID = #{id}
+    </select>
+
+    <insert id="addQuitUserCst" parameterType="cn.visolink.system.companyQw.model.QuitUserCst">
+        insert into b_qw_cst_redistribution(userid_old,external_userid,`status`,create_time)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.useridOld},#{item.externalUserid},1,now())
+        </foreach>
+    </insert>
+
+    <update id="delQwUser" parameterType="java.lang.String">
+        update b_qw_user set is_del = 1,`status` = 5,quit_time = now() where userid = #{userid};
+        update b_qw_cst_oppcst_rel set is_del = 1,is_bind = 0,edit_time = now() where userid = #{userid};
+    </update>
+</mapper>

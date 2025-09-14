@@ -1,0 +1,2580 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.projectmanager.dao.projectmanagerDao">
+	<!--查询项目信息-->
+    <resultMap id="stageMap" type="cn.visolink.system.projectmanager.model.requestmodel.StageModel" >
+        <id column="stage_id" property="stageId"  />
+        <result column="stage_code" property="stageCode"  />
+        <result column="stage_name" property="stageName"  />
+        <result column="stage_record_name" property="stageRecordName"  />
+        <result column="project_id" property="projectId"  />
+        <result column="start_time" property="startTime"  />
+        <result column="end_time" property="endTime"  />
+        <result column="totalland_area" property="totallandArea"  />
+        <result column="buildland_area" property="buildlandArea"  />
+        <result column="totalbuild_area" property="totalbuildArea"  />
+        <result column="on_build_area" property="onBuildArea"  />
+        <result column="up_build_area" property="upBuildArea"  />
+        <result column="build_volume_area" property="buildVolumeArea"  />
+        <result column="build_sale_area" property="buildSaleArea"  />
+        <result column="plot_ratio" property="plotRatio"  />
+        <result column="remark" property="remark"  />
+        <result column="create_time" property="createTime"  />
+        <result column="update_time" property="updateTime"  />
+        <result column="create_user" property="createUser"  />
+        <result column="update_user" property="updateUser"  />
+        <result column="is_delete" property="isDelete"  />
+        <result column="status" property="status"  />
+        <result column="order_code" property="orderCode"  />
+    </resultMap>
+
+    <resultMap id="groupMap" type="cn.visolink.system.projectmanager.model.requestmodel.GroupModel">
+        <id column="group_id"  property="groupId" />
+        <result column="group_code"  property="groupCode" />
+        <result column="group_name"  property="groupName" />
+        <result column="kingdee_project_id"  property="kingdeeProjectId" />
+        <result column="project_id"  property="projectId" />
+        <result column="project_code"  property="projectCode" />
+        <result column="project_name"  property="projectName" />
+        <result column="kingdee_stage_id"  property="kingdeeStageId" />
+        <result column="stage_id"  property="stageId" />
+        <result column="stage_code"  property="stageCode" />
+        <result column="stage_name"  property="stageName" />
+        <result column="total_build_area"  property="totalBuildArea" />
+        <result column="business_type"  property="businessType" />
+        <result column="free_type"  property="freeType" />
+        <result column="version_stage"  property="versionStage" />
+        <result column="total_sale_area"  property="totalSaleArea" />
+        <result column="room_num"  property="roomNum" />
+        <result column="approval_time"  property="approvalTime" />
+        <result column="start_time"  property="startTime" />
+        <result column="end_time"  property="endTime" />
+        <result column="create_time"  property="createTime" />
+        <result column="create_user"  property="createUser" />
+        <result column="update_time"  property="updateTime" />
+        <result column="update_user"  property="updateUser" />
+        <result column="is_delete"  property="isDelete" />
+        <result column="status"  property="status" />
+    </resultMap>
+
+    <resultMap id="designBuildMap" type="cn.visolink.system.projectmanager.model.requestmodel.DesignBuildModel" >
+        <id column="build_id" property="buildId"  />
+        <result column="kingdee_build_id" property="kingdeeBuildId"  />
+        <result column="my_build_id" property="myBuildId"  />
+        <result column="product_build_code" property="productBuildCode"  />
+        <result column="product_build_name" property="productBuildName"  />
+        <result column="building_code" property="buildingCode"  />
+        <result column="building_name" property="buildingName"  />
+        <result column="stage_id" property="stageId"  />
+        <result column="stage_code" property="stageCode"  />
+        <result column="group_id" property="groupId"  />
+        <result column="group_name" property="groupName"  />
+        <result column="product_code" property="productCode"  />
+        <result column="product_name" property="productName"  />
+        <result column="free_type_code" property="freeTypeCode"  />
+        <result column="free_type_name" property="freeTypeName"  />
+        <result column="pro_type_code" property="proTypeCode"  />
+        <result column="pro_type_name" property="proTypeName"  />
+        <result column="total_sale_area" property="totalSaleArea"  />
+        <result column="total_build_area" property="totalBuildArea"  />
+        <result column="up_build_area" property="upBuildArea"  />
+        <result column="under_build_area" property="underBuildArea"  />
+        <result column="up_sale_area" property="upSaleArea"  />
+        <result column="under_sale_area" property="underSaleArea"  />
+        <result column="total_complimentary_area" property="totalComplimentaryArea"  />
+        <result column="up_gift_area" property="upGiftArea"  />
+        <result column="under_gift_area" property="underGiftArea"  />
+        <result column="total_land_area" property="totalLandArea"  />
+        <result column="land_qz_date" property="landQzDate" />
+        <result column="land_qz_area" property="landQzArea" />
+        <result column="planning_qz_date" property="planningQzDate" />
+        <result column="planning_qz_area" property="planningQzArea"  />
+        <result column="construction_qz_date" property="constructionQzDate" />
+        <result column="construction_qz_area" property="constructionQzArea" />
+        <result column="presale_qz_date" property="presaleQzDate" />
+        <result column="presale_qz_area" property="presaleQzArea" />
+        <result column="completioncer_date" property="completioncerDate" />
+        <result column="completioncer_area" property="completioncerArea" />
+        <result column="floors" property="floors" />
+        <result column="unit_num" property="unitNum" />
+        <result column="room_high" property="roomHigh" />
+        <result column="floor_high" property="floorHigh"  />
+        <result column="lift_num" property="liftNum"  />
+        <result column="room_num" property="roomNum"  />
+        <result column="deposit" property="deposit"  />
+        <result column="structure_area" property="structureArea" />
+        <result column="parking_ratio" property="parkingRatio" />
+        <result column="is_refined" property="isRefined" />
+        <result column="is_assembling" property="isAssembling" />
+        <result column="presale_image" property="presaleImage" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="create_user" property="createUser" />
+        <result column="update_user" property="updateUser" />
+        <result column="is_delete" property="isDelete" />
+        <result column="status" property="status" />
+        <result column="project_id" property="projectId" />
+        <result column="project_name" property="projectName" />
+        <result column="start_time" property="startTime" />
+        <result column="end_time" property="endTime" />
+        <result column="stage_name" property="stageName" />
+        <result column="bld_type" property="bldType" />
+        <result column="order_code" property="orderCode" />
+        <result column="permit_num" property="permitNum" />
+        <result column="gen_house_flag" property="genHouseFlag" />
+        <result column="yt_type_id" property="ytTypeId" />
+    </resultMap>
+
+    <resultMap id="projectMap" type="cn.visolink.system.projectmanager.model.requestmodel.ProjectModel" >
+        <id column="ID" property="id" />
+        <result column="PID" property="pid" />
+        <result column="IsStages" property="isstages" />
+        <result column="ProjectNum" property="projectnum" />
+        <result column="ProjectName" property="projectName" />
+        <result column="ProjectCategory" property="projectcategory" />
+        <result column="ProjectStatus" property="projectstatus" />
+        <result column="Contacts" property="contacts" />
+        <result column="ContactPhone" property="contactphone" />
+        <result column="Longitude" property="longitude" />
+        <result column="Latitude" property="latitude" />
+        <result column="OpeningTime" property="openingtime" />
+        <result column="SubmittedTime" property="submittedtime" />
+        <result column="RoomType" property="roomtype" />
+        <result column="AveragePrice" property="averageprice" />
+        <result column="RegionalLocation" property="regionallocation" />
+        <result column="AccountStatus" property="accountstatus" />
+        <result column="LoginName" property="loginname" />
+        <result column="Password" property="password" />
+        <result column="AuthCompanyID" property="authcompanyid" />
+        <result column="OrgID" property="orgId" />
+        <result column="ProductID" property="productid" />
+        <result column="Creator" property="creator" />
+        <result column="CreateTime" property="createtime" />
+        <result column="Editor" property="editor" />
+        <result column="EditTime" property="edittime" />
+        <result column="Status" property="status"  />
+        <result column="IsDel" property="isdel" />
+        <result column="MerchantArea" property="merchantarea" />
+        <result column="ProjectAreaMask" property="projectareamask" />
+        <result column="ProjectCategoryMask" property="projectcategorymask" />
+        <result column="province" property="province" />
+        <result column="ProvinceCode" property="provincecode"  />
+        <result column="city" property="city" />
+        <result column="CityCode" property="citycode"  />
+        <result column="county" property="county" />
+        <result column="CountyCode" property="countycode"  />
+        <result column="ProjectInfoUrl" property="projectinfourl"   />
+        <result column="PeripheralMatchingUrl" property="peripheralmatchingurl" />
+        <result column="HouseTypeUrl" property="housetypeurl" />
+        <result column="Sort" property="sort" />
+        <result column="RecommendedCommission" property="recommendedcommission" />
+        <result column="PriceDesc" property="pricedesc" />
+        <result column="CoverPictureAddress" property="coverpictureaddress" />
+        <result column="UpdateOrInsertFlag" property="updateorinsertflag" />
+        <result column="AddressDetails" property="addressdetails" />
+        <result column="bks_status" property="bksStatus" />
+        <result column="TokerResetType" property="tokerresettype" />
+        <result column="AnChangResetType" property="anchangresettype" />
+        <result column="release" property="release" />
+        <result column="tag" property="tag" />
+        <result column="AreaID" property="areaid" />
+        <result column="AreaName" property="areaname" />
+        <result column="tagName" property="tagname" />
+        <result column="TokerReportStatus" property="tokerreportstatus" />
+        <result column="IsPrintStatus" property="isprintstatus" />
+        <result column="KeyCommission" property="keycommission"  />
+        <result column="IsChoseSaler" property="ischosesaler" />
+        <result column="Trackfrequency" property="trackfrequency" />
+        <result column="offlineTime" property="offlinetime" />
+        <result column="version" property="version" />
+        <result column="HKBProjectID" property="hkbprojectid" />
+        <result column="HKBProjectFqID" property="hkbprojectfqid" />
+        <result column="KindeeProjectID" property="kindeeprojectid"  />
+        <result column="KindeeProjectNAME" property="kindeeprojectname"  />
+        <result column="KindeeProjectFID" property="kindeeprojectfid" />
+        <result column="KindeeProjectFNAME" property="kindeeprojectfname" />
+        <result column="BUGUID" property="buguid" />
+        <result column="isSyn" property="issyn" />
+        <result column="HotLine" property="hotline" />
+        <result column="bind_project_name" property="bindProjectName" />
+        <result column="start_time" property="startTime"  />
+        <result column="end_time" property="endTime"  />
+        <result column="bind_project_id" property="bindProjectId"  />
+        <result column="stage_id" property="stageId" />
+        <result column="build_id" property="buildId" />
+        <result column="group_id" property="groupId" />
+        <result column="project_pic" property="projectPic" />
+        <result column="buildland_area" property="buildlandArea"  />
+        <result column="totalland_area" property="totallandArea"   />
+        <result column="up_build_area" property="upBuildArea"  />
+        <result column="totalbuild_area" property="totalbuildArea"  />
+        <result column="on_build_area" property="onBuildArea" />
+        <result column="get_time" property="getTime" />
+        <result column="build_volume_area" property="buildVolumeArea"/>
+        <result column="plot_ratio" property="plotRatio" />
+        <result column="total_sale_area" property="totalSaleArea" />
+        <result column="Address" property="address" />
+        <result column="LatestNews" property="latestnews" />
+        <result column="project_pic" property="projectPic" />
+        <result column="buildland_area" property="buildlandArea" />
+        <result column="totalland_area" property="totallandArea" />
+        <result column="up_build_area" property="upBuildArea" />
+        <result column="totalbuild_area" property="totalbuildArea" />
+        <result column="on_build_area" property="onBuildArea" />
+        <result column="get_time" property="getTime" />
+        <result column="build_volume_area" property="buildVolumeArea" />
+        <result column="plot_ratio" property="plotRatio" />
+        <result column="total_sale_area" property="totalSaleArea" />
+        <result column="full_path" property="fullPath" />
+    </resultMap>
+
+    <sql id="projectField">
+        select ID, PID, IsStages, ProjectNum, ProjectName, ProjectCategory, ProjectStatus,
+        Contacts, ContactPhone, Longitude, Latitude, OpeningTime, SubmittedTime, RoomType,
+        AveragePrice, RegionalLocation, AccountStatus, LoginName, Password, AuthCompanyID,
+        OrgID, ProductID, Creator, CreateTime, Editor, EditTime, Status, IsDel, MerchantArea,
+        ProjectAreaMask, ProjectCategoryMask, province, ProvinceCode, city, CityCode, county,
+        CountyCode, ProjectInfoUrl, PeripheralMatchingUrl, HouseTypeUrl, Sort, RecommendedCommission,
+        PriceDesc, CoverPictureAddress, UpdateOrInsertFlag, AddressDetails, bks_status, TokerResetType,
+        AnChangResetType, `release`, tag, AreaID, AreaName, tagName, TokerReportStatus, IsPrintStatus,
+        KeyCommission, IsChoseSaler, Trackfrequency, offlineTime, version, HKBProjectID,
+        HKBProjectFqID, KindeeProjectID, KindeeProjectNAME, KindeeProjectFID, KindeeProjectFNAME,
+        BUGUID, isSyn, HotLine, bind_project_name, start_time, end_time, bind_project_id,
+        stage_id, build_id, group_id, project_pic, buildland_area, totalland_area, up_build_area,
+        totalbuild_area, on_build_area, get_time, build_volume_area, plot_ratio, total_sale_area,
+        Address, LatestNews, project_pic, buildland_area, totalland_area, up_build_area, totalbuild_area,
+        on_build_area, get_time, build_volume_area, plot_ratio, total_sale_area, full_path
+    </sql>
+
+    <sql id="stageField">
+        select stage_id, stage_code, stage_name, stage_record_name, project_id, start_time,
+        end_time, totalland_area, buildland_area, totalbuild_area, on_build_area, up_build_area,
+        build_volume_area, build_sale_area, plot_ratio, remark, create_time, update_time,
+        create_user, update_user, is_delete, `status`, order_code
+    </sql>
+
+    <sql id="groupField">
+        select
+        group_id, group_code, group_name, kingdee_project_id, project_id, project_code,
+        project_name, kingdee_stage_id, stage_id, stage_code, stage_name, total_build_area,
+        business_type, free_type, version_stage, total_sale_area, room_num, approval_time,
+        start_time, end_time, create_time, create_user, update_time, update_user, is_delete,
+        `status`
+    </sql>
+
+    <sql id="designBuildField">
+        select build_id, kingdee_build_id, my_build_id, product_build_code,
+        product_build_name, building_code, building_name,
+        stage_id, stage_code, group_id,
+        group_name, product_code, product_name,
+        free_type_code, free_type_name, pro_type_code,
+        pro_type_name, total_sale_area, total_build_area,
+        up_build_area, under_build_area, up_sale_area,
+        under_sale_area, total_complimentary_area, up_gift_area,
+        under_gift_area, total_land_area, land_qz_date,
+        land_qz_area, planning_qz_date, planning_qz_area,
+        construction_qz_date, construction_qz_area,
+        presale_qz_date, presale_qz_area, completioncer_date,
+        completioncer_area, floors, unit_num,
+        room_high, floor_high, lift_num,
+        room_num, structure_area, parking_ratio,
+        is_refined, is_assembling, presale_image,
+        create_time, update_time, create_user,
+        update_user, is_delete, status, stage_name, start_time, end_time,project_id
+        ,project_name, bld_type, order_code, bld_type, permit_num, gen_house_flag, yt_type_id, deposit
+    </sql>
+
+    <select id="selectProjectByOrgId" resultType="hashmap" parameterType="string">
+        select
+        a.ID,
+        a.OrgCategory
+        from s_organization a
+        where a.PID = #{pid}
+        AND a.IsDel = 0
+        AND a.`Status` = 1
+        AND 4 >= OrgCategory
+    </select>
+
+    <select id="selectProjectPlusPageByOrgId" resultType="hashmap" parameterType="string">
+        select
+        a.OrgID as ID
+        from b_project a
+        where a.OrgID = #{orgID}
+        AND a.IsDel = 0
+        AND a.`Status` = 1
+    </select>
+
+    <select id="isExistProject" parameterType="string" resultType="int">
+        select count(ID)
+        from b_project
+        where IsDel = 0
+        AND `Status` = 1
+        AND ID = #{projectId}
+    </select>
+
+    <select id="selectFullPath" resultType="hashmap" parameterType="string">
+        select *
+        from s_organization
+        where IsDel = 0
+        AND `Status` = 1
+        AND ID = #{orgId}
+    </select>
+
+    <select id="selectAllProject" resultType="cn.visolink.system.projectmanager.dao.ProjectDto">
+        SELECT
+        bp.ProjectName as projectName,
+        bp.`Status` as status,
+        bp.Creator as creator,
+        bp.ID as id,
+        bp.OrgID as orgId,
+        bp.AreaID as areaId,
+        bp.AreaName as areaName,
+        bp.CreateTime as createTime
+        FROM
+        b_project bp
+        WHERE
+        bp.IsDel = 0
+        AND `Status` = 1
+        <if test="areaName != null and areaName != ''">
+            AND bp.AreaName LIKE '%${areaName}%'
+        </if>
+        <if test="projectName != null and projectName != ''">
+            AND bp.ProjectName LIKE '%${projectName}%'
+        </if>
+        and bp.OrgID in (
+        <foreach collection="list" separator="," item="item">
+            #{item.ID}
+        </foreach>
+        )
+        ORDER BY CreateTime DESC
+    </select>
+
+    <select id="selectProjectListByFullPath" parameterType="cn.visolink.system.projectmanager.model.requestmodel.ProjectQueryRequest" resultType="cn.visolink.system.projectmanager.dao.ProjectDto">
+        select
+        bp.ProjectName as projectName,
+        bp.`Status` as status,
+        bp.Creator as creator,
+        bp.ID as id,
+        bp.OrgID as orgId,
+        bp.AreaID as areaId,
+        bp.AreaName as areaName,
+        bp.CreateTime as createTime
+        FROM
+        b_project bp
+        inner join s_organization b
+        ON bp.OrgID = b.ID
+        WHERE
+        bp.IsDel = 0
+        AND bp.`Status` = 1
+        AND b.FullPath like '${fullPath}%'
+        <if test="areaName != null and areaName != ''">
+            AND bp.AreaName LIKE '%${areaName}%'
+        </if>
+        <if test="projectName != null and projectName != ''">
+            AND bp.ProjectName LIKE '%${projectName}%'
+        </if>
+        ORDER BY bp.CreateTime DESC
+    </select>
+
+
+    <select id="getProjectByProjectId" resultMap="projectMap" parameterType="string">
+        <include refid="projectField"/>
+        from b_project
+        where id = #{id}
+        and IsDel = 0
+        AND `Status` = 1
+    </select>
+
+    <insert id="createProject" parameterType="cn.visolink.system.projectmanager.model.requestmodel.ProjectModel">
+        insert into b_project
+        (ID, PID, IsStages, ProjectNum,
+        ProjectName, ProjectCategory, ProjectStatus,
+        Contacts, ContactPhone, Longitude,
+        Latitude, OpeningTime, SubmittedTime,
+        RoomType, AveragePrice, RegionalLocation,
+        AccountStatus, LoginName, `Password`,
+        AuthCompanyID, OrgID, ProductID,
+        Creator, CreateTime, `Status`, IsDel,
+        MerchantArea, ProjectAreaMask, ProjectCategoryMask,
+        province, ProvinceCode, city,
+        CityCode, county, CountyCode,
+        ProjectInfoUrl, PeripheralMatchingUrl,
+        HouseTypeUrl, Sort, RecommendedCommission,
+        PriceDesc, CoverPictureAddress, UpdateOrInsertFlag,
+        AddressDetails, bks_status, TokerResetType,
+        AnChangResetType, `release`, tag,
+        AreaID, AreaName, tagName,
+        TokerReportStatus, IsPrintStatus, KeyCommission,
+        IsChoseSaler, Trackfrequency, offlineTime,
+        version, HKBProjectID, HKBProjectFqID,
+        KindeeProjectID, KindeeProjectNAME, KindeeProjectFID,
+        KindeeProjectFNAME, BUGUID, isSyn,
+        HotLine, bind_project_name, start_time,
+        end_time, bind_project_id, stage_id,
+        build_id, group_id, Address,
+        LatestNews, project_pic, buildland_area, totalland_area, up_build_area, totalbuild_area,
+        on_build_area, get_time, build_volume_area, plot_ratio, total_sale_area, full_path)
+        values (#{id}, #{pid}, 0, #{projectnum},
+        #{projectName}, #{projectcategory}, #{projectstatus},
+        #{contacts}, #{contactphone}, #{longitude},
+        #{latitude}, #{openingtime}, #{submittedtime},
+        #{roomtype}, #{averageprice}, #{regionallocation},
+        #{accountstatus}, #{loginname}, #{password},
+        #{authcompanyid}, #{orgId}, #{productid},
+        #{creator}, NOW(), 1, 0,
+        #{merchantarea}, #{projectareamask}, #{projectcategorymask},
+        #{province}, #{provincecode}, #{city},
+        #{citycode}, #{county}, #{countycode},
+        #{projectinfourl}, #{peripheralmatchingurl},
+        #{housetypeurl}, #{sort}, #{recommendedcommission},
+        #{pricedesc}, #{coverpictureaddress}, #{updateorinsertflag},
+        #{addressdetails}, #{bksStatus}, #{tokerresettype},
+        #{anchangresettype}, #{release}, #{tag},
+        #{areaid}, #{areaname}, #{tagname},
+        #{tokerreportstatus}, #{isprintstatus}, #{keycommission},
+        #{ischosesaler}, #{trackfrequency}, #{offlinetime},
+        #{version}, #{hkbprojectid}, #{hkbprojectfqid},
+        #{kindeeprojectid}, #{kindeeprojectname}, #{kindeeprojectfid},
+        #{kindeeprojectfname}, #{buguid}, 0,
+        #{hotline}, #{bindProjectName}, #{startTime},
+        #{endTime}, #{bindProjectId}, #{stageId},
+        #{buildId}, #{groupId}, #{address},
+        #{latestnews}, #{projectPic}, #{buildlandArea}, #{totallandArea}, #{upBuildArea},
+         #{totalbuildArea}, #{onBuildArea}, #{getTime}, #{buildVolumeArea}, #{plotRatio}, #{totalSaleArea}, #{fullPath})
+    </insert>
+
+    <update id="saveProjectFromEdit" parameterType="cn.visolink.system.projectmanager.model.requestmodel.ProjectModel">
+        update b_project
+        <trim suffixOverrides="," prefix="set">
+            <if test="pid != null and pid != ''">PID = #{pid}, </if>
+            <if test="isstages != null">IsStages = #{isstages}, </if>
+            <if test="projectnum != null and projectnum != ''">ProjectNum = #{projectnum}, </if>
+            <if test="projectName != null and projectName != ''">ProjectName = #{projectName}, </if>
+            <if test="projectcategory != null and projectcategory != ''">ProjectCategory = #{projectcategory}, </if>
+            <if test="projectstatus != null and projectstatus != ''">ProjectStatus = #{projectstatus}, </if>
+            <if test="contacts != null and contacts != ''">Contacts = #{contacts}, </if>
+            <if test="contactphone != null and contactphone != ''">ContactPhone = #{contactphone}, </if>
+            <if test="longitude != null">Longitude = #{longitude}, </if>
+            <if test="latitude != null">Latitude = #{latitude}, </if>
+            <if test="openingtime != null and openingtime != ''">OpeningTime = #{openingtime}, </if>
+            <if test="submittedtime != null and submittedtime != ''">SubmittedTime = #{submittedtime}, </if>
+            <if test="roomtype != null and roomtype != ''">RoomType = #{roomtype}, </if>
+            <if test="averageprice != null and averageprice != ''">AveragePrice = #{averageprice}, </if>
+            <if test="regionallocation != null and regionallocation != ''">RegionalLocation = #{regionallocation}, </if>
+            <if test="accountstatus != null">AccountStatus = #{accountstatus}, </if>
+            <if test="loginname != null and loginname != ''">LoginName = #{loginname}, </if>
+            <if test="password != null and password != ''">Password = #{password}, </if>
+            <if test="authcompanyid != null and authcompanyid != ''">AuthCompanyID = #{authcompanyid}, </if>
+            <if test="productid != null and productid != ''">ProductID = #{productid}, </if>
+            <if test="editor != null and editor != ''">Editor = #{editor}, </if>
+            EditTime = NOW(),
+            <if test="merchantarea != null and merchantarea != ''">MerchantArea = #{merchantarea}, </if>
+            <if test="projectareamask != null and projectareamask != ''">ProjectAreaMask = #{projectareamask}, </if>
+            <if test="projectcategorymask != null and projectcategorymask != ''">ProjectCategoryMask = #{projectcategorymask}, </if>
+            <if test="province != null and province != ''">province = #{province}, </if>
+            <if test="provincecode != null">ProvinceCode = #{provincecode}, </if>
+            <if test="city != null and city != ''">city = #{city}, </if>
+            <if test="city != null">CityCode = #{citycode}, </if>
+            <if test="county != null and county != ''">county = #{county}, </if>
+            <if test="countycode != null">CountyCode = #{countycode}, </if>
+            <if test="projectinfourl != null and projectinfourl != ''">ProjectInfoUrl = #{projectinfourl}, </if>
+            <if test="peripheralmatchingurl != null and peripheralmatchingurl != ''">PeripheralMatchingUrl = #{peripheralmatchingurl}, </if>
+            <if test="housetypeurl != null and housetypeurl != ''">HouseTypeUrl = #{housetypeurl}, </if>
+            <if test="sort != null">sort = #{sort}, </if>
+            <if test="recommendedcommission != null and recommendedcommission != ''">RecommendedCommission = #{recommendedcommission}, </if>
+            <if test="pricedesc != null and pricedesc != ''">PriceDesc = #{pricedesc}, </if>
+            <if test="coverpictureaddress != null and coverpictureaddress != ''">CoverPictureAddress = #{coverpictureaddress}, </if>
+            <if test="updateorinsertflag != null">UpdateOrInsertFlag = #{updateorinsertflag}, </if>
+            <if test="addressdetails != null and addressdetails != ''">AddressDetails = #{addressdetails}, </if>
+            <if test="bksStatus != null">bks_status = #{bksStatus}, </if>
+            <if test="tokerresettype != null and tokerresettype != ''">TokerResetType = #{tokerresettype}, </if>
+            <if test="anchangresettype != null and anchangresettype != ''">AnChangResetType = #{anchangresettype}, </if>
+            <if test="release != null">release = #{release}, </if>
+            <if test="tag != null and tag != ''">tag = #{tag}, </if>
+            <if test="areaid != null and areaid != ''">AreaID = #{areaid}, </if>
+            <if test="areaname != null and areaname != ''">AreaName = #{areaname}, </if>
+            <if test="tagname != null and tagname != ''">tagName = #{tagname}, </if>
+            <if test="tokerreportstatus != null">TokerReportStatus = #{tokerreportstatus}, </if>
+            <if test="isprintstatus != null">IsPrintStatus = #{isprintstatus}, </if>
+            <if test="keycommission != null and keycommission != ''">KeyCommission = #{keycommission}, </if>
+            <if test="ischosesaler != null">IsChoseSaler = #{ischosesaler}, </if>
+            <if test="trackfrequency != null">Trackfrequency = #{trackfrequency}, </if>
+            <if test="offlinetime != null">offlineTime = #{offlinetime}, </if>
+            <if test="version != null">version = #{version}, </if>
+            <if test="hkbprojectid != null and hkbprojectid != ''">HKBProjectID = #{hkbprojectid}, </if>
+            <if test="hkbprojectfqid != null and hkbprojectfqid != ''">HKBProjectFqID = #{hkbprojectfqid}, </if>
+            <if test="kindeeprojectid != null and kindeeprojectid != ''">KindeeProjectID = #{kindeeprojectid}, </if>
+            <if test="kindeeprojectname != null and kindeeprojectname != ''">KindeeProjectNAME = #{kindeeprojectname}, </if>
+            <if test="kindeeprojectfid != null and kindeeprojectfid != ''">KindeeProjectFID = #{kindeeprojectfid}, </if>
+            <if test="kindeeprojectfname != null and kindeeprojectfname != ''">KindeeProjectFNAME = #{kindeeprojectfname}, </if>
+            <if test="buguid != null and buguid != ''">BUGUID = #{buguid}, </if>
+            <if test="issyn != null">isSyn = #{issyn}, </if>
+            <if test="hotline != null and hotline != ''">HotLine = #{hotline}, </if>
+            <if test="bindProjectName != null and bindProjectName != ''">bind_project_name = #{bindProjectName}, </if>
+            <if test="startTime != null">start_time = #{startTime}, </if>
+            <if test="endTime != null">end_time = #{endTime}, </if>
+            <if test="bindProjectId != null">bind_project_id = #{bindProjectId}, </if>
+            <if test="stageId != null and stageId != ''">stage_id = #{stageId}, </if>
+            <if test="buildId != null and buildId != ''">build_id = #{buildId}, </if>
+            <if test="groupId != null and groupId != ''">group_id = #{groupId}, </if>
+            <if test="address != null and address != ''">Address = #{address}, </if>
+            <if test="latestnews != null and latestnews != ''">LatestNews = #{latestnews}, </if>
+            <if test="orgId != null and orgId != ''">OrgID = #{orgId}, </if>
+            <if test="projectPic != null and projectPic != ''">project_pic = #{projectPic}, </if>
+            <if test="buildlandArea != null">buildland_area = #{buildlandArea}, </if>
+            <if test="totallandArea != null">totalland_area = #{totallandArea}, </if>
+            <if test="upBuildArea != null">up_build_area = #{upBuildArea}, </if>
+            <if test="totalbuildArea != null">totalbuild_area = #{totalbuildArea}, </if>
+            <if test="onBuildArea != null">on_build_area = #{onBuildArea}, </if>
+            <if test="getTime != null">get_time = #{getTime}, </if>
+            <if test="buildVolumeArea != null">build_volume_area = #{buildVolumeArea}, </if>
+            <if test="plotRatio != null">plot_ratio = #{plotRatio}, </if>
+            <if test="totalSaleArea != null">total_sale_area = #{totalSaleArea}, </if>
+            <if test="fullPath != null and fullPath != ''">full_path = #{fullPath}, </if>
+        </trim>
+        where ID = #{projectId}
+    </update>
+
+    <select id="selectGroupListByProjectId" parameterType="string" resultMap="groupMap">
+        <include refid="groupField"/>
+        from t_mm_group
+        where is_delete = 0
+        AND `status` = 1
+        AND project_id = #{projectId}
+    </select>
+
+    <select id="selectGroupList" parameterType="string" resultMap="groupMap">
+        <include refid="groupField"/>
+        from t_mm_group
+        where is_delete = 0
+        AND project_id = #{projectId}
+        AND `status` = 1
+    </select>
+
+    <select id="selectDesignBuildByStageId" resultMap="designBuildMap" parameterType="string">
+        <include refid="designBuildField"/>
+        from t_mm_designbuild
+        where is_delete = 0
+        AND `status` = 1
+        AND stage_id = #{stageId}
+        ORDER BY order_code ASC
+    </select>
+
+    <insert id="createStage" parameterType="cn.visolink.system.projectmanager.model.requestmodel.StageModel">
+        insert into t_mm_stage
+        <foreach collection="list" item="item" separator=",">
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="item.stageId != null and item.stageId != ''">stage_id, </if>
+                <if test="item.stageCode != null and item.stageCode != ''">stage_code, </if>
+                <if test="item.stageName != null and item.stageName != ''">stage_name, </if>
+                <if test="item.stageRecordName != null and item.stageRecordName != ''">stage_record_name, </if>
+                <if test="item.projectId != null and item.projectId != ''">project_id, </if>
+                <if test="item.startTime != null">start_time, </if>
+                <if test="item.endTime != null">end_time, </if>
+                <if test="item.totallandArea != null">totalland_area, </if>
+                <if test="item.buildlandArea != null">buildland_area, </if>
+                <if test="item.totalbuildArea != null">totalbuild_area, </if>
+                <if test="item.onBuildArea != null">on_build_area, </if>
+                <if test="item.upBuildArea != null">up_build_area, </if>
+                <if test="item.buildVolumeArea != null">build_volume_area, </if>
+                <if test="item.buildSaleArea != null">build_sale_area, </if>
+                <if test="item.plotRatio != null">plot_ratio, </if>
+                <if test="item.remark != null and item.remark != ''">remark, </if>
+                create_time, is_delete, `status`,
+                <if test="item.createUser != null and item.createUser != ''">create_user, </if>
+                <if test="item.orderCode != null">order_code, </if>
+            </trim>
+            <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="item.stageId != null and item.stageId != ''">#{item.stageId}, </if>
+                <if test="item.stageCode != null and item.stageCode != ''">#{item.stageCode}, </if>
+                <if test="item.stageName != null and item.stageName != ''">#{item.stageName}, </if>
+                <if test="item.stageRecordName != null and item.stageRecordName != ''">#{item.stageRecordName}, </if>
+                <if test="item.projectId != null and item.projectId != ''">#{item.projectId}, </if>
+                <if test="item.startTime != null">#{item.startTime}, </if>
+                <if test="item.endTime != null">#{item.endTime}, </if>
+                <if test="item.totallandArea != null">#{item.totallandArea}, </if>
+                <if test="item.buildlandArea != null">#{item.buildlandArea}, </if>
+                <if test="item.totalbuildArea != null">#{item.totalbuildArea}, </if>
+                <if test="item.onBuildArea != null">#{item.onBuildArea}, </if>
+                <if test="item.upBuildArea != null">#{item.upBuildArea}, </if>
+                <if test="item.buildVolumeArea != null">#{item.buildVolumeArea}, </if>
+                <if test="item.buildSaleArea != null">#{item.buildSaleArea}, </if>
+                <if test="item.plotRatio != null">#{item.plotRatio}, </if>
+                <if test="item.remark != null and item.remark != ''">#{item.remark}, </if>
+                NOW(), 0, 1,
+                <if test="item.createUser != null and item.createUser != ''">#{item.createUser}, </if>
+                <if test="item.orderCode != null and item.orderCode != ''">#{item.orderCode}, </if>
+            </trim>
+        </foreach>
+
+    </insert>
+
+    <insert id="createGroup" parameterType="cn.visolink.system.projectmanager.model.requestmodel.GroupModel">
+        insert into t_mm_group
+        <foreach collection="list" item="item" separator=",">
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="item.groupId != null and item.groupId != ''">group_id, </if>
+                <if test="item.groupCode != null and item.groupCode != ''">group_code, </if>
+                <if test="item.groupName != null and item.groupName != ''">group_name, </if>
+                <if test="item.kingdeeProjectId != null and item.kingdeeProjectId != ''">kingdee_project_id, </if>
+                <if test="item.projectId != null and item.projectId != ''">project_id, </if>
+                <if test="item.projectCode != null and item.projectCode != ''">project_code, </if>
+                <if test="item.projectName != null and item.projectName != ''">project_name, </if>
+                <if test="item.kingdeeStageId != null and item.kingdeeStageId != ''">kingdee_stage_id, </if>
+                <if test="item.stageId != null and item.stageId != ''">stage_id, </if>
+                <if test="item.stageCode != null and item.stageCode != ''">stage_code, </if>
+                <if test="item.stageName != null and item.stageName != ''">stage_name, </if>
+                <if test="item.totalBuildArea != null">total_build_area, </if>
+                <if test="item.businessType != null and item.businessType != ''">business_type, </if>
+                <if test="item.freeType != null and item.freeType != ''">free_type, </if>
+                <if test="item.versionStage != null and item.versionStage != ''">version_stage, </if>
+                <if test="item.totalSaleArea != null">total_sale_area, </if>
+                <if test="item.roomNum != null">room_num, </if>
+                <if test="item.approvalTime != null">approval_time, </if>
+                <if test="item.startTime != null">start_time, </if>
+                <if test="item.endTime != null">end_time, </if>
+                create_time,
+                <if test="item.createUser != null and item.createUser != ''">create_user, </if>
+                is_delete, `status`
+            </trim>
+            <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="item.groupId != null and item.groupId != ''">#{item.groupId}, </if>
+                <if test="item.groupCode != null and item.groupCode != ''">#{item.groupCode}, </if>
+                <if test="item.groupName != null and item.groupName != ''">#{item.groupName}, </if>
+                <if test="item.kingdeeProjectId != null and item.kingdeeProjectId != ''">#{item.kingdeeProjectId}, </if>
+                <if test="item.projectId != null and item.projectId != ''">#{item.projectId}, </if>
+                <if test="item.projectCode != null and item.projectCode != ''">#{item.projectCode}, </if>
+                <if test="item.projectName != null and item.projectName != ''">#{item.projectName}, </if>
+                <if test="item.kingdeeStageId != null and item.kingdeeStageId != ''">#{item.kingdeeStageId}, </if>
+                <if test="item.stageId != null and item.stageId != ''">#{item.stageId}, </if>
+                <if test="item.stageCode != null and item.stageCode != ''">#{item.stageCode}, </if>
+                <if test="item.stageName != null and item.stageName != ''">#{item.stageName}, </if>
+                <if test="item.totalBuildArea != null">#{item.totalBuildArea}, </if>
+                <if test="item.businessType != null and item.businessType != ''">#{item.businessType}, </if>
+                <if test="item.freeType != null and item.freeType != ''">#{item.freeType}, </if>
+                <if test="item.versionStage != null and item.versionStage != ''">#{item.versionStage}, </if>
+                <if test="item.totalSaleArea != null">#{item.totalSaleArea}, </if>
+                <if test="item.roomNum != null">#{item.roomNum}, </if>
+                <if test="item.approvalTime != null">#{item.approvalTime}, </if>
+                <if test="item.startTime != null">#{item.startTime}, </if>
+                <if test="item.endTime != null">#{item.endTime}, </if>
+                NOW(),
+                <if test="item.createUser != null and item.createUser != ''">#{item.createUser}, </if>
+                0, 1
+            </trim>
+        </foreach>
+    </insert>
+
+    <insert id="createDesignBuild" parameterType="cn.visolink.system.projectmanager.model.requestmodel.DesignBuildModel">
+        insert into t_mm_designbuild (build_id, kingdee_build_id, my_build_id, product_build_code,
+        product_build_name, building_code, building_name,
+        stage_id, stage_code, group_id,
+        group_name, product_code, product_name,
+        free_type_code, free_type_name, pro_type_code,
+        pro_type_name, total_sale_area, total_build_area,
+        up_build_area, under_build_area, up_sale_area,
+        under_sale_area, total_complimentary_area, up_gift_area,
+        under_gift_area, total_land_area, land_qz_date,
+        land_qz_area, planning_qz_date, planning_qz_area,
+        construction_qz_date, construction_qz_area,
+        presale_qz_date, presale_qz_area, completioncer_date,
+        completioncer_area, floors, unit_num,
+        room_high, floor_high, lift_num,
+        room_num, structure_area, parking_ratio,
+        is_refined, is_assembling, presale_image,
+        create_time, update_time, create_user,
+        update_user, is_delete, status, project_id, project_name, start_time, end_time, stage_name, order_code,
+        bld_type, yt_type_id, gen_house_flag, deposit)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.buildId}, #{item.kingdeeBuildId}, #{item.myBuildId}, #{item.productBuildCode},
+            #{item.productBuildName}, #{item.buildingCode}, #{item.buildingName},
+            #{item.stageId}, #{item.stageCode}, #{item.groupId},
+            #{item.groupName}, #{item.productCode}, #{item.productName},
+            #{item.freeTypeCode}, #{item.freeTypeName}, #{item.proTypeCode},
+            #{item.proTypeName}, #{item.totalSaleArea}, #{item.totalBuildArea},
+            #{item.upBuildArea}, #{item.underBuildArea}, #{item.upSaleArea},
+            #{item.underSaleArea}, #{item.totalComplimentaryArea}, #{item.upGiftArea},
+            #{item.underGiftArea}, #{item.totalLandArea}, #{item.landQzDate},
+            #{item.landQzArea}, #{item.planningQzDate}, #{item.planningQzArea},
+            #{item.constructionQzDate}, #{item.constructionQzArea},
+            #{item.presaleQzDate}, #{item.presaleQzArea}, #{item.completioncerDate},
+            #{item.completioncerArea}, #{item.floors}, #{item.unitNum},
+            #{item.roomHigh}, #{item.floorHigh}, #{item.liftNum},
+            #{item.roomNum}, #{item.structureArea}, #{item.parkingRatio},
+            #{item.isRefined}, #{item.isAssembling}, #{item.presaleImage},
+            NOW(), #{item.updateTime}, #{item.createUser},
+            #{item.updateUser}, 0, 1, #{item.projectId}, #{item.projectName},
+            #{item.startTime}, #{item.endTime}, #{item.stageName}, #{item.orderCode},
+            #{item.bldType}, #{item.ytTypeId}, #{item.genHouseFlag}, #{item.deposit})
+        </foreach>
+    </insert>
+
+    <select id="selectStagePlusPageList" resultMap="stageMap" parameterType="cn.visolink.system.projectmanager.model.requestmodel.StageModel">
+        <include refid="stageField"/>
+        from t_mm_stage
+        where is_delete = 0
+        AND project_id = #{projectId}
+        AND `status` = 1
+        ORDER BY order_code ASC
+    </select>
+
+    <select id="selectGroupPlusPageList" resultMap="groupMap" parameterType="cn.visolink.system.projectmanager.model.requestmodel.GroupModel">
+        <include refid="groupField"/>
+        from t_mm_group
+        where is_delete = 0
+        AND project_id = #{projectId}
+        AND `status` = 1
+    </select>
+
+    <select id="selectDesignBuildPlusPageList" resultMap="designBuildMap" parameterType="cn.visolink.system.projectmanager.model.requestmodel.DesignBuildModel">
+        <include refid="designBuildField"/>
+        from t_mm_designbuild
+        where is_delete = 0
+        AND project_id = #{projectId}
+        AND `status` = 1
+        ORDER BY order_code ASC
+    </select>
+
+    <update id="updateStage" parameterType="cn.visolink.system.projectmanager.model.requestmodel.StageModel">
+        update t_mm_stage
+        <trim suffixOverrides="," prefix="set">
+            <if test="stageCode != null and stageCode != ''">stage_code = #{stageCode}, </if>
+            <if test="stageName != null and stageName != ''">stage_name = #{stageName}, </if>
+            <if test="stageRecordName != null and stageRecordName != ''">stage_record_name = #{stageRecordName}, </if>
+            <if test="projectId != null and projectId != ''">project_id = #{projectId}, </if>
+            <if test="startTime != null">start_time = #{startTime}, </if>
+            <if test="endTime != null">end_time = #{endTime}, </if>
+            <if test="totallandArea != null">totalland_area = #{totallandArea}, </if>
+            <if test="buildlandArea != null">buildland_area = #{buildlandArea}, </if>
+            <if test="totalbuildArea != null">totalbuild_area = #{totalbuildArea}, </if>
+            <if test="onBuildArea != null">on_build_area = #{onBuildArea}, </if>
+            <if test="upBuildArea != null">up_build_area = #{upBuildArea}, </if>
+            <if test="buildVolumeArea != null">build_volume_area = #{buildVolumeArea}, </if>
+            <if test="buildSaleArea != null">build_sale_area = #{buildSaleArea}, </if>
+            <if test="plotRatio != null">plot_ratio = #{plotRatio}, </if>
+            <if test="remark != null and remark != ''">remark = #{remark}, </if>
+            update_time = NOW(),
+            <if test="updateUser != null and updateUser != ''">update_user = #{updateUser}, </if>
+        </trim>
+        where stage_id = #{stageId}
+    </update>
+
+    <update id="updateGroup" parameterType="cn.visolink.system.projectmanager.model.requestmodel.GroupModel">
+        update t_mm_group
+        <trim suffixOverrides="," prefix="set">
+            <if test="groupCode != null and groupCode != ''">group_code = #{groupCode}, </if>
+            <if test="groupName != null and groupName != ''">group_name = #{groupName}, </if>
+            <if test="kingdeeProjectId != null and kingdeeProjectId != ''">kingdee_project_id = #{kingdeeProjectId}, </if>
+            <if test="projectId != null and projectId != ''">project_id = #{projectId}, </if>
+            <if test="projectCode != null and projectCode != ''">project_code = #{projectCode}, </if>
+            <if test="projectName != null and projectName != ''">project_name = #{projectName}, </if>
+            <if test="kingdeeStageId != null and kingdeeStageId != ''">kingdee_stage_id = #{kingdeeStageId}, </if>
+            <if test="stageId != null and stageId != ''">stage_id = #{stageId}, </if>
+            <if test="stageCode != null and stageCode != ''">stage_code = #{stageCode}, </if>
+            <if test="stageName != null and stageName != ''">stage_name = #{stageName}, </if>
+            <if test="totalBuildArea != null">total_build_area = #{totalBuildArea}, </if>
+            <if test="businessType != null and businessType != ''">business_type = #{businessType}, </if>
+            <if test="freeType != null and freeType != ''">free_type = #{freeType}, </if>
+            <if test="versionStage != null and versionStage != ''">version_stage = #{versionStage}, </if>
+            <if test="totalSaleArea != null">total_sale_area = #{totalSaleArea}, </if>
+            <if test="roomNum != null">room_num = #{roomNum}, </if>
+            <if test="approvalTime != null">approval_time = #{approvalTime}, </if>
+            <if test="startTime != null">start_time = #{startTime}, </if>
+            <if test="endTime != null">end_time = #{endTime}, </if>
+            update_time = NOW(),
+            <if test="updateUser != null and updateUser != ''">update_user = #{updateUser}, </if>
+        </trim>
+        where group_id = #{groupId}
+    </update>
+
+    <update id="updateDesignBuild" parameterType="cn.visolink.system.projectmanager.model.requestmodel.DesignBuildModel">
+        update t_mm_designbuild
+        <trim suffixOverrides="," prefix="set">
+            <if test="kingdeeBuildId != null and kingdeeBuildId != ''">kingdee_build_id = #{kingdeeBuildId}, </if>
+            <if test="myBuildId != null and myBuildId != ''">my_build_id = #{myBuildId}, </if>
+            <if test="productBuildCode != null and productBuildCode != ''">product_build_code = #{productBuildCode}, </if>
+            <if test="productBuildName != null and productBuildName != ''">product_build_name = #{productBuildName}, </if>
+            <if test="buildingCode != null and buildingCode != ''">building_code = #{buildingCode}, </if>
+            <if test="buildingName != null and buildingName != ''">building_name = #{buildingName}, </if>
+            <if test="stageId != null and stageId != ''">stage_id = #{stageId}, </if>
+            <if test="stageCode != null and stageCode != ''">stage_code = #{stageCode}, </if>
+            <if test="groupId != null and groupId != ''">group_id = #{groupId}, </if>
+            <if test="groupName != null and groupName != ''">group_name = #{groupName}, </if>
+            <if test="productCode != null and productCode != ''">product_code = #{productCode}, </if>
+            <if test="productName != null and productName != ''">product_name = #{productName}, </if>
+            <if test="freeTypeCode != null and freeTypeCode != ''">free_type_code = #{freeTypeCode}, </if>
+            <if test="freeTypeName != null and freeTypeName != ''">free_type_name = #{freeTypeName}, </if>
+            <if test="proTypeCode != null and proTypeCode != ''">pro_type_code = #{proTypeCode}, </if>
+            <if test="proTypeName != null and proTypeName != ''">pro_type_name = #{proTypeName}, </if>
+            <if test="totalSaleArea != null">total_sale_area = #{totalSaleArea}, </if>
+            <if test="totalBuildArea != null">total_build_area = #{totalBuildArea}, </if>
+            <if test="upBuildArea != null">up_build_area = #{upBuildArea}, </if>
+            <if test="underBuildArea != null">under_build_area = #{underBuildArea}, </if>
+            <if test="upSaleArea != null">up_sale_area = #{upSaleArea}, </if>
+            <if test="underSaleArea != null">under_sale_area = #{underSaleArea}, </if>
+            <if test="totalComplimentaryArea != null">total_complimentary_area = #{totalComplimentaryArea}, </if>
+            <if test="upGiftArea != null">up_gift_area = #{upGiftArea}, </if>
+            <if test="underGiftArea != null">under_gift_area = #{underGiftArea}, </if>
+            <if test="totalLandArea != null">total_land_area = #{totalLandArea}, </if>
+            <if test="landQzDate != null">land_qz_date = #{landQzDate}, </if>
+            <if test="landQzArea != null">land_qz_area = #{landQzArea}, </if>
+            <if test="planningQzDate != null">planning_qz_date = #{planningQzDate}, </if>
+            <if test="planningQzArea != null">planning_qz_area = #{planningQzArea}, </if>
+            <if test="constructionQzDate != null">construction_qz_date = #{constructionQzDate}, </if>
+            <if test="constructionQzArea != null">construction_qz_area = #{constructionQzArea}, </if>
+            <if test="presaleQzDate != null">presale_qz_date = #{presaleQzDate}, </if>
+            <if test="presaleQzArea != null">presale_qz_area = #{presaleQzArea}, </if>
+            <if test="completioncerDate != null">completioncer_date = #{completioncerDate}, </if>
+            <if test="completioncerArea != null">completioncer_area = #{completioncerArea}, </if>
+            <if test="floors != null">floors = #{floors}, </if>
+            <if test="unitNum != null">unit_num = #{unitNum}, </if>
+            <if test="roomHigh != null">room_high = #{roomHigh}, </if>
+            <if test="floorHigh != null">floor_high = #{floorHigh}, </if>
+            <if test="liftNum != null">lift_num = #{liftNum}, </if>
+            <if test="roomNum != null">room_num = #{roomNum}, </if>
+            <if test="structureArea != null">structure_area = #{structureArea}, </if>
+            <if test="parkingRatio != null">parking_ratio = #{parkingRatio}, </if>
+            <if test="isRefined != null">is_refined = #{isRefined}, </if>
+            <if test="isAssembling != null">is_assembling = #{isAssembling}, </if>
+            <if test="presaleImage != null and presaleImage != ''">presale_image = #{presaleImage}, </if>
+            update_time = NOW(),
+            <if test="updateUser != null and updateUser != ''">update_user = #{updateUser}, </if>
+            <if test="startTime != null and startTime != ''">start_time = #{startTime}, </if>
+            <if test="endTime != null and endTime != ''">end_time = #{endTime}, </if>
+            <if test="stageName != null and stageName != ''">stage_name = #{stageName}, </if>
+            <if test="bldType != null and stageName != ''">bld_type = #{bldType}, </if>
+            <if test="bldType != null and stageName != ''">yt_type_id = #{bldType}, </if>
+            <if test="ytTypeId != null and ytTypeId != ''">yt_type_id = #{ytTypeId}, </if>
+            <if test="deposit != null">deposit = #{deposit}, </if>
+        </trim>
+        where build_id = #{buildId}
+    </update>
+
+    <update id="updateBatchDesignBuild" parameterType="cn.visolink.system.projectmanager.model.requestmodel.DesignBuildModel">
+        <foreach collection="list" separator=";" item="item">
+            update t_mm_designbuild
+            set group_id = #{item.groupId},
+            stage_id = #{item.stageId}
+            where build_id = #{item.buildId}
+        </foreach>
+    </update>
+
+    <update id="delStage" parameterType="cn.visolink.system.projectmanager.model.requestmodel.StageModel">
+        update t_mm_stage
+        set is_delete = 1
+        where stage_id = #{stageId}
+    </update>
+
+    <update id="delGroup" parameterType="cn.visolink.system.projectmanager.model.requestmodel.GroupModel">
+        update t_mm_group
+        set is_delete = 1
+        where group_id = #{groupId}
+    </update>
+
+    <update id="delDesignBuild" parameterType="cn.visolink.system.projectmanager.model.requestmodel.DesignBuildModel">
+        update t_mm_designbuild
+        set is_delete = 1
+        where build_id = #{buildId}
+    </update>
+
+    <update id="resetGroup" parameterType="cn.visolink.system.projectmanager.model.requestmodel.DesignBuildModel">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_designbuild
+            set group_id = null
+            where group_id = #{item.groupId}
+            AND is_delete = 0
+            AND `status` = 1
+        </foreach>
+    </update>
+
+    <select id="verifyIsExistProject" parameterType="string" resultType="integer">
+        select count(OrgID)
+        from b_project
+        where IsDel = 0
+        AND `Status` = 1
+        AND OrgID = #{orgId}
+    </select>
+
+    <select id="selectDesignBuildByGroupId" resultMap="designBuildMap" parameterType="string">
+        <include refid="designBuildField"/>
+        from t_mm_designbuild
+        where is_delete = 0
+        AND group_id = #{groupId}
+        AND `status` = 1
+    </select>
+
+
+
+
+
+    <select id="queryStage" parameterType="string" resultMap="stageMap">
+        <include refid="stageField"/>
+        from t_mm_stage
+        where stage_id = #{stageId}
+    </select>
+
+    <select id="queryGroup" parameterType="string" resultMap="groupMap">
+        <include refid="groupField"/>
+        from t_mm_group
+        where group_id = #{groupId}
+    </select>
+
+    <select id="queryDesignBuild" parameterType="string" resultMap="designBuildMap">
+        <include refid="designBuildField"/>
+        from t_mm_designbuild
+        where build_id = #{buildId}
+        AND is_delete = 0
+        AND `status` = 1
+    </select>
+
+
+
+
+
+    <!--查询项目信息-->
+    <select id="projectListSelectCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+ SELECT
+COUNT(1)
+FROM
+(SELECT @rownum:=0) r,
+	b_project bp left join s_organization so on bp.OrgID=so.ID
+	left join s_dictionary sd on sd.DictCode=bp.ProjectStatus and sd.PID='44C408CD-A1AA-3372-BE91-E0F81E822324'
+WHERE
+	bp.IsDel = 0 and bp.PID is null and bp.IsStages=0
+        <if test="ProjectName!=null and ProjectName!='' ">AND ProjectName LIKE '%${ProjectName}%'</if>
+    </select>
+	<!--启用禁用项目-->
+	<update id="projectIsEnableUpdate" parameterType="java.util.Map">
+		UPDATE b_project bp
+SET bp.`Status` =#{Status},
+    bp.isSyn = #{isSyn},
+ bp.Editor = #{UserID},
+ bp.EditTime = NOW()
+WHERE
+	bp.ID = #{ProjectID}
+	</update>
+
+	<!--删除项目-->
+	<update id="projectDeleteUpdate" >
+UPDATE b_project bp
+SET bp.IsDel = 1,bp.isSyn = 0,
+    bp.EditTime = NOW()
+WHERE
+	bp.ID = #{ProjectID}
+	</update>
+
+
+	<!--插入一条新项目-->
+<insert id="addNewProjectInfoInsert">
+    INSERT INTO b_project (
+    ID,
+    ProjectNum,
+    ProjectName,
+    ProjectStatus,
+    Status,
+    AuthCompanyID,
+    OrgID,
+    ProductID,
+    Creator,
+    CreateTime,
+    province,
+    ProvinceCode,
+    city,
+    CityCode,
+    county,
+    CountyCode,
+    TokerResetType,
+    AnChangResetType,
+    IsPrintStatus
+    )
+    VALUES
+    (
+    #{ID},
+    #{ProjectNum},
+    #{ProjectName},
+    #{ProjectStatus},
+    #{Status},
+    #{AuthCompanyID},
+    #{OrgID},
+    #{ProductID},
+    #{UserID},
+     now(),
+    #{ProvivceName},
+    #{ProvinceCode},
+    #{CityName},
+    #{CityCode},
+    #{AreaName},
+    #{AreaCode},
+    #{TokerResetType},
+    #{AnChangResetType},
+    #{IsPrintStatus}
+    );
+
+</insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateProjectorgrel">
+	 insert into b_projectorgrel(ID,OrgID,ProjectID) VALUES(UUID(),#{ProjectOrgID},#{ID});
+	 </insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateOne">
+	INSERT INTO b_project_protect_rule (ID,ProjectID,SourceType,TreeType) VALUES (UUID(),#{ID},3,1);
+	 </insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateTwo">
+	INSERT INTO b_project_protect_rule (ID,ProjectID,SourceType,TreeType) VALUES (UUID(),#{ID},3,2);
+	 </insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateThree">
+	INSERT INTO b_project_protect_rule (ID,ProjectID,SourceType,TreeType) VALUES (UUID(),#{ID},3,3);
+	 </insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateFour">
+	INSERT INTO b_project_protect_rule (ID,ProjectID,SourceType,TreeType) VALUES (UUID(),#{ID},3,4);
+	 </insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateFive">
+	INSERT INTO b_project_protect_rule (ID,ProjectID,SourceType,TreeType) VALUES (UUID(),#{ID},3,5);
+	 </insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateSix">
+	INSERT INTO b_project_protect_rule (ID,ProjectID,SourceType,TreeType) VALUES (UUID(),#{ID},3,6);
+	 </insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateSeven">
+    INSERT INTO b_project_protect_rule (ID,ProjectID,SourceType,TreeType) VALUES (UUID(),#{ID},3,7);
+	 </insert>
+    <!--以下这些插入条数是和插入新项目一起执行的-->
+    <insert id="addNewProjectSaleRelUpdateEight">
+	INSERT INTO b_project_protect_rule (ID,ProjectID,SourceType,TreeType) VALUES (UUID(),#{ID},3,8);
+	 </insert>
+
+	<!--修改项目信息-->
+<update id="projectInfoModify">
+    UPDATE b_project bp
+    SET bp.ProjectNum = #{ProjectNum},
+    bp.ProjectName = #{ProjectName},
+    bp.ProjectStatus = #{ProjectStatus},
+    bp.`Status` = #{Status},
+    bp.Editor = #{UserID},
+    bp.EditTime = now(),
+    bp.province = #{ProvivceName},
+    bp.ProvinceCode = #{ProvinceCode},
+    bp.city = #{CityName},
+    bp.CityCode = #{CityCode},
+    bp.county = #{AreaName},
+    bp.CountyCode = #{AreaCode},
+    bp.TokerResetType = #{TokerResetType},
+    bp.AnChangResetType = #{AnChangResetType},
+    bp.IsPrintStatus=#{IsPrintStatus}
+    WHERE
+    bp.ID = #{ID};
+</update>
+
+
+<!--新增销售系统与售前系统的关联,先跟新，然後插入，这里是跟新-->
+	<update id="addNewProjectSaleRelUpdate">
+		 update C_ProjectSaleRel sr3 set sr3.IsDel=1 where not INSTR(#{SaleProjectID},sr3.SaleID) and sr3.ProjectID=#{ID};
+	</update>
+
+	<!--新增销售系统与售前系统的关联,先跟新，然後插入，这里是插入数据-->
+<insert id="addNewProjectSaleRelInsert">
+      INSERT INTO c_projectsalerel(ID,ProjectID,SaleID,IsDel)
+      VALUES(UUID(),#{ID},#{SaleProjectID},0);
+</insert>
+
+
+	<!--项目关联组织, 先找到項目ID，再跟新项目，这里是查找项目ID-->
+<select id="newProjectOrgSelect" resultType="java.util.Map" parameterType="java.util.Map">
+	SELECT ProjectID, ID FROM s_organization WHERE ID = #{ProjectOrgID}
+</select>
+	<!--项目关联组织, 先找到項目ID，再跟新项目，这里是跟新项目-->
+	<update id="newProjectOrgUpdate">
+UPDATE s_organization org
+SET org.ProjectID = #{NewProjectID} where org.ProjectID=#{ProjectID};
+	</update>
+
+<!--是否关联销售系统项目，判断当前内容不为空时，判断当前是否已经存在过关联关系-->
+<select id="projectSaleRelCountBySaleProjectIdSelect" resultType="java.util.Map" parameterType="java.util.Map">
+    select count(*) as A from c_projectsalerel  where ProjectID=#{ID} AND SaleID=#{SaleProjectID};
+</select>
+	<!--是否关联销售系统项目，判断当前内容不为空时，且判断当前有关联关系执行此方法-->
+<update id="newProjectSaleRelNoDel">
+       update C_ProjectSaleRel sr3 set sr3.IsDel=0 where sr3.SaleID= #{SaleProjectID} and sr3.ProjectID=#{ID};
+</update>
+
+
+	<!--判断项目编号是否已存在-->
+<select id="projectNumIsExsit"  resultType="java.util.Map" parameterType="java.util.Map">
+	select * from  b_project  where ProjectNum=#{ProjectNum};
+</select>
+
+    <!--查看单条项目数据的信息-->
+    <select id="selectOneProject"  resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+            bp.ID,
+            bp.ProjectName,
+            bp.ProjectNum,
+            bp.ProjectStatus,
+               (case bp.ProjectStatus when 5001 then '在售' when 5002 then '待售' when 5003 then '热销' when 5004 then '售罄' else '' end ) as  ProjectStatusName,
+            bp.`Status`,
+            so.ID ProjectOrgID,
+            so.OrgName ProjectOrgName,
+            bp.province,
+            bp.city,
+            bp.county,
+            bp.TokerResetType,
+            bp.AnChangResetType,
+            bp.IsPrintStatus,
+            bp.AreaID,
+            bp.AreaName,
+            acp.CityID,
+            bp.bind_project_name as bindProjectName,
+            bp.start_time as startTime,
+            bp.end_time as endTime,
+            bind_project_id as bindProjectId
+        FROM
+            b_project bp
+        LEFT JOIN s_organization so ON bp.OrgID = so.ID
+        left join a_city_project acp on bp.ID  = acp.ProjectID
+        WHERE
+	        bp.ID = #{ID}
+    </select>
+
+    <!--修改菜单的状态-->
+    <update id="updateMenuStatus" parameterType="java.util.Map">
+        UPDATE s_menus SET Status =#{status} WHERE ID = #{ID}
+    </update>
+
+    <!--修改Menus信息-->
+    <select id="systemMenuOldPathSelect" resultType="java.util.Map">
+        SELECT a.FullPath as OldPath FROM s_menus a WHERE a.ID = #{ID}
+    </select>
+    <select id="systemMenuNewPathSelect" resultType="java.util.Map">
+        select concat(IFNULL(concat((SELECT FullPath FROM s_menus WHERE ID = (SELECT b.PID FROM s_menus b WHERE b.ID = #{ID})) , '/') ,'') , #{MenuSysName}) as  NewPath;
+    </select>
+    <update id="systemMenuInfoUpdate">
+        UPDATE s_menus m
+        SET
+        m.MenuName = #{MenuName},
+        m.MenuSysName = #{MenuSysName},
+        m.Url = #{Url},
+        m.ImageUrl = #{ImageUrl},
+        m.IconClass = #{IconClass},
+        m.IsHomePage = #{IsHomePage},
+        m.IsShow = #{IsShow},
+        m.Levels = #{Levels},
+        m.ListIndex = #{ListIndex},
+        m.FullPath = #{NewPath},
+        m.IsLast = #{IsLast},
+        m.Editor = #{Editor},
+        m.EditTime = now(),
+        m.Status = #{Status}
+        WHERE m.ID = #{ID};
+    </update>
+
+    <select id="getCityList" resultType="java.util.Map">
+        select
+          ID as value,
+          CityName as label
+        from a_city
+    </select>
+
+    <insert id="insertCityProject" parameterType="java.util.Map">
+        INSERT INTO a_city_project
+        (ID,CityID,ProjectID,CreateTime,IsDel,Status)
+        VALUES
+        (UUID(),#{cityID},#{projectID},NOW(),0,1)
+    </insert>
+
+    <delete id="deleteCityProject" parameterType="java.lang.String">
+        delete from a_city_project where ProjectID = #{projectID}
+    </delete>
+
+    <select id="selectInvalidProject" resultType="cn.visolink.system.projectmanager.dao.BindProject">
+        select
+        id, is_bind as isBind, project_id as projectId, generate_name as generateName,
+        project_name as projectName, status, create_time as createTime,
+        edit_time as editTime, start_time as startTime, end_time as endTime,
+        company_code as companyCode, company_name as companyName, creator, editer
+        from b_bind_project
+        where is_del = 0
+        AND `status` = 1
+        AND NOW() > end_time
+    </select>
+
+    <update id="updateProjectStatus" parameterType="cn.visolink.system.projectmanager.dao.BindProject">
+        <foreach collection="list" item="item" separator=";">
+            update b_bind_project
+            SET `status` = 0,
+            <if test="item.editer != null and item.editer != ''">editer = #{item.editer},</if>
+            edit_time = NOW()
+            where project_id = #{item.projectId}
+        </foreach>
+    </update>
+
+    <select id="selectNotBindProject" resultType="cn.visolink.system.projectmanager.dao.BindProject" parameterType="string">
+         select
+         id, is_bind as isBind, project_id as projectId,
+         project_name as projectName, `status`, create_time as createTime,
+         edit_time as editTime, start_time as startTime, end_time as endTime,
+         company_code as companyCode, company_name as companyName, creator, editer
+         from b_bind_project
+         where is_del = 0
+         AND `status` = 1
+         AND `is_bind` = 0
+		 AND company_code = #{companyCode}
+    </select>
+
+    <update id="updateProjectForBind" parameterType="cn.visolink.system.projectmanager.dao.BindProject">
+        <foreach collection="list" item="item" separator=";">
+            update b_bind_project
+            SET `is_bind` = 1,
+            <if test="item.editer != null and item.editer != ''">editer = #{item.editer},</if>
+            edit_time = NOW()
+            where project_id = #{item.projectId}
+        </foreach>
+    </update>
+
+    <update id="updateStatus" parameterType="cn.visolink.system.projectmanager.dao.BindProject">
+        <foreach collection="list" item="item" separator=";">
+            update b_project
+            SET `status` = 0
+            where id = #{item.projectId}
+        </foreach>
+    </update>
+
+
+    <resultMap id="buildUnitMap" type="cn.visolink.system.projectmanager.model.BuildUnit" >
+        <id column="unit_id" property="unitId" />
+        <result column="unit_name" property="unitName" />
+        <result column="unit_no" property="unitNo" />
+        <result column="build_id" property="buildId" />
+        <result column="kingdee_build_id" property="kingdeeBuildId" />
+        <result column="my_build_id" property="myBuildId" />
+        <result column="stage_id" property="stageId" />
+        <result column="stage_code" property="stageCode" />
+        <result column="group_id" property="groupId" />
+        <result column="group_name" property="groupName" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="create_user" property="createUser" />
+        <result column="update_user" property="updateUser" />
+        <result column="is_delete" property="isDelete" />
+        <result column="status" property="status" />
+        <result column="project_id" property="projectId" />
+        <result column="project_name" property="projectName" />
+        <result column="stage_name" property="stageName" />
+        <result column="households_num" property="householdsNum" />
+    </resultMap>
+
+    <resultMap id="buildHxMap" type="cn.visolink.system.projectmanager.model.BuildHx" >
+        <id column="id" property="id" />
+        <result column="hx_name" property="hxName" />
+        <result column="room_stru_code" property="roomStruCode" />
+        <result column="room_stru" property="roomStru" />
+        <result column="project_id" property="projectId" />
+        <result column="project_fid" property="projectFid" />
+        <result column="x_hx_img_url" property="xHxImgUrl" />
+        <result column="x_hx_img_name" property="xHxImgName" />
+        <result column="plan_url" property="planUrl" />
+        <result column="remark" property="remark" />
+        <result column="plan" property="plan" />
+        <result column="tn_area" property="tnArea" />
+        <result column="bld_area" property="bldArea" />
+        <result column="x_hx_other_name" property="xHxOtherName" />
+        <result column="x_area" property="xArea" />
+        <result column="x_hx_product_type" property="xHxProductType" />
+        <result column="x_area_section" property="xAreaSection" />
+        <result column="x_staircase_proportion" property="xStaircaseProportion" />
+        <result column="x_wide_number" property="xWideNumber" />
+        <result column="x_scopeenum" property="xScopeenum" />
+        <result column="x_scope" property="xScope" />
+        <result column="x_rowId" property="xRowid" />
+        <result column="created_time" property="createdTime" />
+        <result column="creator" property="creator" />
+        <result column="modified_time" property="modifiedTime" />
+        <result column="modified" property="modified" />
+        <result column="is_del" property="isDel" />
+        <result column="x_hx_img" property="xHxImg" />
+    </resultMap>
+
+    <resultMap id="buildRoomMap" type="cn.visolink.system.projectmanager.model.BuildRoom" >
+        <id column="room_id" property="roomId" />
+        <result column="room_info" property="roomInfo" />
+        <result column="room_name" property="roomName" />
+        <result column="room_code" property="roomCode" />
+        <result column="room_no" property="roomNo" />
+        <result column="no" property="no" />
+        <result column="status_enum" property="statusEnum" />
+        <result column="floor_name" property="floorName" />
+        <result column="floor_no" property="floorNo" />
+        <result column="unit_id" property="unitId" />
+        <result column="unit_name" property="unitName" />
+        <result column="unit_no" property="unitNo" />
+        <result column="build_id" property="buildId" />
+        <result column="kingdee_build_id" property="kingdeeBuildId" />
+        <result column="my_build_id" property="myBuildId" />
+        <result column="stage_id" property="stageId" />
+        <result column="stage_code" property="stageCode" />
+        <result column="group_id" property="groupId" />
+        <result column="group_name" property="groupName" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="create_user" property="createUser" />
+        <result column="update_user" property="updateUser" />
+        <result column="is_delete" property="isDelete" />
+        <result column="project_id" property="projectId" />
+        <result column="project_name" property="projectName" />
+        <result column="stage_name" property="stageName" />
+        <result column="opening_lock" property="openingLock" />
+        <result column="bottom_price_return_house_lock" property="bottomPriceReturnHouseLock" />
+        <result column="dj_bld_price" property="djBldPrice" />
+        <result column="dj_tn_price" property="djTnPrice" />
+        <result column="bld_price" property="bldPrice" />
+        <result column="dj_total" property="djTotal" />
+        <result column="bld_area" property="bldArea" />
+        <result column="is_area_modify" property="isAreaModify" />
+        <result column="trade_locker" property="tradeLocker" />
+        <result column="is_trade_lock" property="isTradeLock" />
+        <result column="is_tf_lock" property="isTfLock" />
+        <result column="trade_lock_time" property="tradeLockTime" />
+        <result column="tf_date" property="tfDate" />
+        <result column="hx_id" property="hxId" />
+        <result column="hx_name" property="hxName" />
+        <result column="tn_price" property="tnPrice" />
+        <result column="tn_area" property="tnArea" />
+        <result column="total" property="total" />
+        <result column="dsp_bld_area" property="dspBldArea" />
+        <result column="dsp_tn_area" property="dspTnArea" />
+        <result column="ys_bld_area" property="ysBldArea" />
+        <result column="ys_tn_area" property="ysTnArea" />
+        <result column="sc_bld_area" property="scBldArea" />
+        <result column="sc_tn_area" property="scTnArea" />
+        <result column="room_stru" property="roomStru" />
+        <result column="dsp_area_status_enum" property="dspAreaStatusEnum" />
+        <result column="cal_mode_enum" property="calModeEnum" />
+        <result column="cal_mode" property="calMode" />
+        <result column="is_hf_lock" property="isHfLock" />
+        <result column="x_is_zc" property="xIsZc" />
+        <result column="area_status_enum" property="areaStatusEnum" />
+        <result column="area_status" property="areaStatus" />
+        <result column="status" property="status" />
+        <result column="dsp_area_status" property="dspAreaStatus" />
+        <result column="is_annexe" property="isAnnexe" />
+        <result column="main_room_id" property="mainRoomId" />
+        <result column="is_virtual_room" property="isVirtualRoom" />
+        <result column="area_chg_id" property="areaChgId" />
+        <result column="product_type_id" property="productTypeId" />
+        <result column="choose_room_lock_time" property="chooseRoomLockTime" />
+        <result column="choose_room_lock_end_time" property="chooseRoomLockEndTime" />
+        <result column="choose_room_id" property="chooseRoomId" />
+        <result column="choose_room_lock_id" property="chooseRoomLockId" />
+        <result column="choose_room_time" property="chooseRoomTime" />
+        <result column="lsxk_time" property="lsxkTime" />
+        <result column="jbr_id" property="jbrId" />
+        <result column="ba_total" property="baTotal" />
+        <result column="ba_bld_price" property="baBldPrice" />
+        <result column="ba_tn_price" property="baTnPrice" />
+        <result column="jf_date" property="jfDate" />
+        <result column="opening_batch" property="openingBatch" />
+        <result column="product_build_name" property="productBuildName" />
+        <result column="mj_bld_price" property="mjBldPrice" />
+        <result column="mj_tn_price" property="mjTnPrice" />
+        <result column="mj_total" property="mjTotal" />
+        <result column="id" property="id" />
+        <result column="right_cell" property="rightCell" />
+        <result column="down_cell" property="downCell" />
+    </resultMap>
+
+    <resultMap id="buildFloorMap" type="cn.visolink.system.projectmanager.model.BuildingFloor" >
+        <id column="floor_id" property="floorId" />
+        <result column="floor_name" property="floorName" />
+        <result column="floor_no" property="floorNo" />
+        <result column="build_id" property="buildId" />
+        <result column="create_time" property="createTime" />
+        <result column="editor_time" property="editorTime" />
+        <result column="creator" property="creator" />
+        <result column="editor" property="editor" />
+        <result column="is_delete" property="isDelete" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <sql id="buildUnitField">
+        select unit_id, unit_name, unit_no, build_id, kingdee_build_id, my_build_id, stage_id,
+        stage_code, group_id, group_name, create_time, update_time, create_user, update_user,
+        is_delete, status, project_id, project_name, stage_name, households_num
+    </sql>
+
+    <sql id="buildHxField">
+        select id, hx_name, room_stru_code, room_stru, project_id, project_fid, x_hx_img_url,
+        x_hx_img_name, plan_url, remark, plan, tn_area, bld_area, x_hx_other_name, x_area,
+        x_hx_product_type, x_area_section, x_staircase_proportion, x_wide_number, x_scopeenum,
+        x_scope, x_rowId, created_time, creator, modified_time, modified, is_del, x_hx_img
+    </sql>
+
+    <sql id="buildRoomField">
+        select room_id, room_info, room_name, room_code, room_no, `no`, status_enum, floor_name,
+        floor_no, unit_id, unit_name, unit_no, build_id, kingdee_build_id, my_build_id, stage_id,
+        stage_code, group_id, group_name, create_time, update_time, create_user, update_user,
+        is_delete, project_id, project_name, stage_name, opening_lock, bottom_price_return_house_lock,
+        dj_bld_price, dj_tn_price, bld_price, dj_total, bld_area, is_area_modify, trade_locker,
+        is_trade_lock, is_tf_lock, trade_lock_time, tf_date, hx_id, hx_name, tn_price, tn_area,
+        total, dsp_bld_area, dsp_tn_area, ys_bld_area, ys_tn_area, sc_bld_area, sc_tn_area,
+        room_stru, dsp_area_status_enum, cal_mode_enum, cal_mode, is_hf_lock, x_is_zc, area_status_enum,
+        area_status, status, dsp_area_status, is_annexe, main_room_id, is_virtual_room, area_chg_id,
+        product_type_id, choose_room_lock_time, choose_room_lock_end_time, choose_room_id,
+        choose_room_lock_id, choose_room_time, lsxk_time, jbr_id, ba_total, ba_bld_price,
+        ba_tn_price, jf_date, opening_batch, product_build_name, mj_bld_price, mj_tn_price, mj_total, right_cell, down_cell
+    </sql>
+
+    <sql id="buildFloorField">
+        select floor_id, floor_name, floor_no, build_id, create_time, editor_time, creator,
+        editor, is_delete, `status`
+    </sql>
+
+
+
+
+
+
+
+    <select id="selectRoomPlusPageByProjectId" parameterType="string" resultMap="buildRoomMap">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where project_id = #{projectId}
+        AND is_delete = 0
+    </select>
+
+    <select id="getRoomByProjectId" resultMap="buildRoomMap" parameterType="string">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where is_delete = 0
+    </select>
+
+    <update id="saveRoomByRoomId" parameterType="hashmap">
+        <foreach collection="list" item="item" separator=";">
+
+        </foreach>
+    </update>
+
+    <select id="selectRoomAreaListPlusPageByProjectId" resultMap="buildRoomMap"
+            parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where project_id = #{projectId}
+        <if test="roomInfo != null and roomInfo != ''">
+            AND room_info = #{roomInfo}
+        </if>
+        AND is_delete = 0
+    </select>
+
+    <insert id="saveBatchBuildingFloor" parameterType="cn.visolink.system.projectmanager.model.BuildingFloor">
+        insert into t_mm_build_floor
+        (floor_id, build_id, floor_name, floor_no, creator, create_time, is_delete, `status`)
+        values
+        <foreach collection="list" separator="," item="item">
+            (UUID(), #{item.buildId}, #{item.floorName}, #{item.floorNo}, #{item.creator}, NOW(), 0, 1)
+        </foreach>
+
+    </insert>
+
+    <insert id="saveBatchUnit" parameterType="cn.visolink.system.projectmanager.model.BuildUnit">
+        insert into t_mm_build_unit
+        (unit_id, unit_name, unit_no, build_id, kingdee_build_id, my_build_id, stage_id,
+        stage_code, group_id, group_name, create_time, create_user,
+        is_delete, status, project_id, project_name, stage_name, households_num)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.unitId}, #{item.unitName}, #{item.unitNo}, #{item.buildId},
+            #{item.kingdeeBuildId}, #{item.myBuildId}, #{item.stageId},
+            #{item.stageCode}, #{item.groupId}, #{item.groupName},
+            NOW(), #{item.createUser}, 0, 1, #{item.projectId},
+            #{item.projectName}, #{item.stageName}, #{item.householdsNum})
+        </foreach>
+    </insert>
+
+    <insert id="saveBatchRoom" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        insert into t_mm_build_room
+        (room_id, room_info, room_name, room_code, room_no, `no`, status_enum,
+        floor_name, floor_no, unit_id, unit_name, unit_no, build_id,
+        kingdee_build_id, my_build_id, stage_id, stage_code, group_id, group_name,
+        create_time, create_user, is_delete, project_id,
+        project_name, stage_name, opening_lock, bottom_price_return_house_lock, dj_bld_price,
+        dj_tn_price, bld_price, dj_total,  bld_area, is_area_modify, trade_locker,
+        is_trade_lock, is_tf_lock, trade_lock_time, tf_date, hx_id, hx_name,
+        tn_price, tn_area, total, dsp_bld_area, dsp_tn_area, ys_bld_area,
+        ys_tn_area, sc_bld_area, sc_tn_area, room_stru, dsp_area_status_enum, cal_mode_enum,
+        cal_mode, is_hf_lock, x_is_zc, area_status_enum, area_status, `status`,
+        dsp_area_status, is_annexe, main_room_id, is_virtual_room, area_chg_id, product_type_id,
+        choose_room_lock_time, choose_room_lock_end_time, choose_room_id, choose_room_lock_id, choose_room_time,
+        lsxk_time, jbr_id, ba_total, ba_bld_price, ba_tn_price, jf_date, opening_batch, product_build_name)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (UUID(), #{item.roomInfo}, #{item.roomName}, #{item.roomCode}, #{item.roomNo}, #{item.no}, 3,
+            #{item.floorName}, #{item.floorNo}, #{item.unitId}, #{item.unitName}, #{item.unitNo}, #{item.buildId},
+            #{item.kingdeeBuildId}, #{item.myBuildId}, #{item.stageId}, #{item.stageCode}, #{item.groupId}, #{item.groupName},
+            NOW(), #{item.createUser}, 0, #{item.projectId},
+            #{item.projectName}, #{item.stageName}, #{item.openingLock}, #{item.bottomPriceReturnHouseLock}, #{item.djBldPrice},
+            #{item.djTnPrice}, #{item.bldPrice}, #{item.djTotal}, #{item.bldArea}, #{item.isAreaModify}, #{item.tradeLocker},
+            #{item.isTradeLock}, #{item.isTfLock}, #{item.tradeLockTime}, #{item.tfDate}, #{item.hxId}, #{item.hxName},
+            #{item.tnPrice}, #{item.tnArea}, #{item.total}, #{item.dspBldArea}, #{item.dspTnArea}, #{item.ysBldArea},
+            #{item.ysTnArea}, #{item.scBldArea}, #{item.scTnArea}, #{item.roomStru}, #{item.dspAreaStatusEnum}, #{item.calModeEnum},
+            #{item.calMode}, #{item.isHfLock}, #{item.xIsZc}, #{item.areaStatusEnum}, #{item.areaStatus}, 1,
+            #{item.dspAreaStatus}, #{item.isAnnexe}, #{item.mainRoomId}, #{item.isVirtualRoom}, #{item.areaChgId}, #{item.productTypeId},
+            #{item.chooseRoomLockTime}, #{item.chooseRoomLockEndTime}, #{item.chooseRoomId}, #{item.chooseRoomLockId}, #{item.chooseRoomTime},
+            #{item.lsxkTime}, #{item.jbrId}, #{item.baTotal}, #{item.baBldPrice}, #{item.baTnPrice}, #{item.jfDate}, #{item.openingBatch}, #{item.productBuildName})
+        </foreach>
+    </insert>
+
+    <select id="getHXArea" parameterType="string" resultMap="buildHxMap">
+        <include refid="buildHxField"/>
+        from t_mm_build_hx
+        where id = #{hxId}
+        AND is_del = 0
+    </select>
+
+    <select id="selectHXListPlusPageByProjectId" parameterType="string" resultMap="buildHxMap">
+        <include refid="buildHxField"/>
+        from t_mm_build_hx
+        where project_id = #{projectId}
+        AND is_del = 0
+    </select>
+    
+    <select id="selectDesignBuildMaxOrderCode" parameterType="string" resultType="integer">
+        select
+        max(order_code)
+        from t_mm_designbuild
+        where project_id = #{projectId}
+        AND is_delete = 0
+    </select>
+
+    <select id="getMaxOrderCode" parameterType="string" resultType="integer">
+        select max(order_code)
+        from t_mm_stage
+        where is_delete = 0
+        AND project_id = #{projectId}
+    </select>
+
+    <select id="selectProjectIsSyn" parameterType="string" resultType="_int">
+        select count(1) from b_project where ID = #{projectId} and  isSyn = 1 and `Status` = 1
+    </select>
+
+    <select id="selectProject" resultType="java.util.Map">
+        select ID id,ProjectName projectName from b_project where isSyn = 0 and pid is null and IsDel = 0 and `Status` = 1
+    </select>
+
+    <select id="selectRoomListByBuildId" parameterType="string" resultMap="buildRoomMap">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where is_delete = 0
+        AND `status` = 1
+        AND build_id = #{buildId}
+        ORDER BY unit_no, `no`
+    </select>
+
+    <update id="delRoomByRoomId" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_build_room
+            set is_delete = 1
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <update id="updateRoomByRoomId" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_build_room
+            set right_cell = #{item.rightCell}
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <update id="updateBuildUnit" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" separator=";" item="item">
+            update t_mm_build_unit
+            set households_num = households_num + 1
+            where unit_id = #{item.unitId}
+        </foreach>
+    </update>
+
+    <update id="delRoom" parameterType="string">
+        update t_mm_build_room
+        set is_delete = 1
+        where room_id = #{roomId}
+    </update>
+
+    <update id="rightMoveRoom" parameterType="string">
+        update t_mm_build_room
+        set right_cell = right_cell + 1
+        where room_id = #{roomId}
+    </update>
+
+    <update id="downMoveRoom" parameterType="string">
+        update t_mm_build_room
+        set down_cell = down_cell + 1
+        where room_id = #{roomId}
+    </update>
+
+    <select id="getMaxFloorNo" parameterType="string" resultType="integer">
+        select max(floor_no) from t_mm_build_room where is_delete = 0 AND build_id = #{buildId} AND `status` = 1
+    </select>
+
+    <update id="updateUnit" parameterType="string">
+        update t_mm_build_unit
+        set households_num = households_num - 1
+        where unit_id = #{unitId}
+    </update>
+
+    <select id="getHouseholdsNumByBuildId" parameterType="string" resultType="integer">
+        select households_num
+        from t_mm_build_unit
+        where `status` = 1
+        AND is_delete = 0
+        AND build_id = #{buildId}
+        ORDER BY unit_no ASC
+    </select>
+
+    <select id="selectUnitByBuildId" parameterType="string" resultMap="buildUnitMap">
+        <include refid="buildUnitField"/>
+        from t_mm_build_unit
+        where `status` = 1
+        AND is_delete = 0
+        AND build_id = #{buildId}
+        ORDER BY unit_no ASC
+    </select>
+
+    <update id="updateDesignBuildByBuildId" parameterType="string">
+        update t_mm_designbuild
+        set gen_house_flag = 1
+        where build_id = #{buildId}
+    </update>
+
+    <select id="getDesignBuildAndUnitByRoomId" parameterType="string" resultType="string">
+        select CONCAT(
+        (select
+        product_build_name
+        from t_mm_designbuild
+        WHERE build_id =
+            (select
+            build_id
+            from t_mm_build_room
+            WHERE room_id = #{roomId})
+        ), '-', (
+        select
+        unit_name
+        from t_mm_build_unit
+        WHERE unit_id =
+            (select
+            unit_id
+            from t_mm_build_room
+            WHERE room_id = #{roomId})
+        ), '-')
+    </select>
+
+    <update id="updateBatchRoom" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_build_room
+            set
+            <if test="item.ysBldArea != null">bld_area = #{item.ysBldArea}, </if>
+            <if test="item.ysTnArea != null">tn_area = #{item.ysTnArea}, </if>
+            <if test="item.scBldArea != null">bld_area = #{item.scBldArea}, </if>
+            <if test="item.scTnArea != null">tn_area = #{item.scTnArea}, </if>
+            <if test="item.updateUser != null and item.updateUser != ''">update_user = #{item.updateUser}, </if>
+            update_time = NOW()
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <update id="updateBatchStandardPrice" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_build_room
+            set
+            <if test="item.mjBldPrice != null">bld_price = #{item.mjBldPrice}, </if>
+            <if test="item.mjTnPrice != null">tn_price = #{item.mjTnPrice}, </if>
+            <if test="item.mjTotal != null">total = #{item.mjTotal}, </if>
+            <if test="item.updateUser != null and item.updateUser != ''">update_user = #{item.updateUser}, </if>
+            update_time = NOW()
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <!--新增所有列-->
+    <insert id="saveBuildHx" parameterType="cn.visolink.system.projectmanager.model.BuildHx">
+        insert into t_mm_build_hx
+        (id, hx_name, room_stru_code, room_stru,
+        project_id, project_fid, x_hx_img, x_hx_img_url,
+        x_hx_img_name, plan_url, remark, plan, tn_area,
+        bld_area, x_hx_other_name, x_area, x_hx_product_type,
+        x_area_section, x_staircase_proportion, x_wide_number, x_scopeenum,
+         x_scope, x_rowId, created_time, creator, is_del, alias)
+        values (
+        #{id}, #{hxName}, #{roomStruCode}, #{roomStru}, #{projectId}, #{projectFid},
+         #{xHxImg}, #{xHxImgUrl}, #{xHxImgName}, #{planUrl}, #{remark}, #{plan},
+         #{tnArea}, #{bldArea}, #{xHxOtherName}, #{xArea}, #{xHxProductType}, #{xAreaSection},
+         #{xStaircaseProportion}, #{xWideNumber}, #{xScopeenum}, #{xScope}, #{xRowid}, NOW(),
+          #{creator}, 0, #{alias})
+    </insert>
+
+    <select id="getBuildHxById" parameterType="string" resultMap="buildHxMap">
+        <include refid="buildHxField"/>
+        from t_mm_build_hx
+        where is_del = 0
+        AND id = #{id}
+    </select>
+
+    <!--通过主键修改数据-->
+    <update id="updateBuildHx" parameterType="cn.visolink.system.projectmanager.model.BuildHx">
+        update t_mm_build_hx
+        <set>
+            <if test="hxName != null and hxName != ''">
+                hx_name = #{hxName},
+            </if>
+            <if test="roomStruCode != null and roomStruCode != ''">
+                room_stru_code = #{roomStruCode},
+            </if>
+            <if test="roomStru != null and roomStru != ''">
+                room_stru = #{roomStru},
+            </if>
+            <if test="projectId != null and projectId != ''">
+                project_id = #{projectId},
+            </if>
+            <if test="projectFid != null and projectFid != ''">
+                project_fid = #{projectFid},
+            </if>
+            <if test="xHxImg != null and xHxImg != ''">
+                x_hx_img = #{xHxImg},
+            </if>
+            <if test="xHxImgUrl != null and xHxImgUrl != ''">
+                x_hx_img_url = #{xHxImgUrl},
+            </if>
+            <if test="xHxImgName != null and xHxImgName != ''">
+                x_hx_img_name = #{xHxImgName},
+            </if>
+            <if test="planUrl != null and planUrl != ''">
+                plan_url = #{planUrl},
+            </if>
+            <if test="remark != null and remark != ''">
+                remark = #{remark},
+            </if>
+            <if test="plan != null and plan != ''">
+                plan = #{plan},
+            </if>
+            <if test="tnArea != null">
+                tn_area = #{tnArea},
+            </if>
+            <if test="bldArea != null">
+                bld_area = #{bldArea},
+            </if>
+            <if test="xHxOtherName != null and xHxOtherName != ''">
+                x_hx_other_name = #{xHxOtherName},
+            </if>
+            <if test="xArea != null and xArea != ''">
+                x_area = #{xArea},
+            </if>
+            <if test="xHxProductType != null and xHxProductType != ''">
+                x_hx_product_type = #{xHxProductType},
+            </if>
+            <if test="xAreaSection != null and xAreaSection != ''">
+                x_area_section = #{xAreaSection},
+            </if>
+            <if test="xStaircaseProportion != null and xStaircaseProportion != ''">
+                x_staircase_proportion = #{xStaircaseProportion},
+            </if>
+            <if test="xWideNumber != null and xWideNumber != ''">
+                x_wide_number = #{xWideNumber},
+            </if>
+            <if test="xScopeenum != null">
+                x_scopeenum = #{xScopeenum},
+            </if>
+            <if test="xScope != null and xScope != ''">
+                x_scope = #{xScope},
+            </if>
+            <if test="xRowid != null and xRowid != ''">
+                x_rowId = #{xRowid},
+            </if>
+            <if test="modified != null and modified != ''">
+                modified = #{modified},
+            </if>
+            <if test="alias != null and alias != ''">
+                alias = #{alias},
+            </if>
+            modified_time = NOW()
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <update id="deleteById" parameterType="string">
+        update t_mm_build_hx set is_del = 1 where id = #{id}
+    </update>
+
+    <!--通过主键修改数据-->
+    <update id="updateBuildRoomByRoomId" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        update t_mm_build_room
+        <set>
+            <if test="roomInfo != null and roomInfo != ''">
+                room_info = #{roomInfo},
+            </if>
+            <if test="roomName != null and roomName != ''">
+                room_name = #{roomName},
+            </if>
+            <if test="roomCode != null and roomCode != ''">
+                room_code = #{roomCode},
+            </if>
+            <if test="roomNo != null and roomNo != ''">
+                room_no = #{roomNo},
+            </if>
+            <if test="no != null">
+                `no` = #{no},
+            </if>
+            <if test="statusEnum != null">
+                status_enum = #{statusEnum},
+            </if>
+            <if test="floorName != null and floorName != ''">
+                floor_name = #{floorName},
+            </if>
+            <if test="floorNo != null">
+                floor_no = #{floorNo},
+            </if>
+            <if test="unitId != null and unitId != ''">
+                unit_id = #{unitId},
+            </if>
+            <if test="unitName != null and unitName != ''">
+                unit_name = #{unitName},
+            </if>
+            <if test="unitNo != null">
+                unit_no = #{unitNo},
+            </if>
+            <if test="buildId != null and buildId != ''">
+                build_id = #{buildId},
+            </if>
+            <if test="productBuildName != null and productBuildName != ''">
+                product_build_name = #{productBuildName},
+            </if>
+            <if test="kingdeeBuildId != null and kingdeeBuildId != ''">
+                kingdee_build_id = #{kingdeeBuildId},
+            </if>
+            <if test="myBuildId != null and myBuildId != ''">
+                my_build_id = #{myBuildId},
+            </if>
+            <if test="stageId != null and stageId != ''">
+                stage_id = #{stageId},
+            </if>
+            <if test="stageCode != null and stageCode != ''">
+                stage_code = #{stageCode},
+            </if>
+            <if test="groupId != null and groupId != ''">
+                group_id = #{groupId},
+            </if>
+            <if test="groupName != null and groupName != ''">
+                group_name = #{groupName},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+            <if test="createUser != null and createUser != ''">
+                create_user = #{createUser},
+            </if>
+            <if test="updateUser != null and updateUser != ''">
+                update_user = #{updateUser},
+            </if>
+            <if test="isDelete != null">
+                is_delete = #{isDelete},
+            </if>
+            <if test="projectId != null and projectId != ''">
+                project_id = #{projectId},
+            </if>
+            <if test="projectName != null and projectName != ''">
+                project_name = #{projectName},
+            </if>
+            <if test="stageName != null and stageName != ''">
+                stage_name = #{stageName},
+            </if>
+            <if test="openingLock != null">
+                opening_lock = #{openingLock},
+            </if>
+            <if test="bottomPriceReturnHouseLock != null">
+                bottom_price_return_house_lock = #{bottomPriceReturnHouseLock},
+            </if>
+            <if test="djBldPrice != null">
+                dj_bld_price = #{djBldPrice},
+            </if>
+            <if test="djTnPrice != null">
+                dj_tn_price = #{djTnPrice},
+            </if>
+            <if test="bldPrice != null">
+                bld_price = #{bldPrice},
+            </if>
+            <if test="djTotal != null">
+                dj_total = #{djTotal},
+            </if>
+            <if test="bldArea != null">
+                bld_area = #{bldArea},
+            </if>
+            <if test="isAreaModify != null">
+                is_area_modify = #{isAreaModify},
+            </if>
+            <if test="tradeLocker != null and tradeLocker != ''">
+                trade_locker = #{tradeLocker},
+            </if>
+            <if test="isTradeLock != null">
+                is_trade_lock = #{isTradeLock},
+            </if>
+            <if test="isTfLock != null">
+                is_tf_lock = #{isTfLock},
+            </if>
+            <if test="tradeLockTime != null">
+                trade_lock_time = #{tradeLockTime},
+            </if>
+            <if test="tfDate != null">
+                tf_date = #{tfDate},
+            </if>
+            <if test="hxId != null and hxId != ''">
+                hx_id = #{hxId},
+            </if>
+            <if test="hxName != null and hxName != ''">
+                hx_name = #{hxName},
+            </if>
+            <if test="tnPrice != null">
+                tn_price = #{tnPrice},
+            </if>
+            <if test="tnArea != null">
+                tn_area = #{tnArea},
+            </if>
+            <if test="total != null">
+                total = #{total},
+            </if>
+            <if test="dspBldArea != null">
+                dsp_bld_area = #{dspBldArea},
+            </if>
+            <if test="dspTnArea != null">
+                dsp_tn_area = #{dspTnArea},
+            </if>
+            <if test="ysBldArea != null">
+                ys_bld_area = #{ysBldArea},
+            </if>
+            <if test="ysTnArea != null">
+                ys_tn_area = #{ysTnArea},
+            </if>
+            <if test="scBldArea != null">
+                sc_bld_area = #{scBldArea},
+            </if>
+            <if test="scTnArea != null">
+                sc_tn_area = #{scTnArea},
+            </if>
+            <if test="roomStru != null and roomStru != ''">
+                room_stru = #{roomStru},
+            </if>
+            <if test="dspAreaStatusEnum != null">
+                dsp_area_status_enum = #{dspAreaStatusEnum},
+            </if>
+            <if test="calModeEnum != null">
+                cal_mode_enum = #{calModeEnum},
+            </if>
+            <if test="calMode != null and calMode != ''">
+                cal_mode = #{calMode},
+            </if>
+            <if test="isHfLock != null">
+                is_hf_lock = #{isHfLock},
+            </if>
+            <if test="xIsZc != null">
+                x_is_zc = #{xIsZc},
+            </if>
+            <if test="areaStatusEnum != null">
+                area_status_enum = #{areaStatusEnum},
+            </if>
+            <if test="areaStatus != null and areaStatus != ''">
+                area_status = #{areaStatus},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            <if test="dspAreaStatus != null and dspAreaStatus != ''">
+                dsp_area_status = #{dspAreaStatus},
+            </if>
+            <if test="isAnnexe != null">
+                is_annexe = #{isAnnexe},
+            </if>
+            <if test="mainRoomId != null and mainRoomId != ''">
+                main_room_id = #{mainRoomId},
+            </if>
+            <if test="isVirtualRoom != null">
+                is_virtual_room = #{isVirtualRoom},
+            </if>
+            <if test="areaChgId != null and areaChgId != ''">
+                area_chg_id = #{areaChgId},
+            </if>
+            <if test="productTypeId != null and productTypeId != ''">
+                product_type_id = #{productTypeId},
+            </if>
+            <if test="chooseRoomLockTime != null">
+                choose_room_lock_time = #{chooseRoomLockTime},
+            </if>
+            <if test="chooseRoomLockEndTime != null">
+                choose_room_lock_end_time = #{chooseRoomLockEndTime},
+            </if>
+            <if test="chooseRoomId != null and chooseRoomId != ''">
+                choose_room_id = #{chooseRoomId},
+            </if>
+            <if test="chooseRoomLockId != null and chooseRoomLockId != ''">
+                choose_room_lock_id = #{chooseRoomLockId},
+            </if>
+            <if test="chooseRoomTime != null">
+                choose_room_time = #{chooseRoomTime},
+            </if>
+            <if test="lsxkTime != null">
+                lsxk_time = #{lsxkTime},
+            </if>
+            <if test="jbrId != null and jbrId != ''">
+                jbr_id = #{jbrId},
+            </if>
+            <if test="baTotal != null">
+                ba_total = #{baTotal},
+            </if>
+            <if test="baBldPrice != null">
+                ba_bld_price = #{baBldPrice},
+            </if>
+            <if test="baTnPrice != null">
+                ba_tn_price = #{baTnPrice},
+            </if>
+            <if test="jfDate != null">
+                jf_date = #{jfDate},
+            </if>
+            <if test="openingBatch != null and openingBatch != ''">
+                opening_batch = #{openingBatch},
+            </if>
+            <if test="mjBldPrice != null">
+                mj_bld_price = #{mjBldPrice},
+            </if>
+            <if test="mjTnPrice != null">
+                mj_tn_price = #{mjTnPrice},
+            </if>
+            <if test="mjTotal != null">
+                mj_total = #{mjTotal},
+            </if>
+            <if test="taskId != null and taskId != ''">
+                task_id = #{taskId},
+            </if>
+            <if test="rightCell != null">
+                right_cell = #{rightCell},
+            </if>
+            <if test="downCell != null">
+                down_cell = #{downCell},
+            </if>
+        </set>
+        where room_id = #{roomId}
+    </update>
+
+    <select id="selectRoomByUnitIdAndNo" resultMap="buildRoomMap">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        WHERE unit_id = #{unitId}
+        AND `no` &gt; #{no}
+        ORDER BY floor_no ASC
+    </select>
+
+    <update id="updateRoomNo" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" separator=";" item="item">
+            update t_mm_build_room
+            set `no` = #{item.no}
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <update id="updateReleaseDish" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" separator=";" item="item">
+            update t_mm_build_room
+            set `status_enum` = #{item.statusEnum}
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <select id="selectRoomListByUnitId" parameterType="string" resultMap="buildRoomMap">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where `status` = 1
+        AND is_delete = 0
+        AND unit_id = #{unitId}
+    </select>
+
+    <select id="selectRoomColumnList" resultMap="buildRoomMap">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where `status` = 1
+        AND is_delete = 0
+        AND unit_id = #{unitId}
+        AND `no` = #{no}
+    </select>
+
+    <update id="delUnitByBuildId" parameterType="string">
+        update t_mm_build_unit
+        set is_delete = 1
+        where build_id = #{buildId}
+    </update>
+
+    <update id="delRoomByBuildId" parameterType="string">
+        update t_mm_build_room
+        set is_delete = 1
+        where build_id = #{buildId}
+    </update>
+
+    <select id="getBuildIdByRoomId" parameterType="string" resultType="string">
+        select build_id as buildId
+        from t_mm_build_room
+        where room_id = #{roomId}
+    </select>
+
+    <select id="getRoomByRoomId" resultMap="buildRoomMap" parameterType="string">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where is_delete = 0
+        AND room_id = #{roomId}
+        AND `status` = 1
+    </select>
+
+    <resultMap id="roomTaskMap" type="cn.visolink.system.projectmanager.model.RoomTask" >
+        <id column="task_id" property="taskId" />
+        <result column="project_name" property="projectName" />
+        <result column="project_id" property="projectId" />
+        <result column="apply_name" property="applyName" />
+        <result column="apply_time" property="applyTime" />
+        <result column="status" property="status" />
+        <result column="adjust_num" property="adjustNum" />
+        <result column="before_ys_bld_area" property="beforeYsBldArea" />
+        <result column="before_ys_tn_area" property="beforeYsTnArea" />
+        <result column="before_sc_bld_area" property="beforeScBldArea" />
+        <result column="before_sc_tn_area" property="beforeScTnArea" />
+        <result column="after_ys_bld_area" property="afterYsBldArea" />
+        <result column="after_ys_tn_area" property="afterYsTnArea" />
+        <result column="after_sc_bld_area" property="afterScBldArea" />
+        <result column="after_sc_tn_area" property="afterScTnArea" />
+        <result column="agent" property="agent" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="create_user" property="createUser" />
+        <result column="update_user" property="updateUser" />
+        <result column="is_delete" property="isDelete" />
+        <result column="remark" property="remark" />
+    </resultMap>
+
+    <sql id="roomTaskField">
+        select task_id, project_name, project_id, apply_name, apply_time, status, adjust_num,
+        before_ys_bld_area, before_ys_tn_area, before_sc_bld_area, before_sc_tn_area, after_ys_bld_area,
+        after_ys_tn_area, after_sc_bld_area, after_sc_tn_area, agent, create_time, update_time,
+        create_user, update_user, is_delete, remark
+    </sql>
+
+    <select id="selectRoomAreaTaskPlusPageList" resultMap="roomTaskMap"
+            parameterType="cn.visolink.system.projectmanager.model.requestmodel.RoomTaskDto">
+        <include refid="roomTaskField"/>
+        from t_mm_room_task
+        where is_delete = 0
+        <if test="applyName != null and applyName != ''">
+            AND apply_name = #{applyName}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            AND DATE(apply_time) &gt; #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND DATE(apply_time) &lt; #{endTime}
+        </if>
+    </select>
+
+    <select id="selectProjectList" resultMap="projectMap">
+        <include refid="projectField"/>
+        from b_project
+        where IsDel = 0
+        AND `Status` = 1
+    </select>
+
+    <select id="buildRoomListByBuildId" parameterType="string" resultMap="buildRoomMap">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where `status` = 1
+        AND is_delete = 0
+        AND build_id = #{buildId}
+        ORDER BY room_code ASC
+    </select>
+
+    <select id="getDesignBuildByBuildId" parameterType="string" resultMap="designBuildMap">
+        <include refid="designBuildField"/>
+        from t_mm_designbuild
+        where build_id = #{buildId}
+        AND is_delete = 0
+        AND `status` = 1
+    </select>
+
+    <select id="getProjectName" parameterType="string" resultType="string">
+        select
+        ProjectName as projectName
+        from b_project
+        where IsDel = 0
+        AND ID = #{projectId}
+        AND `Status` = 1
+    </select>
+
+    <insert id="saveBatchRoomToPlusTable" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        insert into t_mm_build_room_plus
+        (id, room_id, room_info, room_name, room_code,
+        room_no, `no`, status_enum, floor_name, floor_no, unit_id,
+        unit_name, unit_no, build_id, product_build_name, kingdee_build_id, my_build_id,
+        stage_id, stage_code, group_id, group_name, create_time, update_time,
+        create_user, update_user, is_delete, project_id, project_name, stage_name,
+        opening_lock, bottom_price_return_house_lock,
+        dj_bld_price, dj_tn_price, bld_price, dj_total, bld_area, is_area_modify,
+        trade_locker, is_trade_lock, is_tf_lock, trade_lock_time, tf_date, hx_id,
+        hx_name, tn_price, tn_area, total, dsp_bld_area, dsp_tn_area,
+        ys_bld_area, ys_tn_area, sc_bld_area, sc_tn_area, room_stru, dsp_area_status_enum,
+        cal_mode_enum, cal_mode, is_hf_lock, x_is_zc, area_status_enum, area_status,
+        status, dsp_area_status, is_annexe, main_room_id, is_virtual_room, area_chg_id,
+        product_type_id, choose_room_lock_time, choose_room_lock_end_time,
+        choose_room_id, choose_room_lock_id, choose_room_time, lsxk_time, jbr_id, ba_total, ba_bld_price, ba_tn_price, jf_date,
+        opening_batch, mj_bld_price, mj_tn_price, mj_total, task_id)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (UUID(), #{item.roomId}, #{item.roomInfo}, #{item.roomName}, #{item.roomCode},
+            #{item.roomNo}, #{item.no}, #{item.statusEnum},
+            #{item.floorName}, #{item.floorNo}, #{item.unitId},
+            #{item.unitName}, #{item.unitNo}, #{item.buildId},
+            #{item.productBuildName}, #{item.kingdeeBuildId}, #{item.myBuildId},
+            #{item.stageId}, #{item.stageCode}, #{item.groupId},
+            #{item.groupName}, NOW(), #{item.updateTime},
+            #{item.createUser}, #{item.updateUser}, 0,
+            #{item.projectId}, #{item.projectName}, #{item.stageName},
+            #{item.openingLock}, #{item.bottomPriceReturnHouseLock},
+            #{item.djBldPrice}, #{item.djTnPrice}, #{item.bldPrice},
+            #{item.djTotal}, #{item.bldArea}, #{item.isAreaModify},
+            #{item.tradeLocker}, #{item.isTradeLock}, #{item.isTfLock},
+            #{item.tradeLockTime}, #{item.tfDate}, #{item.hxId},
+            #{item.hxName}, #{item.tnPrice}, #{item.tnArea},
+            #{item.total}, #{item.dspBldArea}, #{item.dspTnArea},
+            #{item.ysBldArea}, #{item.ysTnArea}, #{item.scBldArea},
+            #{item.scTnArea}, #{item.roomStru}, #{item.dspAreaStatusEnum},
+            #{item.calModeEnum}, #{item.calMode}, #{item.isHfLock},
+            #{item.xIsZc}, #{item.areaStatusEnum}, #{item.areaStatus},
+            1, #{item.dspAreaStatus}, #{item.isAnnexe},
+            #{item.mainRoomId}, #{item.isVirtualRoom}, #{item.areaChgId},
+            #{item.productTypeId}, #{item.chooseRoomLockTime}, #{item.chooseRoomLockEndTime},
+            #{item.chooseRoomId}, #{item.chooseRoomLockId}, #{item.chooseRoomTime},
+            #{item.lsxkTime}, #{item.jbrId}, #{item.baTotal},
+            #{item.baBldPrice}, #{item.baTnPrice}, #{item.jfDate},
+            #{item.openingBatch}, #{item.mjBldPrice}, #{item.mjTnPrice},
+            #{item.mjTotal}, #{item.taskId})
+        </foreach>
+    </insert>
+
+    <select id="getAreaDataByBuildId" resultMap="buildRoomMap" parameterType="string">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room
+        where `status` = 1
+        AND is_delete = 0
+        AND build_id = #{buildId}
+    </select>
+
+    <insert id="saveRoomAreaTask" parameterType="cn.visolink.system.projectmanager.model.RoomTask">
+        insert into t_mm_room_task
+        (task_id, project_name, project_id, apply_name, apply_time, status, adjust_num,
+        before_ys_bld_area, before_ys_tn_area, before_sc_bld_area,
+        before_sc_tn_area, after_ys_bld_area, after_ys_tn_area,
+        after_sc_bld_area, after_sc_tn_area, agent,
+        create_time, update_time, create_user, update_user, is_delete, remark)
+        values (#{taskId}, #{projectName}, #{projectId}, #{applyName},
+        #{applyTime}, #{status}, #{adjustNum}, #{beforeYsBldArea}, #{beforeYsTnArea}, #{beforeScBldArea},
+        #{beforeScTnArea}, #{afterYsBldArea}, #{afterYsTnArea}, #{afterScBldArea}, #{afterScTnArea}, #{agent},
+        NOW(), #{updateTime}, #{createUser}, #{updateUser}, 0, #{remark})
+    </insert>
+
+    <update id="delAreaByTaskId" parameterType="string">
+        update t_mm_room_task
+        set is_delete = 1
+        where task_id = #{taskId}
+    </update>
+
+    <resultMap id="priceTaskMap" type="cn.visolink.system.projectmanager.model.PriceTask" >
+        <id column="task_id" property="taskId" />
+        <result column="project_name" property="projectName" />
+        <result column="project_id" property="projectId" />
+        <result column="apply_name" property="applyName" />
+        <result column="apply_time" property="applyTime" />
+        <result column="status" property="status" />
+        <result column="adjust_num" property="adjustNum" />
+        <result column="before_bz_total_price" property="beforeBzTotalPrice" />
+        <result column="after_bz_total_price" property="afterBzTotalPrice" />
+        <result column="before_bz_bld_price" property="beforeBzBldPrice" />
+        <result column="before_bz_tn_price" property="beforeBzTnPrice" />
+        <result column="after_bz_bld_price" property="afterBzBldPrice" />
+        <result column="after_bz_tn_price" property="afterBzTnPrice" />
+        <result column="before_dj_total" property="beforeDjTotal" />
+        <result column="after_dj_total" property="afterDjTotal" />
+        <result column="before_bld_dj_price" property="beforeBldDjPrice" />
+        <result column="before_tn_dj_price" property="beforeTnDjPrice" />
+        <result column="after_dj_price" property="afterDjPrice" />
+        <result column="after_bld_dj_price" property="afterBldDjPrice" />
+        <result column="valuation_type" property="valuationType" />
+        <result column="price_standard" property="priceStandard" />
+        <result column="agent" property="agent" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="create_user" property="createUser" />
+        <result column="update_user" property="updateUser" />
+        <result column="is_delete" property="isDelete" />
+        <result column="type" property="type" />
+        <result column="remark" property="remark" />
+    </resultMap>
+
+    <sql id="priceTaskField">
+        select task_id, project_name, project_id, apply_name, apply_time, status, adjust_num,
+        before_bz_total_price, after_bz_total_price, before_bz_bld_price, before_bz_tn_price,
+        after_bz_bld_price, after_bz_tn_price, before_dj_total, after_dj_total, before_bld_dj_price,
+        before_tn_dj_price, after_dj_price, after_bld_dj_price, valuation_type, price_standard,
+        agent, create_time, update_time, create_user, update_user, is_delete, `type`, remark
+    </sql>
+
+    <select id="selectPriceList" resultMap="priceTaskMap" parameterType="cn.visolink.system.projectmanager.model.PriceTask">
+        <include refid="priceTaskField"/>
+        from t_mm_price_task
+        where is_delete = 0
+        AND `type` = #{type}
+        <if test="applyName != null and applyName != ''">
+            AND apply_name = #{applyName}
+        </if>
+    </select>
+
+    <update id="updateStatusByTaskId" parameterType="string">
+        update t_mm_room_task
+        set `status` = 1
+        where task_id = #{taskId}
+    </update>
+
+    <select id="selectRoomAreaTaskListByTaskId" resultMap="buildRoomMap" parameterType="string">
+        <include refid="buildRoomField"/>
+        from t_mm_build_room_plus
+        where is_delete = 0
+        AND `status` = 1
+        AND task_id = #{taskId}
+    </select>
+
+    <update id="updateBatchToBuildRoom" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_build_room
+            set
+            <if test="item.ysBldArea != null">ys_bld_area = #{item.ysBldArea}, </if>
+            <if test="item.ysTnArea != null">ys_tn_area = #{item.ysTnArea}, </if>
+            <if test="item.scBldArea != null">sc_bld_area = #{item.scBldArea}, </if>
+            <if test="item.scTnArea != null">sc_tn_area = #{item.scTnArea}, </if>
+            <if test="item.updateUser != null and item.updateUser != ''">update_user = #{item.updateUser}, </if>
+            update_time = NOW()
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <insert id="savePriceTask" parameterType="cn.visolink.system.projectmanager.model.PriceTask">
+        insert into t_mm_price_task (task_id, project_name, project_id, apply_name,
+        apply_time, `status`, adjust_num, before_bz_total_price, after_bz_total_price,
+        before_bz_bld_price, before_bz_tn_price, after_bz_bld_price,
+        after_bz_tn_price, before_dj_total, after_dj_total,
+        before_bld_dj_price, before_tn_dj_price, after_dj_price,
+        after_bld_dj_price, valuation_type, price_standard,
+        agent, create_time, create_user, is_delete,
+        `type`, remark)
+        values (#{taskId}, #{projectName}, #{projectId}, #{applyName},
+        NOW(), 0, #{adjustNum}, #{beforeBzTotalPrice}, #{afterBzTotalPrice},
+        #{beforeBzBldPrice}, #{beforeBzTnPrice}, #{afterBzBldPrice},
+        #{afterBzTnPrice}, #{beforeDjTotal}, #{afterDjTotal},
+        #{beforeBldDjPrice}, #{beforeTnDjPrice}, #{afterDjPrice},
+        #{afterBldDjPrice}, #{valuationType}, #{priceStandard},
+        #{agent}, NOW(), #{createUser}, 0, #{type}, #{remark})
+    </insert>
+
+    <select id="selectStandardPriceTask" resultMap="priceTaskMap" parameterType="integer">
+        <include refid="priceTaskField"/>
+        from t_mm_price_task
+        where is_delete = 0
+        AND `type` = #{type}
+    </select>
+
+    <update id="updateStandardPriceStatusByTaskId" parameterType="string">
+        update t_mm_price_task
+        set `status` = 1
+        where task_id = #{taskId}
+    </update>
+
+    <update id="delStandardPriceByTaskId" parameterType="string">
+        update t_mm_price_task
+        set is_delete = 1
+        where task_id = #{taskId}
+    </update>
+
+    <update id="updateBatchStandardPriceToBuildRoom" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_build_room
+            set
+            <if test="item.mjBldPrice != null">mj_bld_price = #{item.mjBldPrice}, </if>
+            <if test="item.mjTnPrice != null">mj_tn_price = #{item.mjTnPrice}, </if>
+            <if test="item.mjTotal != null">mj_total = #{item.mjTotal}, </if>
+            <if test="item.updateUser != null and item.updateUser != ''">update_user = #{item.updateUser}, </if>
+            update_time = NOW()
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <update id="updateBatchDjPriceToBuildRoom" parameterType="cn.visolink.system.projectmanager.model.BuildRoom">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_build_room
+            set
+            <if test="item.djBldPrice != null">dj_bld_price = #{item.djBldPrice}, </if>
+            <if test="item.djTnPrice != null">dj_tn_price = #{item.djTnPrice}, </if>
+            <if test="item.djTotal != null">dj_total = #{item.djTotal}, </if>
+            <if test="item.updateUser != null and item.updateUser != ''">update_user = #{item.updateUser}, </if>
+            update_time = NOW()
+            where room_id = #{item.roomId}
+        </foreach>
+    </update>
+
+    <select id="getCurrentOrderCode" parameterType="string" resultType="integer">
+        select order_code
+        from t_mm_stage
+        where stage_id = #{stageId}
+        AND is_delete = 0
+    </select>
+
+    <select id="getDesignBuildCurrentOrderCode" parameterType="string" resultType="integer">
+        select
+        order_code
+        from t_mm_designbuild
+        where build_id = #{buildId}
+        AND is_delete = 0
+    </select>
+
+    <update id="moveDesignBuild" parameterType="hashmap">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_designbuild
+            set order_code = #{item.orderCode}
+            where build_id = #{item.buildId}
+        </foreach>
+    </update>
+
+    <update id="move" parameterType="hashmap">
+        <foreach collection="list" item="item" separator=";">
+            update t_mm_stage
+            set order_code = #{item.orderCode}
+            where stage_id = #{item.stageId}
+        </foreach>
+    </update>
+
+    <update id="updateOrganizationByOrgId">
+        update s_organization
+        set ProjectID = #{projectId}
+        where ID = #{orgId}
+    </update>
+
+    <select id="selectDateByFullPath" parameterType="string" resultType="map">
+        select * from s_organization where FullPath = #{fullPath} and IsDel = 0 and `Status` = 1
+    </select>
+    <select id="isExistProjectName" parameterType="string" resultType="integer">
+        select count(ProjectName)
+        from b_project
+        where `Status` = 1
+        AND IsDel = 0
+        AND ProjectName = #{projectName}
+    </select>
+
+    <select id="isExistStageName" resultType="integer">
+        select count(stage_name)
+        from t_mm_stage
+        where `status` = 1
+        AND is_delete = 0
+        AND stage_name = #{stageName}
+        AND project_id = #{projectId}
+    </select>
+
+    <select id="isExistGroupName" resultType="map">
+        select
+        group_id as groupId,
+        group_name as groupName
+        from t_mm_group
+        where `status` = 1
+        AND is_delete = 0
+        AND group_name = #{groupName}
+        AND stage_id = #{stageId}
+    </select>
+
+    <select id="isExistProjectName2" parameterType="string" resultType="map">
+        select
+        ProjectName as projectName,
+        ID as projectId
+        from b_project
+        where `Status` = 1
+        AND IsDel = 0
+        AND ProjectName = #{projectName}
+    </select>
+
+    <select id="isExistBuildName" resultType="map">
+        select
+        build_id as buildId,
+        product_build_name as productBuildName
+        from t_mm_designbuild
+        where `status` = 1
+        AND is_delete = 0
+        AND product_build_name = #{buildName}
+        AND project_id = #{projectId}
+    </select>
+
+    <select id="isExistStageName2" resultType="map">
+        select
+        stage_id as stageId,
+        stage_name as stageName
+        from t_mm_stage
+        where `status` = 1
+        AND is_delete = 0
+        AND stage_name = #{stageName}
+        AND project_id = #{projectId}
+    </select>
+
+    <insert id="saveGlobalDictionary"  parameterType="java.util.Map">
+        INSERT INTO S_Dictionary
+        ( ID, PID,ListIndex, DictCode, DictName, DictType,
+        Levels, Remark, IsReadOnly,
+        FullPath,
+        AuthCompanyID, ProductID, Creator,
+        CreateTime, Status, IsDel,DictionaryLevel,
+        ParamMode, DictTypeMode,ParamDefaults,
+        DecimalPlaces, Unit, MinVal, MaxVal, StorageMode, ProjectID, CityId, global_flag
+        )
+        SELECT
+        UUID(), PID,
+        ifnull(MAX(CONVERT(ListIndex, SIGNED)),0) +1,
+        DictCode, DictName, DictType,
+        Levels, null, 0, FullPath ,
+        AuthCompanyID,ProductID,#{Creator},
+        NOW(), 1, 0,DictionaryLevel,
+        ParamMode, DictTypeMode, ParamDefaults,
+        DecimalPlaces, Unit, MinVal, MaxVal, StorageMode, #{ProjectID}, CityId, global_flag
+        FROM S_Dictionary WHERE global_flag = '1' and IsDel = 0 and `Status` = 1
+        group By DictCode
+        order by DictCode
+    </insert>
+
+    <select id="selectDesignBuildByProjectId" parameterType="string" resultMap="designBuildMap">
+        <include refid="designBuildField"/>
+        from t_mm_designbuild
+        where is_delete = 0
+        AND `status` = 1
+        AND project_id = #{projectId}
+    </select>
+
+    <delete id="deleteProject" parameterType="string">
+        update b_project
+        set IsDel = 1
+        where ID = #{stageId}
+    </delete>
+
+    <select id="getCitys" resultType="java.util.Map">
+        select ID id,CityName name from a_city
+        where IsDel = 0 and Scope is not null
+          and ID !='00000000-0000-0000-0000-000000000000'
+    </select>
+</mapper>

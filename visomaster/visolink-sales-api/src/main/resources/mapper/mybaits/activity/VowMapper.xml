@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.activity.dao.VowMapper">
+
+    <resultMap id="BaseResuleMap" type="cn.visolink.system.activity.model.vo.ActivityVowDetailVo">
+        <result column="activity_name" property="activity_name"/>
+        <result column="vow_award_name" property="vow_award_name"/>
+        <result column="win_award_name" property="win_award_name"/>
+        <result column="vow_time" property="vow_time"/>
+        <result column="vow_barrage" property="vow_barrage"/>
+        <result column="award_status" property="award_status"/>
+        <result column="vow_open_time" property="vow_open_time"/>
+        <result column="operate_remark" property="operate_remark"/>
+        <result column="is_open_award" property="is_open_award"/>
+        <result column="operator_name" property="operator_name"/>
+        <result column="project_name" property="project_name"/>
+        <result column="mobile" property="mobile"/>
+        <result column="allmobile" property="allmobile"/>
+        <result column="name" property="name"/>
+        <result column="barrage_status" property="barrage_status"/>
+        <result column="operate_time" property="operate_time"/>
+        <result column="couponStatus" property="couponStatus"/>
+        <result column="closure" property="closure"/>
+    </resultMap>
+    <!--获取许愿明细-->
+    <select id="getVowDetail" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+        avd.id,
+        aai.activity_no,
+        aai.id activity_id,
+        aai.activity_name,
+        aci.coupon_no vow_award_no,
+        avd.vow_award_name,
+        aci.coupon_no win_award_no,
+        avd.win_award_id,
+        avd.win_award_name,
+        avd.create_time vow_time,
+        avd.vow_barrage,
+        avd.award_status,
+        DATE_FORMAT(aai.vow_open_time, '%Y-%m-%d %H:%i:%s') vow_open_time,
+        avd.operate_remark,
+        avd.operate_url,
+        avd.is_open_award,
+        avd.operator,
+        avd.operator_name operator_name,
+        ( SELECT GROUP_CONCAT( aap.project_name ) FROM a_activity_projects aap WHERE aap.actity_id = aai.id ) project_name,
+        avd.mobile mobile,
+        avd.broker_name name,
+        avd.openId,
+        avd.barrage_status,
+        avd.operate_time,
+        acd.status as couponStatus,
+        acd.closure,
+        DATE_FORMAT(acd.closure_time, '%Y-%m-%d %H:%i:%s') closure_time
+        FROM
+        a_activity_vow_detail avd
+        LEFT JOIN a_activity_vow_award ava ON avd.win_award_id = ava.id
+        left join a_coupon_detail acd on acd.collection_openid = avd.openId and acd.activity_id=avd.activity_id
+        left join a_activity_info aai on aai.id=avd.activity_id
+        left join (select id,coupon_no from a_coupon_info) aci on ava.coupon_id = aci.id
+	where
+	1=1
+        <if test="activity_id !=null and activity_id !=''">
+            and avd.activity_id = #{activity_id}
+        </if>
+        <if test="is_open_award != null and is_open_award !=''">
+            and is_open_award=#{is_open_award}
+        </if>
+        <if test="projectList != null and projectList.size() > 0">
+            and aai.id in (select DISTINCT actity_id from a_activity_projects where isdel = 0 and project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="activity_name != null and activity_name != ''">
+            and aai.activity_name like '%${activity_name}%'
+        </if>
+        <if test="activity_no != null and activity_no != ''">
+            and aai.activity_no like '%${activity_no}%'
+        </if>
+        <if test="mobileAndNameKey != null and mobileAndNameKey !=''">
+            and (avd.mobile  like '%${mobileAndNameKey}%' or avd.broker_name like '%${mobileAndNameKey}%')
+        </if>
+--         vow_no
+        <if test="award_name != null and award_name !=''">
+            and (avd.vow_award_name like '%${award_name}%' or avd.win_award_name like '%${award_name}%')
+        </if>
+        <if test="vow_no != null and vow_no !=''">
+            and (avd.aci.coupon_no like '%${vow_no}%')
+        </if>
+        <if test="award_no != null and award_no !=''">
+            and (avd.aci.coupon_no like '%${award_no}%')
+        </if>
+        <if test="people_name != null and people_name !=''">
+            and (acd.closure like '%${people_name}%' or avd.operator_name like '%${people_name}%')
+        </if>
+        <if test="vow_barrage != null and vow_barrage !='' ">
+            and avd.vow_barrage like '%${avd.vow_barrage}%'
+        </if>
+        <if test="barrage_status != null and barrage_status !=''">
+            and avd.barrage_status = #{barrage_status}
+        </if>
+        <if test="award_status != null and award_status !=''">
+            and avd.award_status = #{award_status}
+        </if>
+        <if test="coupon_status != null and coupon_status !=''">
+            and acd.status =#{coupon_status}
+        </if>
+        <if test="report_time ==1 and start_time != null and start_time != ''">
+            and acd.closure_time &lt;= #{end_time} and acd.closure_time &gt;= #{start_time}
+        </if>
+        <if test="report_time ==2 and start_time != null and start_time != ''">
+            and avd.create_time &lt;= #{end_time} and avd.create_time &gt;= #{start_time}
+        </if>
+        order by avd.create_time desc
+    </select>
+
+    <!--导出字段-->
+    <select id="getVowDetailExport" parameterType="java.util.Map" resultMap="BaseResuleMap">
+        SELECT
+        avd.id,
+        aai.id activity_id,
+        aai.activity_no,
+        aci.coupon_no vow_no,
+        aai.activity_name,
+        avd.vow_award_name,
+        avd.win_award_id,
+        aci.coupon_no award_no,
+        avd.win_award_name,
+        avd.create_time vow_time,
+        avd.vow_barrage,
+        case avd.award_status when 0 then '未中奖'
+        when 1 then '已中奖' end award_status,
+        aai.vow_open_time,
+        avd.operate_remark,
+        avd.operate_url,
+        case avd.is_open_award when 0 then '未开奖'
+        when 1 then '已开奖' end is_open_award,
+        avd.operator,
+        avd.operator_name operator_name,
+        ( SELECT GROUP_CONCAT( aap.project_name ) FROM a_activity_projects aap WHERE aap.actity_id = aai.id ) project_name,
+        avd.mobile allmobile,
+        concat(left(avd.mobile,3),'****',right(avd.mobile,4)) mobile,
+        avd.broker_name name,
+        avd.openId,
+        avd.barrage_status,
+        avd.operate_time,
+        case acd.status when 1 then '待核销'
+        when 2 then '已核销' end couponStatus,
+        acd.closure,
+        acd.closure_time
+        FROM
+        a_activity_vow_detail avd
+        LEFT JOIN a_activity_vow_award ava ON avd.win_award_id = ava.id
+        left join a_coupon_detail acd on acd.collection_openid = avd.openId and acd.activity_id=avd.activity_id
+        left join a_activity_info aai on aai.id=avd.activity_id
+        left join (select id,coupon_no from a_coupon_info) aci on ava.coupon_id = aci.id
+        where
+        1=1
+        <if test="activity_id !=null and activity_id !=''">
+            and aai.id = #{activity_id}
+        </if>
+        <if test="is_open_award != null and is_open_award !=''">
+            and is_open_award=#{is_open_award}
+        </if>
+        <if test="projectList != null and projectList.size() > 0">
+            and aai.id in (select DISTINCT actity_id from a_activity_projects where isdel = 0 and project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="activity_name != null and activity_name != ''">
+            and aai.activity_name like '%${activity_name}%'
+        </if>
+        <if test="mobileAndNameKey != null and mobileAndNameKey !=''">
+            and (avd.mobile  like '%${mobileAndNameKey}%' or avd.broker_name like '%${mobileAndNameKey}%')
+        </if>
+        <if test="award_name != null and award_name !=''">
+            and (avd.vow_award_name like '%${award_name}%' or avd.win_award_name like '%${award_name}%')
+        </if>
+        <if test="vow_no != null and vow_no !=''">
+            and (avd.aci.coupon_no like '%${vow_no}%')
+        </if>
+        <if test="award_no != null and award_no !=''">
+            and (avd.aci.coupon_no like '%${award_no}%')
+        </if>
+        <if test="people_name != null and people_name !=''">
+            and (acd.closure like '%${people_name}%' or avd.operator_name like '%${people_name}%')
+        </if>
+        <if test="vow_barrage != null and vow_barrage !='' ">
+            and avd.vow_barrage like '%${avd.vow_barrage}%'
+        </if>
+        <if test="barrage_status != null and barrage_status !=''">
+            and avd.barrage_status = #{barrage_status}
+        </if>
+        <if test="award_status != null and award_status !=''">
+            and avd.award_status = #{award_status}
+        </if>
+        <if test="coupon_status != null and coupon_status !=''">
+            and acd.status =#{couponStatus}
+        </if>
+        <if test="report_time ==1 and start_time != null and start_time != ''">
+            and acd.closure_time &lt;= #{end_time} and acd.closure_time &gt;= #{start_time}
+        </if>
+        <if test="report_time ==2 and start_time != null and start_time != ''">
+            and avd.create_time &lt;= #{end_time} and avd.create_time &gt;= #{start_time}
+        </if>
+    </select>
+    <!--修改弹幕状态-->
+    <update id="updateBarrageStatus" parameterType="java.util.Map">
+        update a_activity_vow_detail set barrage_status=#{type} where id =#{id}
+    </update>
+
+    <!--获取开奖状态-->
+    <select id="checkIsOpenAward" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select is_open_award from a_activity_vow_detail where id =#{id}
+    </select>
+
+    <!--获取奖品信息-->
+    <select id="getAwardInfo" parameterType="java.lang.String" resultType="java.util.Map">
+SELECT
+    ava.id as award_id,
+	ava.activity_id,
+	ava.award_name,
+	ifnull(ava.award_num,0) as award_num,
+  IFNULL(t.winNum,0) win_actual_num
+FROM
+	a_activity_vow_award ava
+  left join (select count(1) winNum,win_award_id from a_activity_vow_detail where win_award_id is not null  and award_status=1   group by win_award_id) t on t.win_award_id=ava.id
+	where ava.activity_id =#{activity_id}
+    </select>
+
+    <!--更新中奖状态-->
+    <update id="updateAwardStatus" parameterType="java.util.Map">
+        update a_activity_vow_detail
+        <set>
+            <if test="type==1">
+                award_status=1,
+                win_award_id=#{award_id},
+                win_award_name = #{award_name},
+            </if>
+            <if test="type==0">
+                award_status=0,
+                win_award_id = null,
+                win_award_name = null,
+            </if>
+                operator = #{userid},
+                operator_name = #{operator_name},
+            <if test="operate_remark !=null and operate_remark !=''" >
+                operate_remark=#{operate_remark},
+            </if>
+            <if test="operate_url !=null and operate_url!=''">
+                operate_url = #{operate_url},
+            </if>
+            operate_time=now()
+            where id = #{id}
+        </set>
+    </update>
+    <!--操作记录-->
+    <insert id="saveOperateRecord" parameterType="java.util.Map">
+INSERT INTO a_activity_vow_detail_record
+ ( id, activity_id, detail_id, operator, operate_time, operate_type, operate_remark, operate_url )
+VALUES
+	( uuid(), #{activity_id}, #{id}, #{userid}, now(), #{type}, #{operate_remark}, #{operate_url} );
+    </insert>
+
+    <!--获取优惠券图片-->
+    <select id="getCouponImageUrl" parameterType="java.lang.String" resultType="java.util.Map">
+        select coupon_image_url,id from a_coupon_info where id = (select coupon_id from a_activity_vow_award where id=#{awardId}  limit 1)  limit 1
+    </select>
+
+    <!--获取是否分区-->
+    <select id="getPartition" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select is_show_award_num from a_activity_info where id =#{activity_id} limit 1
+    </select>
+
+    <!--获取中奖名单-->
+    <select id="getAwardWinners" parameterType="java.lang.String" resultType="java.util.Map">
+SELECT
+	openId,
+    id
+FROM
+	a_activity_vow_detail
+WHERE
+	activity_id = #{activity_id}
+	<if test="isPartition == 1">
+	AND vow_award_id = #{award_id}
+    </if>
+    <if test="isPartition == 0">
+    AND win_award_id is null
+    </if>
+	ORDER BY RAND() limit ${award_num}
+    </select>
+
+    <!--更新中奖状态-->
+    <update id="updateBrokerAwardStatus" parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" separator=";">
+            update a_activity_vow_detail
+            set award_status = 1,
+            win_award_id = #{award_id},
+            win_award_name = #{award_name}
+            where id = #{item.id}
+        </foreach>
+
+    </update>
+</mapper>

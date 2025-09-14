@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.message.dao.SysUpdateMessageMapper">
+
+    <!-- 分页查询系统更新消息 -->
+    <select id="selectMessagePage" resultType="cn.visolink.system.message.entity.SysUpdateMessage">
+        SELECT 
+            id, title, content, message_type, target_type, target_users, target_roles,
+            is_popup, expire_time, status, creator, creator_name, create_time,
+            updator, updator_name, update_time, is_deleted
+        FROM b_sysupdate_message
+        WHERE is_deleted = 0
+        <if test="params.title != null and params.title != ''">
+            AND title LIKE CONCAT('%', #{params.title}, '%')
+        </if>
+        <if test="params.messageType != null and params.messageType != ''">
+            AND message_type = #{params.messageType}
+        </if>
+        <if test="params.targetType != null and params.targetType != ''">
+            AND target_type = #{params.targetType}
+        </if>
+        <if test="params.status != null and params.status != ''">
+            AND status = #{params.status}
+        </if>
+        <if test="params.startTime != null and params.startTime != ''">
+            AND create_time >= #{params.startTime}
+        </if>
+        <if test="params.endTime != null and params.endTime != ''">
+            AND create_time &lt;= #{params.endTime}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询用户未读的系统更新消息 -->
+    <select id="selectUnreadMessagesByUserId" resultType="cn.visolink.system.message.entity.SysUpdateMessage">
+        SELECT DISTINCT
+            m.id, m.title, m.content, m.message_type, m.target_type, m.target_users, m.target_roles,
+            m.is_popup, m.expire_time, m.status, m.creator, m.creator_name, m.create_time,
+            m.updator, m.updator_name, m.update_time, m.is_deleted
+        FROM b_sysupdate_message m
+        LEFT JOIN b_sysupdate_message_read r ON m.id = r.message_id AND r.user_id = #{userId}
+        WHERE m.is_deleted = 0 
+        AND m.status = 1
+        AND (m.expire_time IS NULL OR m.expire_time > NOW())
+        AND (
+            (m.target_type = 1) OR
+            (m.target_type = 2 AND FIND_IN_SET(#{userId}, m.target_users))
+        )
+        AND (r.id IS NULL OR r.is_read = 0)
+        ORDER BY m.create_time DESC
+    </select>
+
+    <!-- 查询需要弹框提醒的消息 -->
+    <select id="selectPopupMessagesByUserId" resultType="cn.visolink.system.message.entity.SysUpdateMessage">
+        SELECT DISTINCT
+            m.id, m.title, m.content, m.message_type, m.target_type, m.target_users, m.target_roles,
+            m.is_popup, m.expire_time, m.status, m.creator, m.creator_name, m.create_time,
+            m.updator, m.updator_name, m.update_time, m.is_deleted
+        FROM b_sysupdate_message m
+        LEFT JOIN b_sysupdate_message_read r ON m.id = r.message_id AND r.user_id = #{userId}
+        WHERE m.is_deleted = 0 
+        AND m.status = 1
+        AND m.is_popup = 1
+        AND (m.expire_time IS NULL OR m.expire_time > NOW())
+        AND (
+            (m.target_type = 1) OR
+            (m.target_type = 2 AND FIND_IN_SET(#{userId}, m.target_users))
+        )
+        AND (r.id IS NULL OR r.is_read = 0)
+        ORDER BY m.create_time DESC
+    </select>
+
+    <!-- 批量插入消息已读记录 -->
+    <insert id="batchInsertMessageRead">
+        INSERT INTO b_sysupdate_message_read (id, message_id, user_id, user_name, is_read, read_time, create_time, update_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.messageId}, #{item.userId}, #{item.userName}, #{item.isRead}, #{item.readTime}, NOW(), NOW())
+        </foreach>
+    </insert>
+
+    <!-- 更新消息已读状态 -->
+    <update id="updateMessageReadStatus">
+        UPDATE b_sysupdate_message_read 
+        SET is_read = 1, read_time = NOW(), update_time = NOW()
+        WHERE message_id = #{messageId} AND user_id = #{userId}
+    </update>
+
+    <!-- 查询消息的已读用户列表 -->
+    <select id="selectMessageReadUsers" resultType="java.util.Map">
+        SELECT 
+            r.user_id, r.user_name, r.read_time,
+            a.Mobile as phone, a.OfficeMail as email
+        FROM b_sysupdate_message_read r
+        LEFT JOIN b_account a ON r.user_id = a.ID
+        WHERE r.message_id = #{messageId} AND r.is_read = 1
+        ORDER BY r.read_time DESC
+    </select>
+
+    <!-- 查询消息的未读用户列表 -->
+    <select id="selectMessageUnreadUsers" resultType="java.util.Map">
+        SELECT 
+            a.ID as user_id, a.UserName as user_name, a.Mobile as phone, a.OfficeMail as email
+        FROM b_account a
+        WHERE a.IsDel = 0 AND a.Status = 1
+        AND (
+            (SELECT target_type FROM b_sysupdate_message WHERE id = #{messageId}) = 1 OR
+            (SELECT target_type FROM b_sysupdate_message WHERE id = #{messageId}) = 2 
+            AND FIND_IN_SET(a.ID, (SELECT target_users FROM b_sysupdate_message WHERE id = #{messageId}))
+        )
+        AND NOT EXISTS (
+            SELECT 1 FROM b_sysupdate_message_read r 
+            WHERE r.message_id = #{messageId} AND r.user_id = a.ID AND r.is_read = 1
+        )
+        ORDER BY a.CreateTime DESC
+    </select>
+
+    <!-- 统计消息的已读/未读数量 -->
+    <select id="countMessageReadStatus" resultType="java.util.Map">
+        SELECT 
+            (SELECT COUNT(1) FROM b_sysupdate_message_read WHERE message_id = #{messageId} AND is_read = 1) as read_count,
+            (SELECT COUNT(1) FROM b_account a
+             WHERE a.IsDel = 0 AND a.Status = 1
+             AND (
+                 (SELECT target_type FROM b_sysupdate_message WHERE id = #{messageId}) = 1 OR
+                 (SELECT target_type FROM b_sysupdate_message WHERE id = #{messageId}) = 2 
+                 AND FIND_IN_SET(a.ID, (SELECT target_users FROM b_sysupdate_message WHERE id = #{messageId}))
+             )
+             AND NOT EXISTS (
+                 SELECT 1 FROM b_sysupdate_message_read r 
+                 WHERE r.message_id = #{messageId} AND r.user_id = a.ID AND r.is_read = 1
+             )
+            ) as unread_count
+    </select>
+
+</mapper>

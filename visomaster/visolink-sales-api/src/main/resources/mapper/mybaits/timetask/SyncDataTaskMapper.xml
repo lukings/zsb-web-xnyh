@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.timetask.SyncDataTaskMapper">
+
+    <!-- 获取外部项目同步数据 -->
+    <select id="getExternalProjectList" resultType="java.util.Map">
+        SELECT project_code,pcode,project_name,status,is_del,update_time,update_by FROM `v_visolink_syn_project`
+        WHERE update_time > DATE_SUB(CURDATE(),INTERVAL 1 DAY)
+    </select>
+
+    <!-- 获取内部项目数据 -->
+    <select id="getInsideProjectList" resultType="java.util.Map">
+        SELECT id FROM `b_project`
+    </select>
+
+    <!-- 获取内部未删除的项目数据 -->
+    <select id="getNotDeletedInsideProjectList" resultType="java.lang.Long">
+        SELECT COUNT(*) AS count FROM `b_project` WHERE isDel = 0
+    </select>
+
+    <!-- 插入项目 -->
+    <insert id="insertBatchProject">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            INSERT INTO `b_project`(ID,PID,ProjectName,ProjectNum,Status,IsDel,Creator,CreateTime,UpdateOrInsertFlag)
+            VALUES(#{item.project_code},#{item.pcode},#{item.project_name},#{item.project_code}
+            ,#{item.status},#{item.is_del},#{item.update_by},#{item.update_time},0)
+        </foreach>
+    </insert>
+
+    <!-- 更新项目 -->
+    <update id="updateBatchProject">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            UPDATE `b_project` SET PID = #{item.pcode},ProjectName = #{item.project_name},Status = #{item.status}
+            ,IsDel = #{item.is_del},Editor = #{item.update_by},EditTime = #{item.update_time},UpdateOrInsertFlag = 1
+            WHERE isDel = 0 AND ID = #{item.project_code}
+        </foreach>
+    </update>
+
+    <!-- 获取外部组织同步数据 -->
+    <select id="getExternalOrganizationList" resultType="java.util.Map">
+        SELECT organization_code,pcode,organization_name,category,status,is_del,update_time,update_by
+        FROM `v_visolink_syn_organization` WHERE update_time > DATE_SUB(CURDATE(),INTERVAL 1 DAY)
+    </select>
+
+    <!-- 获取内部组织数据 -->
+    <select id="getInsideOrganizationList" resultType="java.util.Map">
+        SELECT ID FROM `s_organization`
+    </select>
+
+    <!-- 插入组织 -->
+    <insert id="insertBatchOrganization">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            INSERT INTO `s_organization`(ID,PID,OrgName,OrgCategory,Status,IsDel,Creator,CreateTime)
+            VALUES(#{item.organization_code},#{item.pcode},#{item.organization_name},#{item.category}
+            ,#{item.status},#{item.is_del},#{item.update_by},#{item.update_time})
+        </foreach>
+    </insert>
+
+    <!-- 更新组织 -->
+    <update id="updateBatchOrganization">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            UPDATE `s_organization` SET PID = #{item.pcode},OrgName = #{item.organization_name}
+            ,OrgCategory = #{item.category}
+            ,IsDel = #{item.is_del},Editor = #{item.update_by},EditTime = #{item.update_time}
+            WHERE isDel = 0 AND ID = #{item.organization_code}
+        </foreach>
+    </update>
+
+    <!-- 获取外部用户同步数据 -->
+    <select id="getExternalUserList" resultType="java.util.Map">
+        SELECT user_code,user_name,employee_name,gender,office_tel,office_mail,mobile,post_code,address
+        ,status,is_del,update_time,update_by
+        FROM `v_visolink_syn_user` WHERE update_time > DATE_SUB(CURDATE(),INTERVAL 1 DAY)
+    </select>
+
+    <!-- 获取内部用户数据 -->
+    <select id="getInsideUserList" resultType="java.util.Map">
+        SELECT ID FROM `b_account`
+    </select>
+
+    <!-- 插入用户 -->
+    <insert id="insertBatchUser">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            INSERT INTO `b_account`(ID,UserName,`Password`,AccountType,EmployeeCode,EmployeeName
+            ,Gender,OfficeTel,OfficeMail,Mobile,PostCode,Address,Status,IsDel,Creator,CreateTime)
+            VALUES(#{item.user_code},#{item.user_name},UPPER(MD5(#{item.user_name})),2,#{item.user_code}
+            ,#{item.employee_name},#{item.gender},#{item.office_tel},#{item.office_mail},#{item.mobile}
+            ,#{item.post_code},#{item.address}
+            ,#{item.status},#{item.is_del},#{item.update_by},#{item.update_time})
+        </foreach>
+    </insert>
+
+    <!-- 更新用户 -->
+    <update id="updateBatchUser">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            UPDATE `b_account` SET UserName = #{item.user_name},EmployeeName = #{item.employee_name}
+            ,Gender = #{item.gender},OfficeTel = #{item.office_tel},OfficeMail = #{item.office_mail}
+            ,Mobile = #{item.mobile},PostCode = #{item.post_code},Address = #{item.address}
+            ,IsDel = #{item.is_del},Editor = #{item.update_by},EditTime = #{item.update_time}
+            WHERE isDel = 0 AND ID = #{item.user_code}
+        </foreach>
+    </update>
+
+    <!-- 获取外部字典同步数据 -->
+    <select id="getExternalDictionaryList" resultType="java.util.Map">
+        SELECT dictionary_code,pcode,dictionary_name,status,is_del,update_time,update_by
+        FROM `v_visolink_syn_dictionary` WHERE update_time > DATE_SUB(CURDATE(),INTERVAL 1 DAY)
+    </select>
+
+    <!-- 获取内部字典数据 -->
+    <select id="getInsideDictionaryList" resultType="java.util.Map">
+        SELECT ID FROM `s_dictionary` WHERE PID != -1
+    </select>
+
+    <!-- 插入字典 -->
+    <insert id="insertBatchDictionary">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            INSERT INTO `s_dictionary`(ID,PID,ListIndex,DictCode,DictName,Status,IsDel,Creator,CreateTime)
+            VALUES(#{item.dictionary_code},#{item.pcode},0,#{item.dictionary_code},#{item.dictionary_name}
+            ,#{item.status},#{item.is_del},#{item.update_by},#{item.update_time})
+        </foreach>
+    </insert>
+
+    <!-- 更新字典 -->
+    <update id="updateBatchDictionary">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            UPDATE `s_dictionary` SET DictName = #{item.dictionary_name}
+            ,IsDel = #{item.is_del},Editor = #{item.update_by},EditTime = #{item.update_time}
+            WHERE isDel = 0 AND ID = #{item.dictionary_code}
+        </foreach>
+    </update>
+
+    <!-- 获取组织全路径 -->
+    <select id="getOrganizationFullPath" resultType="java.util.Map">
+        SELECT ID,PID,OrgName,FullPath FROM `s_organization` WHERE IsDel = 0 ORDER BY CreateTime
+    </select>
+
+    <!-- 批量更新组织 全路径 -->
+    <update id="updateBatchOrganizationFullPath">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            UPDATE `s_organization` SET FullPath = #{item.FullPath} WHERE ID = #{item.ID}
+        </foreach>
+    </update>
+</mapper>

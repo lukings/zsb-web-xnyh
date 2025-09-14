@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.invalidvisit.dao.InvalidVisitDao">
+
+    <!--查询无效客户-->
+    <select id="findInvalidVisitList" resultType="cn.visolink.system.invalidvisit.model.InvalidVisit" parameterType="java.util.Map">
+        select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+        select v.ProjectName,
+        DATE_FORMAT(v.VisitTime,'%Y-%m-%d %H:%i') as VisitTime,
+        v.VisitNum,
+        v.VisitReason,
+        DATE_FORMAT(v.CreateTime,'%Y-%m-%d %H:%i') as CreateTime,
+        v.CreateUserName,
+        s.DictName as VisitReasonCode
+        from b_invalid_visit v
+        left join (select DictCode,DictName from s_dictionary where pid = (
+        select id from s_dictionary where pid = '-1' and DictCode = 'visit_reason'
+        )) s on v.VisitReasonCode = s.DictCode
+        where v.ProjectId in (${projectId})
+        <if test="beginTime!=null  and endTime!=null ">
+            and v.VisitTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+        <if test="visitReasonCodeList!=null and visitReasonCodeList.size() > 0">
+            and v.VisitReasonCode in
+            <foreach collection="visitReasonCodeList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        order by v.VisitTime desc
+        <if test="index!=null">
+            limit #{index},#{size}
+        </if>) t
+    </select>
+    <!--获取无效来访的总数-->
+    <select id="getCount" resultType="java.util.Map" parameterType="java.util.Map">
+        select count(*) as visitCount,sum(VisitNum) as cstCount
+        from b_invalid_visit
+        where ProjectId in (${projectId})
+        <if test="beginTime!=null  and endTime!=null ">
+            and VisitTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+        <if test="visitReasonCodeList!=null and visitReasonCodeList.size() > 0">
+            and VisitReasonCode in
+            <foreach collection="visitReasonCodeList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <!--查询来访原因-->
+    <select id="getVisitReason" resultType="java.util.Map">
+        select DictCode dictCode,DictName dictName from s_dictionary where pid = (
+            select id from s_dictionary where pid = '-1' and DictCode = 'visit_reason')
+            ;
+    </select>
+</mapper>

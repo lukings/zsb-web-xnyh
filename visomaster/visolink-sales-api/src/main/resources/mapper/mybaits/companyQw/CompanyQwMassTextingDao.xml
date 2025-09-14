@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.companyQw.dao.CompanyQwMassTextingDao">
+
+    <!--新增所有列-->
+    <insert id="createMassTextingTasks" parameterType="cn.visolink.system.companyQw.model.BQwMassTexting">
+        insert into b_qw_mass_texting(id, task_name, project_id, send_time,
+        senders, send_type, flag_type, sender_names, create_time,
+        creater, is_del, is_start, col_client_id,col_client_names)
+        values (#{id}, #{taskName}, #{projectId}, #{sendTime}, #{senders},
+        #{sendType}, #{flagType},#{senderNames},
+        NOW(), #{creater}, 0, 0, #{colClientId},#{colClientNames})
+    </insert>
+
+    <!--通过主键删除-->
+    <update id="deleteById" parameterType="string">
+        update b_qw_mass_texting set is_del = 1 where id = #{id}
+    </update>
+
+    <!--撤回-->
+    <update id="reMassTextingTasks" parameterType="string">
+        update b_qw_mass_texting set status = 2 where id = #{id}
+    </update>
+
+    <!--重发-->
+    <update id="reAddMassTextingTasks" parameterType="java.util.Map">
+        update b_qw_mass_texting
+        set status = 1,is_del = 0,is_start = 0,
+            send_time = #{sendTime},
+            update_time = now()
+        where id = #{id}
+    </update>
+
+
+    <!--获取未关联案场客户 或全部客户-->
+    <select id="getUserCstNoAc" parameterType="java.util.Map" resultType="java.lang.String">
+        SELECT
+            rel.external_userid
+        FROM
+            b_qw_user_cst_rel rel
+        WHERE
+            rel.userid IN (
+              <foreach collection="userIds" item="item" separator=",">
+                  #{item}
+              </foreach>
+                )
+          <if test="projectId!=null and projectId!=''">
+              AND rel.external_userid NOT IN ( SELECT external_userid FROM b_qw_cst_oppcst_rel WHERE project_id = #{projectId} AND is_bind = 1 AND is_del = 0 )
+          </if>
+          <if test="tagIds!=null and tagIds.size()>0">
+              AND rel.external_userid IN ( SELECT external_userid
+              FROM b_qw_user_cst_tag WHERE userid IN
+                   (<foreach collection="userIds" item="item" separator=",">
+                        #{item}
+                     </foreach>)
+              AND tag_name IN
+                  (<foreach collection="tagIds" item="item" separator=",">
+                    #{item}
+                   </foreach>)
+              AND is_del = 0 )
+          </if>
+    </select>
+
+    <select id="getUserCstByType" parameterType="java.util.Map" resultType="java.lang.String">
+        SELECT
+            rel.external_userid
+        FROM
+            b_qw_user_cst_rel rel
+                INNER JOIN b_qw_cst_oppcst_rel opprel ON rel.external_userid = opprel.external_userid
+                AND opprel.project_id = #{projectId}
+                INNER JOIN b_project_clues clue ON clue.ProjectClueId = opprel.ProjectClueId
+        WHERE
+            rel.userid IN (
+              <foreach collection="userIds" item="item" separator=",">
+                #{item}
+              </foreach> )
+          <if test="status!=null and status.size()>0">
+              AND clue.ClueStatus IN (
+                <foreach collection="status" separator="," item="item">
+                    #{item}
+                </foreach>
+              )
+          </if>
+        <if test="tagIds!=null and tagIds.size()>0">
+            AND rel.external_userid IN ( SELECT external_userid
+            FROM b_qw_user_cst_tag WHERE userid IN
+            (<foreach collection="userIds" item="item" separator=",">
+            #{item}
+        </foreach>)
+            AND tag_name IN
+            (<foreach collection="tagIds" item="item" separator=",">
+            #{item}
+        </foreach>)
+            AND is_del = 0 )
+        </if>
+    </select>
+
+    <select id="getUserCstTags" parameterType="java.util.List" resultType="java.util.Map">
+        SELECT distinct
+            tag_name id,
+            tag_name name
+        FROM
+            b_qw_user_cst_tag
+        WHERE
+            userid IN (
+            <foreach collection="list" item="item" separator=",">
+                #{item}
+            </foreach>
+                )
+    </select>
+
+    <select id="getUserNames" parameterType="java.lang.String" resultType="java.lang.String">
+        select name
+        from b_qw_user
+        where userid in (
+            <foreach collection="list" item="item" separator=",">
+                #{item}
+            </foreach>
+            );
+    </select>
+
+    <select id="getCstNames" parameterType="java.lang.String" resultType="java.lang.String">
+        select name
+        from b_qw_cst
+        where external_userid in (
+            <foreach collection="list" item="item" separator=",">
+                #{item}
+            </foreach>
+            );
+    </select>
+
+    <insert id="addTaskMediaList" parameterType="java.util.List">
+        insert into b_qw_mass_media(task_id,title,media_url,appid,page,media_type,creator,create_time)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.taskId},#{item.title},#{item.mediaUrl},#{item.appid},#{item.page},#{item.mediaType},#{item.creator},now())
+        </foreach>
+    </insert>
+
+    <select id="selectMassTextingTasks" parameterType="map" resultType="cn.visolink.system.companyQw.model.BQwMassTexting">
+        SELECT
+        bp.ProjectName projectName,
+        t.id,
+        t.project_id projectId,
+        t.task_name taskName,
+        t.send_time sendTime,
+        ( CASE WHEN t.send_type = 1 THEN '群发到客户群'
+        WHEN t.send_type = 2 THEN '群发到朋友圈' ELSE '群发到客户' END ) sendType,
+        media.title content,
+        t.sender_names senderNames,
+        t.col_client_names colClientNames,
+        (
+        CASE
+
+        WHEN t.is_start = 1 THEN
+        '已群发'
+        WHEN t.is_start = 0
+        AND t.STATUS = 1 THEN
+        '待群发'
+        WHEN t.is_start = 0
+        AND t.STATUS = 2 THEN
+        '已撤回' ELSE ''
+        END
+        ) status,
+        ba.EmployeeName creater,
+        t.create_time createTime
+        FROM
+        b_qw_mass_texting t
+        INNER JOIN b_account ba ON ba.id = t.creater
+        INNER JOIN b_project bp ON bp.id = t.project_id
+        INNER JOIN b_qw_mass_media media ON media.task_id = t.id
+        AND media.media_type = 6
+        WHERE
+        t.is_del = 0
+        <if test="ids != null and ids.size()>0">
+            and t.project_id in (
+              <foreach collection="ids" item="item" separator=",">
+                  #{item}
+              </foreach>
+            )
+        </if>
+        <if test="taskName != null and taskName != ''">
+            and t.task_name like '%${taskName}%'
+        </if>
+        <if test="creater != null and creater != ''">
+            and ba.EmployeeName like '%${creater}%'
+        </if>
+        <if test="status != null and status =='2'.toString()">
+            and t.is_start = 1
+        </if>
+        <if test="status != null and status =='1'.toString()">
+            and t.is_start = 0 and t.STATUS = 1
+        </if>
+        <if test="status != null and status =='0'.toString()">
+            and t.is_start = 0 and t.STATUS = 2
+        </if>
+
+        <if test="timeType == '1'.toString() and startTime != null and startTime != '' and endTime != null and endTime != ''">
+            and t.send_time BETWEEN #{startTime} AND #{endTime}
+        </if>
+        <if test="timeType == '2'.toString() and startTime != null and startTime != '' and endTime != null and endTime != ''">
+            and t.create_time BETWEEN #{startTime} AND #{endTime}
+        </if>
+        order by t.create_time desc
+    </select>
+</mapper>
+

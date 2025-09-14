@@ -1,0 +1,2142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.activity.dao.ActivityInfoDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.visolink.system.activity.model.ActivityInfo">
+        <id column="ID" property="id"/>
+        <result column="activity_name" property="activityName"/>
+        <result column="activity_no" property="activityNo"/>
+        <result column="activity_level" property="activityLevel"/>
+        <result column="activity_projectnames" property="activityProjectnames"/>
+        <result column="activity_sharecont" property="activitySharecont"/>
+        <result column="release_time" property="releaseTime"/>
+        <result column="signup_begintime" property="signupBegintime"/>
+        <result column="signup_endtime" property="signupEndtime"/>
+        <result column="activity_begintime" property="activityBegintime"/>
+        <result column="activity_endtime" property="activityEndtime"/>
+        <result column="activity_note" property="activityNote"/>
+        <result column="is_signup" property="isSignup"/>
+        <result column="is_signin" property="isSignin"/>
+        <result column="is_sharefriend" property="isSharefriend"/>
+        <result column="havecoupon" property="havecoupon"/>
+        <result column="signin_type" property="signinType"/>
+        <result column="sharefriend_no" property="sharefriendNo"/>
+        <result column="sharefriend_gift" property="sharefriendGift"/>
+        <result column="collection_method" property="collectionMethod"/>
+        <result column="act_status" property="actStatus"/>
+        <result column="status" property="status"/>
+        <result column="is_del" property="isDel"/>
+        <result column="createtime" property="createtime"/>
+        <result column="creator" property="creator"/>
+        <result column="edittime" property="edittime"/>
+        <result column="editor" property="editor"/>
+    </resultMap>
+    <!-- 查询映射结果 -->
+    <resultMap id="ResultMap" type="cn.visolink.system.activity.model.vo.ActivityInfoVO">
+        <id column="ID" property="id"/>
+        <result column="activity_no" property="activityNo"/>
+        <result column="activity_name" property="activityName"/>
+        <result column="activity_level" property="activityLevel"/>
+        <result column="activity_projectnames" property="activityProjectnames"/>
+        <result column="activity_sharecont" property="activitySharecont"/>
+        <result column="release_time" property="releaseTime"/>
+        <result column="signup_begintime" property="signupBegintime"/>
+        <result column="signup_endtime" property="signupEndtime"/>
+        <result column="activity_begintime" property="activityBegintime"/>
+        <result column="activity_endtime" property="activityEndtime"/>
+        <result column="activity_note" property="activityNote"/>
+        <result column="is_signup" property="isSignup"/>
+        <result column="is_signin" property="isSignin"/>
+        <result column="is_sharefriend" property="isSharefriend"/>
+        <result column="havecoupon" property="havecoupon"/>
+        <result column="signin_type" property="signinType"/>
+        <result column="sharefriend_no" property="sharefriendNo"/>
+        <result column="sharefriend_gift" property="sharefriendGift"/>
+        <result column="collection_method" property="collectionMethod"/>
+        <result column="act_status" property="actStatus"/>
+        <result column="status" property="status"/>
+        <result column="is_del" property="isDel"/>
+        <result column="createtime" property="createtime"/>
+        <result column="creator" property="creator"/>
+        <result column="edittime" property="edittime"/>
+        <result column="editor" property="editor"/>
+        <result column="activity_type" property="activityType"/>
+        <result column="signup_title" property="signUpTitle"/>
+        <result column="hold_address" property="holdAddress"/>
+        <result column="help_type" property="helpType"/>
+        <result column="help_begintime" property="helpBeginTime"/>
+        <result column="help_endtime" property="helpEndTime"/>
+        <result column="gift_name" property="giftName"/>
+        <result column="collect_coupons_title" property="collectCouponsTitle"/>
+
+        <result column="signup_max" property="signupMax"/>
+        <result column="help_max" property="helpMax"/>
+        <result column="is_signup_limit" property="isSignupLimit"/>
+        <result column="is_help_limit" property="isHelpLimit"/>
+        <result column="is_signup_show" property="isSignupShow"/>
+        <result column="is_help_show" property="isHelpShow"/>
+        <result column="vowCount" property="vowCount"/>
+        <result column="openAwardStatus" property="openAwardStatus"/>
+        <result column="vow_titile" property="vow_titile"/>
+        <result column="vow_begintime" property="vow_begintime"/>
+        <result column="vow_endtime" property="vow_endtime"/>
+        <result column="vow_open_time" property="vow_open_time"/>
+        <result column="is_support_partition_vow" property="is_support_partition_vow"/>
+        <result column="is_show_award_num" property="is_show_award_num"/>
+        <result column="signup_diy_code" property="signup_diy_code"/>
+        <result column="help_allow_customer_status" property="help_allow_customer_status"/>
+        <result column="signup_allow_customer_status" property="signup_allow_customer_status"/>
+        <result column="vow_allow_customer_status" property="vow_allow_customer_status"/>
+        <result column="activity_desc" property="activity_desc"/>
+        <result column="help_title" property="helpTitle"/>
+        <result column="projectName" property="projectName"/>
+        <result column="is_home_page_hot" property="isHomePageHot"/>
+    </resultMap>
+
+    <resultMap id="activitySignUpMap" type="cn.visolink.system.activity.model.vo.ActivitySignUpVO">
+        <result column="id" property="id"/>
+        <result column="rownum" property="rownum"/>
+        <result column="ProjectClueId" property="projectClueId"/>
+        <result column="CustomerName" property="customerName"/>
+        <result column="CustomerGender" property="customerGender"/>
+        <result column="customerMobile" property="customerMobile"/>
+        <result column="SourceType" property="sourceType"/>
+        <result column="SourceTypeDesc" property="sourceTypeDesc"/>
+        <result column="MainMediaGUID" property="mainMediaGUID"/>
+        <result column="MainMediaName" property="mainMediaName"/>
+        <result column="SubMediaGUID" property="subMediaGUID"/>
+        <result column="SubMediaName" property="subMediaName"/>
+        <result column="SourceTypeOld" property="sourceTypeOld"/>
+        <result column="SourceTypeOldDesc" property="sourceTypeOldDesc"/>
+        <result column="ClueStatus" property="clueStatus"/>
+        <result column="projectId" property="projectId"/>
+        <result column="ProjectName" property="projectName"/>
+        <result column="ReportSource" property="reportSource"/>
+        <result column="ReportSourceDesc" property="reportSourceDesc"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="activity_name" property="activityName"/>
+        <result column="activity_no" property="activityNo"/>
+        <result column="signup_time" property="signUpTime"/>
+        <result column="act_begintime" property="actBeginTime"/>
+        <result column="act_endtime" property="actEndTime"/>
+        <result column="signup_id" property="signUpId"/>
+        <result column="signup_openid" property="signUpOpenId"/>
+        <result column="signup_name" property="signUpName"/>
+        <result column="signup_mobile" property="signUpMobile"/>
+        <result column="buildbook_name" property="buildBookName"/>
+        <result column="buildbook_ids" property="buildBookIds"/>
+        <result column="signup_projectid" property="signUpProjectId"/>
+        <result column="signup_projectname" property="signUpProjectName"/>
+        <result column="signin_time_online" property="signInTimeOnline"/>
+        <result column="signin_time" property="signInTime"/>
+        <result column="signin_time_auto" property="signInTimeAuto"/>
+        <result column="signin_time_autoid" property="signInTimeAutoId"/>
+        <result column="signin_time_autoname" property="signInTimeAutoName"/>
+        <result column="signin_type" property="signInType"/>
+        <result column="relationProject" property="relationProject"/>
+        <result column="signup_diy_code" property="signup_diy_code"/>
+    </resultMap>
+
+    <resultMap id="activityHelpMap" type="cn.visolink.system.activity.model.vo.ActivityHelpVO">
+        <result column="id" property="id"/>
+        <result column="rownum" property="rownum"/>
+        <result column="activity_no" property="activityNo"/>
+        <result column="activity_name" property="activityName"/>
+        <result column="help_type" property="helpType"/>
+        <result column="help_begintime" property="helpBeginTime"/>
+        <result column="help_endtime" property="helpEndTime"/>
+        <result column="gift_name" property="giftName"/>
+        <result column="share_id" property="shareId"/>
+        <result column="share_name" property="shareName"/>
+        <result column="share_mobile" property="shareMobile"/>
+        <result column="share_time" property="shareTime"/>
+        <result column="closure_id" property="closureId"/>
+        <result column="closure_name" property="closureName"/>
+        <result column="closure_time" property="closureTime"/>
+        <result column="helpNum" property="helpNum"/>
+        <result column="relationProject" property="relationProject"/>
+        <result column="level" property="level"/>
+        <result column="activityId" property="activityId"/>
+        <result column="share_openid" property="shareOpenId"/>
+        <result column="help_status" property="helpStatus"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, activity_name, activity_level, activity_projectnames, activity_sharecont, release_time, signup_begintime, signup_endtime, activity_begintime, activity_endtime, activity_note, is_signup, is_signin, is_sharefriend, havecoupon, signin_type, sharefriend_no, sharefriend_gift, collection_method, act_status, status, isdel, createtime, creator, edittime, editor
+    </sql>
+
+    <!--查询活动报名及助力人数等-->
+    <select id="getActivitySumCountById" parameterType="java.lang.String" resultMap="ResultMap">
+        select id,(select count(1) from a_activity_signup where activity_id = #{id}) signUpCount,
+               (select count(1) from a_activity_help where activity_id = #{id}) needHelpCount ,
+               (select count(1) from (select count(1) from a_activity_helpdetail  where activity_id = #{id} GROUP BY activity_id,friend_id) t) helpCount
+        from a_activity_info where id = #{id}
+    </select>
+    <!--查询活动列表-->
+    <select id="getAllActivityInfoVO" parameterType="cn.visolink.system.activity.model.form.ActivityInfoForm"
+            resultMap="ResultMap">
+        select info.id,info.activity_no,info.activity_name,info.activity_projectnames,info.activity_begintime,
+        info.activity_endtime,info.createtime,ba.EmployeeName creator,info.release_time,
+        (case when info.disabletime is null then '/' else info.disabletime end) disabletime,
+        (case when info.`status` = 0 then '已禁用'
+        when info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1 then '已结束'
+        when info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+        info.`status` = 1 then '已开始'
+        when info.act_status = 2 and info.release_time &lt;= now() and info.`status` = 1 then '已发布'
+        when info.act_status = 2 and info.release_time &gt; now() and info.`status` = 1 then '未发布'
+        when info.act_status = 1 then '草稿'
+        else '' end
+        ) act_status,
+        info.activity_type,
+        ifnull(s.count,0) couponCollected,
+        ifnull(sup.count,0) signUpCount,
+        ifnull(sin.count,0) signInCount,
+        ifnull(he.count,0) needHelpCount,
+        ifnull(he.okCount,0) helpOkCount,
+        ifnull(hedetail.count,0) helpCount,
+        ifnull(avd.count,0) vowCount,
+        info.signup_max,
+        (CASE
+        WHEN info.vow_open_time &gt; now() THEN '未开奖'
+        when info.vow_open_time &lt;=now() THEN '已开奖'
+        ELSE '/'
+        END) openAwardStatus,
+        info.help_max
+        from a_activity_info info
+        LEFT JOIN b_account ba on ba.id = info.creator
+        LEFT JOIN (select sum(coupon_collected) count,activity_id from a_coupon_info GROUP BY activity_id) s on
+        s.activity_id = info.id
+        LEFT JOIN (select count(1) count,activity_id from a_activity_signup GROUP BY activity_id) sup on info.id =
+        sup.activity_id
+        LEFT JOIN (select count(1) count,cc.activity_id from (
+        select activity_id,signin_id from a_activity_signin GROUP BY activity_id,signin_id) cc group by cc.activity_id)
+        sin on info.id = sin.activity_id
+        LEFT JOIN (select count(1) count,sum(case when help_status = 2 then 1 else 0 end) okCount, activity_id from
+        a_activity_help GROUP BY activity_id) he on info.id = he.activity_id
+        LEFT JOIN (select count(1) count,sss.activity_id from (
+        select activity_id,friend_id from a_activity_helpdetail GROUP BY activity_id,friend_id) sss group by
+        sss.activity_id) hedetail on info.id = hedetail.activity_id
+        LEFT JOIN (select count(1) count,activity_id from a_activity_vow_detail GROUP BY activity_id ) avd on
+        avd.activity_id=info.id
+        where info.is_del = 0 and info.third_party_type = 0
+        <!--<if test="bookIds != null and bookIds.size() > 0">-->
+        <!--and actPro.book_id in-->
+        <!--<foreach collection="bookIds" index="index" item="item" open="("-->
+        <!--separator="," close=")">-->
+        <!--#{item}-->
+        <!--</foreach>-->
+        <!--</if>-->
+        <if test="openAwardtStatus =='1'.toString()">
+            and info.vow_open_time &lt;=now()
+        </if>
+        <if test="openAwardtStatus =='2'.toString()">
+            and info.vow_open_time &gt; now()
+        </if>
+        <if test="creator!=null and creator!=''">
+            and ba.EmployeeName like concat('%',#{creator},'%')
+        </if>
+        <if test="activityName!=null and activityName!=''">
+            and info.activity_name like concat('%',#{activityName},'%')
+        </if>
+        <if test="activityNo!=null and activityNo!=''">
+            and info.activity_no like concat('%',#{activityNo},'%')
+        </if>
+        <if test="queryType != null and queryType=='2'.toString()">
+            and info.id in (select DISTINCT actity_id from a_activity_projects where isdel = 0 and project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="queryType != null and queryType=='3'.toString()">
+            and info.id in (select DISTINCT actity_id from a_activity_projects where isdel = 0 and project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+            ${books} )
+        </if>
+        <if test="activityType!=null and activityType!=''">
+            and info.activity_type like concat('%',#{activityType},'%')
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '1'.toString()">
+            and info.act_status = #{actStatus}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+            and info.act_status = 2 and info.release_time &lt;= now() and info.activity_begintime &gt; now() and
+            info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+            and info.`status` = 0
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+            and info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+            info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+            and info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '5'.toString()">
+            and info.release_time &gt; now() and info.act_status = 2 and info.`status` = 1
+        </if>
+        <if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.release_time BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.activity_begintime BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==3  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.activity_endtime BETWEEN #{date1} AND #{date2}
+        </if>
+        order by info.createtime desc
+    </select>
+
+    <!--查询活动列表-->
+    <select id="getAllActivityInfoVO_COUNT" parameterType="cn.visolink.system.activity.model.form.ActivityInfoForm"
+            resultType="java.lang.Long">
+        select count(1)
+        from a_activity_info info
+        LEFT JOIN b_account ba on ba.id = info.creator
+        where info.is_del = 0 and info.third_party_type = 0
+        <if test="openAwardtStatus =='1'.toString()">
+            and info.vow_open_time &lt;=now()
+        </if>
+        <if test="openAwardtStatus =='2'.toString()">
+            and info.vow_open_time &gt; now()
+        </if>
+        <if test="creator!=null and creator!=''">
+            and ba.EmployeeName like concat('%',#{creator},'%')
+        </if>
+        <if test="activityName!=null and activityName!=''">
+            and info.activity_name like concat('%',#{activityName},'%')
+        </if>
+        <if test="queryType != null and queryType=='2'.toString()">
+            and info.id in (select DISTINCT actity_id from a_activity_projects where isdel = 0 and project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="queryType != null and queryType=='3'.toString()">
+            and info.id in (select DISTINCT actity_id from a_activity_projects where isdel = 0 and project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+            ${books} )
+        </if>
+        <if test="activityType!=null and activityType!=''">
+            and info.activity_type like concat('%',#{activityType},'%')
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '1'.toString()">
+            and info.act_status = #{actStatus}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+            and info.act_status = 2 and info.release_time &lt;= now() and info.activity_begintime &gt; now() and
+            info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+            and info.`status` = 0
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+            and info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+            info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+            and info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '5'.toString()">
+            and info.release_time &gt; now() and info.act_status = 2 and info.`status` = 1
+        </if>
+        <if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.release_time BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.activity_begintime BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==3  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.activity_endtime BETWEEN #{date1} AND #{date2}
+        </if>
+    </select>
+
+
+    <!--查询活动列表-->
+    <select id="getActivityInfoVOList" parameterType="cn.visolink.system.activity.model.form.ActivityInfoForm"
+            resultMap="ResultMap">
+        select info.id,info.activity_no,info.activity_name,info.activity_projectnames,info.activity_begintime,
+        info.activity_endtime,info.createtime,ba.EmployeeName creator,info.release_time,
+        (case when info.disabletime is null then '/' else info.disabletime end) disabletime,
+        (case when info.`status` = 0 then '已禁用'
+        when info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1 then '已结束'
+        when info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+        info.`status` = 1 then '已开始'
+        when info.act_status = 2 and info.release_time &lt;= now() and info.`status` = 1 then '已发布'
+        when info.act_status = 2 and info.release_time &gt; now() and info.`status` = 1 then '未发布'
+        when info.act_status = 1 then '草稿'
+        else '' end
+        ) act_status,
+        info.activity_type,
+        info.signup_max,
+        (CASE
+        WHEN info.vow_open_time &gt; now() THEN '未开奖'
+        when info.vow_open_time &lt;=now() THEN '已开奖'
+        ELSE '/'
+        END) openAwardStatus,
+        info.help_max
+        from a_activity_info info
+        LEFT JOIN b_account ba on ba.id = info.creator
+        where info.is_del = 0 and info.third_party_type = 0
+        <if test="openAwardtStatus =='1'.toString()">
+            and info.vow_open_time &lt;=now()
+        </if>
+        <if test="openAwardtStatus =='2'.toString()">
+            and info.vow_open_time &gt; now()
+        </if>
+        <if test="creator!=null and creator!=''">
+            and ba.EmployeeName like concat('%',#{creator},'%')
+        </if>
+        <if test="activityName!=null and activityName!=''">
+            and info.activity_name like concat('%',#{activityName},'%')
+        </if>
+        <if test="activityNo!=null and activityNo!=''">
+            and info.activity_no like concat('%',#{activityNo},'%')
+            or info.activity_name like concat('%',#{activityNo},'%')
+        </if>
+        <if test="projectList != null and projectList.size() > 0">
+            and info.id in (select DISTINCT actity_id from a_activity_projects where isdel = 0 and project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="activityType!=null and activityType!=''">
+            and info.activity_type like concat('%',#{activityType},'%')
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '1'.toString()">
+            and info.act_status = #{actStatus}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+            and info.act_status = 2 and info.release_time &lt;= now() and info.activity_begintime &gt; now() and
+            info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+            and info.`status` = 0
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+            and info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+            info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+            and info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '5'.toString()">
+            and info.release_time &gt; now() and info.act_status = 2 and info.`status` = 1
+        </if>
+        <if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.release_time BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.activity_begintime BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==3  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and info.activity_endtime BETWEEN #{date1} AND #{date2}
+        </if>
+        order by info.createtime desc
+    </select>
+
+    <!--更新活动-->
+    <update id="updateActivityInfo" parameterType="java.util.Map">
+        update a_activity_info
+        <set>
+            <if test="isDel!=null and isDel!=''">
+                is_del = #{isDel},
+            </if>
+            <if test="actStatus!=null and actStatus!=''">
+                act_status = #{actStatus},
+                release_time = now(),
+            </if>
+            <if test="status!=null">
+                status = #{status},
+                disabletime = now(),
+            </if>
+            edittime = now(),
+            editor = #{userId},
+        </set>
+        where id = #{id}
+    </update>
+    <!--保存活动素材-->
+    <insert id="addActivityPhoto" parameterType="java.util.Map">
+        insert into a_activity_material(id,activity_id,material_type,material_address,createtime,creator)
+        values(uuid(),#{activity_id},#{material_type},#{material_address},#{createtime},#{creator})
+    </insert>
+    <!--更新活动素材-->
+    <update id="updateActivityPhoto" parameterType="cn.visolink.system.activity.model.ActivityMaterial">
+        update a_activity_material
+        set material_address = #{materialAddress},
+            edittime = now(),
+            editor = #{creator}
+        where id = #{id}
+    </update>
+    <!--查询活动素材-->
+    <select id="selectActivityPhoto" parameterType="java.lang.String"
+            resultType="cn.visolink.system.activity.model.ActivityMaterial">
+        select id,material_type materialType,material_address materialAddress from a_activity_material where activity_id = #{id} and isdel = 0 and status = 0
+    </select>
+    <!--保存活动基本信息-->
+    <insert id="addActivityInfo" parameterType="cn.visolink.system.activity.model.form.ActivityInfoForm">
+        insert into
+        a_activity_info(id,activity_no,activity_name,activity_level,activity_projectnames,activity_sharecont,
+        <if test="releaseTime!=null and releaseTime!=''">
+            release_time,
+        </if>
+        <if test="activityBegintime!=null and activityBegintime!=''">
+            activity_begintime,
+        </if>
+        <if test="activityEndtime!=null and activityEndtime!=''">
+            activity_endtime,
+        </if>
+        activity_note,act_status,createtime,creator,activity_type,signup_title,hold_address,help_type,help_begintime,help_endtime,gift_name,
+        signup_begintime,signup_endtime,sharefriend_no,collect_coupons_title,signup_max,help_max,is_signup_limit,is_help_limit,is_signup_show,is_help_show
+        ,
+        <if test="vow_begintime!=null and vow_begintime!=''">vow_begintime,</if>
+        <if test="vow_endtime!=null and vow_endtime!=''">vow_endtime,</if>
+        <if test="vow_open_time!=null and vow_open_time!=''">vow_open_time,</if>
+        <if test="is_support_partition_vow!=null and is_support_partition_vow!=''">is_support_partition_vow,</if>
+        <if test="is_show_award_num!=null and is_show_award_num!=''">is_show_award_num,</if>
+        <if test="open_award_img!=null and open_award_img!=''">open_award_img,</if>
+        <if test="signup_diy_code!=null and signup_diy_code!=''">signup_diy_code,</if>
+        <if test="help_allow_customer_status!=null and help_allow_customer_status!=''">help_allow_customer_status,</if>
+        <if test="signup_allow_customer_status!=null and signup_allow_customer_status!=''">
+            signup_allow_customer_status,
+        </if>
+        <if test="vow_allow_customer_status!=null and vow_allow_customer_status!=''">vow_allow_customer_status,</if>
+        <if test="activity_desc!=null and activity_desc!=''">activity_desc,</if>
+        vow_titile,help_title,is_home_page_hot
+        )
+        values(#{id},#{activityNo},#{activityName},3,#{activityProjectnames},#{activitySharecont},
+        <if test="releaseTime!=null and releaseTime!=''">
+            #{releaseTime},
+        </if>
+        <if test="activityBegintime!=null and activityBegintime!=''">
+            #{activityBegintime},
+        </if>
+        <if test="activityEndtime!=null and activityEndtime!=''">
+            #{activityEndtime},
+        </if>
+        #{activityNote},#{actStatus},#{createtime},#{creator},#{activityType},#{sinUpTitle},#{holdAddress},#{helpType},#{helpBeginTime},#{helpEndTime},#{giftName},
+        #{signupBegintime},#{signupEndtime},#{sharefriendNo},#{collectCouponsTitle},#{signupMax},#{helpMax},#{isSignupLimit},#{isHelpLimit},#{isSignupShow},#{isHelpShow}
+        ,
+        <if test="vow_begintime!=null and vow_begintime!=''">#{vow_begintime},</if>
+        <if test="vow_endtime!=null and vow_endtime!=''">#{vow_endtime},</if>
+        <if test="vow_open_time!=null and vow_open_time!=''">#{vow_open_time},</if>
+        <if test="is_support_partition_vow!=null and is_support_partition_vow!=''">#{is_support_partition_vow},</if>
+        <if test="is_show_award_num!=null and is_show_award_num!=''">#{is_show_award_num},</if>
+        <if test="open_award_img!=null and open_award_img!=''">#{open_award_img},</if>
+        <if test="signup_diy_code!=null and signup_diy_code!=''">#{signup_diy_code},</if>
+        <if test="help_allow_customer_status!=null and help_allow_customer_status!=''">#{help_allow_customer_status},
+        </if>
+        <if test="signup_allow_customer_status!=null and signup_allow_customer_status!=''">
+            #{signup_allow_customer_status},
+        </if>
+        <if test="vow_allow_customer_status!=null and vow_allow_customer_status!=''">#{vow_allow_customer_status},</if>
+        <if test="activity_desc!=null and activity_desc!=''">#{activity_desc},</if>
+        #{vow_titile},#{helpTitle},#{isHomePageHot}
+        )
+    </insert>
+    <!--查询项目关联城市，楼盘-->
+    <select id="getProBookCity" parameterType="java.lang.String" resultType="java.util.Map">
+        select cp.CityID,ac.CityName,bp.ProjectName,ab.id BookId,ab.BuildBookName
+        from b_project bp
+                 LEFT JOIN a_city_project cp on bp.id = cp.ProjectID
+                 left JOIN a_build_book ab on cp.ProjectID = ab.ProjectID and ab.Status = 1 and ab.IsDel = 0
+                 left JOIN a_city ac on ac.id = cp.CityID
+        where bp.id = #{projectId};
+    </select>
+    <!--保存活动关联项目-->
+    <insert id="addActivityPro" parameterType="java.util.Map">
+        insert into a_activity_projects(id,city_id,city_name,actity_id,project_id,project_name,book_id,book_name,createtime,creator)
+        values(uuid(),#{CityID},#{CityName},#{activityId},#{projectId},#{ProjectName},#{BookId},#{BuildBookName},#{createtime},#{creator})
+    </insert>
+
+    <!--更新优惠券-->
+    <update id="updateCoupon" parameterType="java.util.Map">
+        update a_coupon_info set activity_id = #{activityId}
+        where id in (${ids}) and is_vow_award = 0
+    </update>
+
+    <!--保存奖项-->
+    <insert id="saveAwardInfo" parameterType="java.util.List">
+        insert into a_activity_vow_award (id,activity_id,award_name,award_num,coupon_id,virtual_num)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.id},#{item.activityId},#{item.award_name},#{item.award_num},#{item.coupon_id},#{item.virtual_num}
+            )
+        </foreach>
+    </insert>
+
+    <!--溢出优惠券绑定活动关系-->
+    <update id="delCouponRel" parameterType="java.lang.String">
+        update a_coupon_info set activity_id=null where activity_id= #{id} and is_vow_award=1
+    </update>
+    <!--添加优惠券绑定活动关系-->
+    <update id="saveCouponRel" parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" separator=";">
+            update a_coupon_info set activity_id=#{id} where id= #{item.coupon_id} and is_vow_award=1
+        </foreach>
+    </update>
+    <!--根据活动ID删除奖项-->
+    <delete id="delAwardInfoByActiviId" parameterType="java.lang.String">
+        delete from a_activity_vow_award where activity_id =#{id}
+    </delete>
+    <!--查询城市-->
+    <select id="selectCityByPro" parameterType="java.lang.String" resultType="java.lang.String">
+        select DISTINCT ac.CityName
+        from b_project bp
+                 INNER JOIN a_city_project cp on bp.id = cp.ProjectID
+                 INNER JOIN a_city ac on ac.id = cp.CityID
+        where bp.id in (${ids})
+    </select>
+    <!--查询优惠券-->
+    <select id="selectCoupon" parameterType="java.lang.String" resultType="java.util.Map">
+        select info.id,info.activity_id activityId,info.help_status as helpStatus,
+        info.coupon_name couponName,
+        (case when info.coupon_type = 1 then '折扣券'
+        when info.coupon_type = 2 then '代金券'
+        when info.coupon_type = 3 then '礼品券'
+        else '' end) couponType,
+        info.coupon_value couponValue,
+        CONCAT(DATE_FORMAT(info.begintime,'%Y.%m.%d'),'-',DATE_FORMAT(info.endtime,'%Y.%m.%d')) time,
+        (case when info.valid_type = 1 then
+        CONCAT(DATE_FORMAT(info.valid_begintime,'%Y.%m.%d'),'-',DATE_FORMAT(info.valid_endtime,'%Y.%m.%d'))
+        when info.valid_type = 2 and info.valid_hours is not null then concat('领取后',info.valid_hours,'天内有效')
+        else '' end
+        ) validityTime
+        from a_coupon_info info
+        where info.coupon_status = 2 and info.`status` = 1 and isdel = 0 and info.endtime &gt; now()
+        <if test="activityId!=null and activityId!=''">
+            and (info.activity_id = #{activityId} or info.activity_id is null)
+        </if>
+        <if test="activityId==null or activityId==''">
+            and info.activity_id is null
+        </if>
+        <if test="couponName!=null and couponName!=''">
+            and info.coupon_name like concat('%',#{couponName},'%')
+        </if>
+        and info.id in (select DISTINCT coupon_id from a_coupon_project where project_id in (${proIds}))
+        and is_vow_award =0
+        order by info.createtime desc
+    </select>
+
+    <!--查询奖项优惠券-->
+    <select id="selectAwardCoupon" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+        info.id couponId,
+        info.activity_id activityId,
+        info.coupon_name couponName,
+        info.valid_endtime,
+        (
+        CASE
+
+        WHEN info.coupon_type = 1 THEN
+        '折扣券'
+        WHEN info.coupon_type = 2 THEN
+        '代金券'
+        WHEN info.coupon_type = 3 THEN
+        '礼品券' ELSE ''
+        END
+        ) couponType,
+        info.coupon_value couponValue,
+        CONCAT(
+        DATE_FORMAT( info.begintime, '%Y.%m.%d' ),
+        '-',
+        DATE_FORMAT( info.endtime, '%Y.%m.%d' )) time,
+        (
+        CASE
+
+        WHEN info.valid_type = 1 THEN
+        CONCAT(
+        DATE_FORMAT( info.valid_begintime, '%Y.%m.%d' ),
+        '-',
+        DATE_FORMAT( info.valid_endtime, '%Y.%m.%d' ))
+        WHEN info.valid_type = 2
+        AND info.valid_hours IS NOT NULL THEN
+        concat( '领取后', info.valid_hours, '天内有效' ) ELSE ''
+        END
+        ) validityTime ,
+        (select GROUP_CONCAT(acp.project_name) from a_coupon_project acp where acp.coupon_id=info.id) project_name,
+        info.stock_surplus
+        FROM
+        a_coupon_info info
+        WHERE
+        info.coupon_status = 2
+        AND info.`status` = 1
+        AND isdel = 0
+        <if test="projectIds!=null and projectIds.size() > 0">
+            and info.id in (select DISTINCT coupon_id from a_coupon_project where project_id in (
+            <foreach collection="projectIds" item="item" separator=",">
+                #{item}
+            </foreach>
+            ))
+        </if>
+
+        <if test="id!=null and id != ''">
+            AND (info.activity_id IS NULL or info.activity_id =#{id})
+        </if>
+        <if test="id==null || id == ''">
+            AND info.activity_id IS NULL
+        </if>
+        AND info.is_vow_award=1
+        And ((info.valid_type=1 and info.valid_endtime &gt;=#{openAwardTime}) or info.valid_type=2)
+        ORDER BY
+        info.createtime DESC
+    </select>
+    <!--获取优惠券项目-->
+    <select id="getCouponPro" parameterType="java.lang.String" resultType="java.lang.String">
+        select project_name from a_coupon_project where  coupon_id = #{id}
+    </select>
+    <!--查询活动基本信息-->
+    <select id="getActivityById" parameterType="java.lang.String" resultMap="ResultMap">
+        select id,activity_no,activity_name,activity_sharecont,release_time,activity_begintime,activity_endtime,activity_note,
+               activity_type,signup_title,hold_address,help_type,help_begintime,help_endtime,gift_name,signup_begintime,
+               signup_endtime,sharefriend_no,collect_coupons_title,signup_max,help_max,is_signup_limit,is_help_limit,
+               is_signup_show,is_help_show,(select count(1) from a_activity_signup where activity_id = #{id}) signUpCount,
+               (select count(1) from a_activity_help where activity_id = #{id} and help_status = '2') helpCount,vow_titile,vow_begintime,
+               vow_endtime,vow_open_time,is_support_partition_vow,is_show_award_num,open_award_img,signup_diy_code,help_allow_customer_status,signup_allow_customer_status,
+               vow_allow_customer_status,activity_desc,help_title,is_home_page_hot
+        from a_activity_info where id = #{id}
+    </select>
+
+    <!--获取活动报名及助力成功人数-->
+    <select id="getHelpAndSingUpCount" parameterType="java.lang.String" resultType="java.util.Map">
+        select count(1) signUpCount,
+               (select count(1) from a_activity_help where activity_id = #{id} and help_status = '2') helpCount
+        from a_activity_signup
+        where activity_id = #{id}
+    </select>
+    <!--查询活动关联项目ID-->
+    <select id="getActivityPro" parameterType="java.lang.String" resultType="java.lang.String">
+        select DISTINCT project_id from a_activity_projects where actity_id = #{id} and isdel = 0
+    </select>
+
+    <!--获取奖项列表-->
+    <select id="getAwardInfoList" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            ava.*,
+            IFNULL(t.cntNum,0) actual_num,
+            info.id coupon_id,
+            info.coupon_name couponName,
+            (
+                CASE
+                    WHEN info.coupon_type = 1 THEN
+                        '折扣券'
+                    WHEN info.coupon_type = 2 THEN
+                        '代金券'
+                    WHEN info.coupon_type = 3 THEN
+                        '礼品券' ELSE ''
+                    END
+                ) couponType,
+            info.coupon_value couponValue,
+            CONCAT(
+                    DATE_FORMAT( info.begintime, '%Y.%m.%d' ),
+                    '-',
+                    DATE_FORMAT( info.endtime, '%Y.%m.%d' )) time,
+		(
+		CASE
+
+				WHEN info.valid_type = 1 THEN
+				CONCAT(
+					DATE_FORMAT( info.valid_begintime, '%Y.%m.%d' ),
+					'-',
+				DATE_FORMAT( info.valid_endtime, '%Y.%m.%d' ))
+				WHEN info.valid_type = 2
+				AND info.valid_hours IS NOT NULL THEN
+					concat( '领取后', info.valid_hours, '天内有效' ) ELSE ''
+				END
+					) validityTime ,
+					(select GROUP_CONCAT(acp.project_name) from a_coupon_project acp where  acp.coupon_id=info.id) project_name,
+					info.stock_surplus
+        FROM
+            a_activity_vow_award ava
+            left join a_coupon_info info on info.id=ava.coupon_id
+            left join ( SELECT avd.vow_award_id, count( 1 ) cntNum FROM a_activity_vow_detail avd WHERE avd.activity_id = #{activityId} GROUP BY avd.vow_award_id ) t on t.vow_award_id = ava.id
+        WHERE
+            ava.activity_id =#{activity_id}
+    </select>
+    <!--查询活动关联项目-->
+    <select id="getActivityProName" parameterType="java.util.Map" resultType="java.util.Map">
+        select DISTINCT project_id projectId,project_name projectName from a_activity_projects where actity_id = #{activityId} and isdel = 0
+    </select>
+
+    <!--更新活动详情-->
+    <update id="updateActivityById" parameterType="cn.visolink.system.activity.model.form.ActivityInfoForm">
+        update a_activity_info
+        set activity_name = #{activityName},
+        activity_sharecont = #{activitySharecont},
+        activity_projectnames = #{activityProjectnames},
+        <if test="releaseTime!=null and releaseTime!=''">
+            release_time = #{releaseTime},
+        </if>
+        <if test="activityBegintime!=null and activityBegintime!=''">
+            activity_begintime = #{activityBegintime},
+        </if>
+        <if test="activityEndtime!=null and activityEndtime!=''">
+            activity_endtime = #{activityEndtime},
+        </if>
+        <if test="actStatus!=null and actStatus!=''">
+            act_status = #{actStatus},
+        </if>
+        <if test="activityType != null and activityType != ''">
+            activity_type = #{activityType},
+        </if>
+        <if test="sinUpTitle != null and sinUpTitle != ''">
+            signup_title = #{sinUpTitle},
+        </if>
+        <if test="holdAddress != null and holdAddress != ''">
+            hold_address = #{holdAddress},
+        </if>
+        <if test="helpType!=null and helpType!=''">
+            help_type = #{helpType},
+        </if>
+        <if test="helpBeginTime != null and helpBeginTime != ''">
+            help_begintime = #{helpBeginTime},
+        </if>
+        <if test="helpEndTime != null and helpEndTime != ''">
+            help_endtime = #{helpEndTime},
+        </if>
+        <if test="giftName != null and giftName != ''">
+            gift_name = #{giftName},
+        </if>
+        <if test="sharefriendNo != null and sharefriendNo != ''">
+            sharefriend_no = #{sharefriendNo},
+        </if>
+        <if test="signupBegintime != null and signupBegintime != ''">
+            signup_begintime = #{signupBegintime},
+        </if>
+        <if test="signupEndtime != null and signupEndtime != ''">
+            signup_endtime = #{signupEndtime},
+        </if>
+        <if test="collectCouponsTitle != null and collectCouponsTitle != ''">
+            collect_coupons_title = #{collectCouponsTitle},
+        </if>
+        signup_max = #{signupMax},
+        help_max = #{helpMax},
+        <if test="isSignupLimit != null and isSignupLimit != ''">
+            is_signup_limit = #{isSignupLimit},
+        </if>
+        <if test="isHelpLimit != null and isHelpLimit != ''">
+            is_help_limit = #{isHelpLimit},
+        </if>
+        <if test="isSignupShow != null and isSignupShow != ''">
+            is_signup_show = #{isSignupShow},
+        </if>
+        <if test="isHelpShow != null and isHelpShow != ''">
+            is_help_show = #{isHelpShow},
+        </if>
+        <if test="vow_titile != null and vow_titile!=''">
+            vow_titile = #{vow_titile},
+        </if>
+        <if test="vow_begintime !=null and vow_begintime !=''">
+            vow_begintime = #{vow_begintime},
+        </if>
+        <if test="vow_endtime != null and vow_endtime !=''">
+            vow_endtime = #{vow_endtime},
+        </if>
+        <if test="vow_open_time != null and vow_open_time!=''">
+            vow_open_time = #{vow_open_time},
+        </if>
+        <if test="open_award_img != null and open_award_img!=''">
+            open_award_img = #{open_award_img},
+        </if>
+        <if test="signup_diy_code != null and signup_diy_code!=''">
+            signup_diy_code = #{signup_diy_code},
+        </if>
+        <if test="help_allow_customer_status != null and help_allow_customer_status!=''">
+            help_allow_customer_status = #{help_allow_customer_status},
+        </if>
+        <if test="signup_allow_customer_status != null and signup_allow_customer_status!=''">
+            signup_allow_customer_status = #{signup_allow_customer_status},
+        </if>
+        <if test="vow_allow_customer_status != null and vow_allow_customer_status!=''">
+            vow_allow_customer_status = #{vow_allow_customer_status},
+        </if>
+        <if test="activity_desc != null and activity_desc!=''">
+            activity_desc = #{activity_desc},
+        </if>
+        is_home_page_hot = #{isHomePageHot},
+        is_support_partition_vow = #{is_support_partition_vow},
+        is_show_award_num = #{is_show_award_num},
+        activity_note = #{activityNote},
+        edittime = now(),
+        editor = #{creator},
+        help_title = #{helpTitle}
+        where id = #{id}
+    </update>
+
+    <!--更新活动关联项目-->
+    <update id="updateActivityProById" parameterType="java.util.Map">
+        update a_activity_projects
+        set isdel = 1,edittime = now(),
+            editor = #{creator}
+        where actity_id = #{id} and project_id = #{proId}
+    </update>
+    <!--获取活动绑定优惠券ID-->
+    <select id="selectActivityCoupon" parameterType="java.lang.String" resultType="java.lang.String">
+        select id from a_coupon_info where activity_id = #{id}
+    </select>
+    <!--获取项目名称-->
+    <select id="getProNames" resultType="java.lang.String" parameterType="java.lang.String">
+        select ProjectName from b_project where id in (${pids}) and IsDel = 0
+    </select>
+    <!--更新redis错误保存-->
+    <insert id="addErrorEdit" parameterType="java.util.Map">
+        insert into s_error_edit_redis(activity_id,coupon_id,node,create_time)
+        values(#{activityId},#{couponId},#{node},now())
+    </insert>
+    <!--更新库存修改字段-->
+    <update id="updateCouponUCount" parameterType="java.lang.String">
+        update a_coupon_info set update_stock = 0 where id  = #{id}
+    </update>
+    <!--更新素材及优惠券-->
+    <update id="updatePhotoAndPopup" parameterType="java.lang.String">
+        update a_build_book_photo
+        set ImgJumpUrl = null,JumpType = 3,JumpToName = '不跳转'
+        where ImgJumpUrl = #{id};
+        update a_coupon_info set activity_id = null
+        where activity_id = #{id};
+    </update>
+    <!--删除活动素材-->
+    <delete id="delActivityPhoto" parameterType="java.lang.String">
+        delete from a_activity_material where activity_id = #{id} and material_type != 10
+    </delete>
+
+    <!--新增活动地址-->
+    <insert id="saveActivityAddress" parameterType="cn.visolink.system.activity.model.ActivityAddress">
+        insert into a_activity_address
+        (ID,activity_id,address,longitude,latitude)
+        values
+        <foreach collection="activityAddressList" item="list" separator=",">
+            (uuid(),#{list.activityId},#{list.address},#{list.longitude},#{list.latitude})
+        </foreach>
+    </insert>
+
+    <!--删除活动地址-->
+    <delete id="delActivityAddressByActivityId" parameterType="java.lang.String">
+        delete from a_activity_address where activity_id = #{activityId}
+    </delete>
+
+    <!--查询楼盘经纬度-->
+    <select id="getLatitudeAndLongitudeList" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+        ID,
+        BuildBookName,
+        Longitude,
+        Latitude,
+        Address
+        FROM
+        a_build_book
+        WHERE
+        ProjectID IN
+        <foreach collection="projectList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        and IsDel = 0
+        and Status = 1
+        <if test="buildBookName != null and buildBookName != ''">
+            and BuildBookName like concat('%',#{buildBookName},'%')
+        </if>
+    </select>
+
+    <!--查詢活動地址-->
+    <select id="getActivityAddressList" parameterType="java.lang.String"
+            resultType="cn.visolink.system.activity.model.ActivityAddress">
+        select
+            activity_id as activityId,
+            address,
+            longitude,
+            latitude
+        from
+            a_activity_address
+        where
+            activity_id = #{activityId}
+    </select>
+
+    <!--查询活动报名明细-->
+    <select id="getActivitySignUpDetailedList" parameterType="java.util.Map" resultMap="activitySignUpMap">
+        select TT.* from (
+        SELECT
+        info.activity_no,
+        aas.activity_name,
+        (case when aasi.is_first_signin = 1 then ''
+        else aas.signup_time end) signup_time,
+        aas.signup_id,
+        aas.signup_name customerName,
+        concat(left(aas.signup_mobile,3),'****',right(aas.signup_mobile,4)) customerMobile,
+        aas.signup_mobile customerMobileAll,
+        aasi.signin_time,
+        aasi.signin_time_auto,
+        aasi.signin_time_autoname,
+        aasi.signin_type,
+        aasi.signin_projectname signinProjectName,
+        (case when info.`status` = 0 then '已禁用'
+        when info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1 then '已结束'
+        when info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+        info.`status` = 1 then '已开始'
+        when info.act_status = 2 and info.release_time &lt;= now() and info.`status` = 1 then '已发布'
+        when info.act_status = 2 and info.release_time &gt; now() and info.`status` = 1 then '未发布'
+        when info.act_status = 1 then '草稿'
+        else '' end
+        ) actStatus,
+        (case aasi.signin_type when 1 then 'APP二维码签到'
+        when 2 then 'PC端二维码签到'
+        when 3 then '确访自动签到' else '' end) signinTypeDesc,
+        aas.signup_projectname,
+        aai.relationProject,
+        aas.signup_diy_code
+        FROM
+        a_activity_signup aas
+        LEFT JOIN a_activity_info info on aas.activity_id = info.id
+
+        inner JOIN (
+        SELECT
+        aap.actity_id,
+        GROUP_CONCAT(distinct aap.project_name) as relationProject
+        FROM
+        a_activity_projects aap
+        WHERE
+        aap.isdel = 0
+        AND aap.`status` = 1
+        <if test="projectType == '3'.toString() and projectList != null and projectList.size() > 0">
+            and aap.project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        group by aap.actity_id
+        ) aai ON aai.actity_id = aas.activity_id
+
+        LEFT JOIN a_activity_signin aasi ON aasi.activity_id = aas.activity_id
+        AND aasi.signup_id = aas.id
+        <where>
+            <if test="activityId != null and activityId != '' ">
+                and aas.activity_id = #{activityId}
+            </if>
+            <if test="activityName != null and activityName != '' ">
+                and aas.activity_name like concat('%',#{activityName},'%')
+            </if>
+            <if test="activityNo != null and activityNo != '' ">
+                and info.activity_no like concat('%',#{activityNo},'%')
+            </if>
+            <if test="customerName != null and customerName != '' ">
+                and aas.signup_name like concat('%',#{customerName},'%')
+            </if>
+            <if test="customerMobile != null and customerMobile != '' ">
+                and aas.signup_mobile like concat('%',#{customerMobile},'%')
+            </if>
+
+            <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+                and info.act_status = 2 and info.release_time &lt;= now() and info.activity_begintime &gt; now() and
+                info.`status` = 1
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+                and info.`status` = 0
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+                and info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+                info.`status` = 1
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+                and info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1
+            </if>
+
+            <if test="signInTypeList != null and signInTypeList.size() > 0 ">
+                and aasi.signin_type in
+                <foreach collection="signInTypeList" index="index" item="item" open="("
+                         separator="," close=")">
+                    ${item}
+                </foreach>
+            </if>
+            <if test="TimeType == '1'.toString() and date1!=null and date1 != '' and date2 != null and date2 != '' ">
+                and aasi.signin_time BETWEEN #{date1} and #{date2}
+            </if>
+            <if test="TimeType == '2'.toString() and date1!=null and date1 != '' and date2 != null and date2 != '' ">
+                and aasi.signin_time_auto BETWEEN #{date1} and #{date2}
+            </if>
+            <if test="TimeType == '3'.toString() and date1!=null and date1 != '' and date2 != null and date2 != '' ">
+                and aas.signup_time BETWEEN #{date1} and #{date2}
+            </if>
+            <if test="projectType == '1'.toString() and projectStr != null and projectStr !=''">
+                and F_LableIsExist(aas.signup_projectid,#{projectStr}) = 1
+            </if>
+            <if test="projectType == '2'.toString() and projectList != null and projectList.size() > 0">
+                and aasi.signin_projectid in
+                <foreach collection="projectList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        order by aas.signup_time desc
+        ) tt
+    </select>
+
+    <!--查询活动助力明细-->
+    <select id="getActivityHelpDetailedList" parameterType="java.util.Map" resultMap="activityHelpMap">
+        select @rownum:=@rownum+1 AS rownum,TT.* from (
+        SELECT
+        aah.id,
+        aai.activity_no,
+        aai.activity_name,
+        aah.activity_id as activityId,
+        (case aai.help_type when 1 then '邀请好友助力'
+        when 2 then '邀请好友注册' else '' end) help_type,
+        aai.help_begintime,
+        aai.help_endtime,
+        aai.gift_name,
+        aai.sharefriend_no shareFriendNo,
+        aah.share_id,
+        aah.share_name,
+        aah.share_openid,
+        concat(left(aah.share_mobile,3),'****',right(aah.share_mobile,4)) share_mobile,
+        aah.share_mobile shareMobileAll,
+        aah.share_time,
+        aah.closure_id,
+        aah.closure_name,
+        aah.closure_time,
+        aah.level,
+        ifnull(aahl.helpNum,0) helpNum,
+        aap.relationProject,
+        aah.help_status
+        FROM
+        a_activity_help aah
+        LEFT JOIN a_activity_info aai ON aah.activity_id = aai.id
+        LEFT JOIN ( SELECT aahl.help_id, count( 1 ) AS helpNum FROM a_activity_helpdetail aahl GROUP BY aahl.help_id )
+        aahl ON aahl.help_id = aah.id
+
+        inner JOIN (
+        SELECT
+        aap.actity_id,
+        GROUP_CONCAT( DISTINCT aap.project_name ) as relationProject
+        FROM
+        a_activity_projects aap
+        WHERE
+        aap.isdel = 0
+        AND aap.`status` = 1
+        <if test="projectList != null and projectList.size() > 0">
+            and aap.project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        aap.actity_id
+        ) aap ON aap.actity_id = aai.id
+        <where>
+            <if test="activityId != null and activityId != '' ">
+                and aah.activity_id = #{activityId}
+            </if>
+            <if test="activityName != null and activityName != ''">
+                and aah.activity_name like concat('%',#{activityName},'%')
+            </if>
+            <if test="activityNo != null and activityNo != ''">
+                and aai.activity_no like concat('%',#{activityNo},'%')
+            </if>
+            <if test="shareName != null and shareName != ''">
+                and aah.share_name like concat('%',#{shareName},'%')
+            </if>
+            <if test="shareMobile != null and shareMobile != ''">
+                and aah.share_mobile like concat('%',#{shareMobile},'%')
+            </if>
+            <if test="closureName != null and closureName != ''">
+                and aah.closure_name like concat('%',#{closureName},'%')
+            </if>
+            <if test="helpStatusList != null and helpStatusList.size()>0">
+                and aah.help_status in
+                <foreach collection="helpStatusList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="levels != null and levels.size()>0">
+                and aah.level in
+                <foreach collection="levels" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="helpTypeList != null and helpTypeList.size() > 0 ">
+                and aai.help_type in
+                <foreach collection="helpTypeList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="closureStatusList != null and closureStatusList.size() > 0 ">
+                and aah.closure_status in
+                <foreach collection="closureStatusList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="TimeType == '1'.toString() and date1!=null and date1 != '' and date2 != null and date2 != '' ">
+                and aah.share_time BETWEEN #{date1} and #{date2}
+            </if>
+            <if test="TimeType == '2'.toString() and date1!=null and date1 != '' and date2 != null and date2 != '' ">
+                and aah.closure_time BETWEEN #{date1} and #{date2}
+            </if>
+            <if test="TimeType == '3'.toString() and date1!=null and date1 != '' and date2 != null and date2 != '' ">
+                and aai.help_begintime BETWEEN #{date1} and #{date2}
+            </if>
+            <if test="TimeType == '4'.toString() and date1!=null and date1 != '' and date2 != null and date2 != '' ">
+                and aai.help_endtime BETWEEN #{date1} and #{date2}
+            </if>
+        </where>
+        ) TT,(SELECT @rownum:=0) r
+        order by tt.share_time desc
+    </select>
+    <!--获取助力详情-->
+    <select id="getHelpDetail" parameterType="java.util.Map" resultType="java.util.Map">
+        select friend_name name,
+               concat(left(friend_mobile,3),'****',right(friend_mobile,4)) mobile,
+               DATE_FORMAT(help_time,'%Y-%m-%d %H:%i:%s') time
+        from a_activity_helpdetail
+        where help_id = #{id}
+    </select>
+
+    <!--查询活动报名详情-->
+    <select id="getActivitySignUpListByActId" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            aas.signup_name as name,
+            concat(left(aas.signup_mobile,3),'****',right(aas.signup_mobile,4)) mobile,
+            DATE_FORMAT(aas.signup_time,'%Y-%m-%d %H:%i:%s')  as time
+        FROM
+            a_activity_signup aas
+        where activity_id = #{activityId}
+    </select>
+
+    <!--查询活动签到详情-->
+    <select id="getActivitySignInListByActId" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            aas.signin_name as name,
+            concat(left(aas.signin_mobile,3),'****',right(aas.signin_mobile,4)) mobile,
+            (case aas.signin_type
+                 when 3 then
+                     DATE_FORMAT(aas.signin_time_auto,'%Y-%m-%d %H:%i:%s')
+                 else
+                     DATE_FORMAT(aas.signin_time,'%Y-%m-%d %H:%i:%s')
+                end ) as time
+        FROM
+            a_activity_signin aas
+        where activity_id = #{activityId}
+    </select>
+
+    <!--查询活动发起助力详情-->
+    <select id="getActivityHelpListByActId" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            aah.share_name as name,
+            concat(left(aah.share_mobile,3),'****',right(aah.share_mobile,4)) mobile,
+            DATE_FORMAT(aah.share_time,'%Y-%m-%d %H:%i:%s') as time
+        FROM
+            a_activity_help aah
+        where activity_id = #{activityId}
+    </select>
+
+    <!--查询活动助力详情-->
+    <select id="getActivityHelpDetailListByActId" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            aah.share_name as shareName,
+            aah.friend_name as name,
+            concat(left(aah.friend_mobile,3),'****',right(aah.friend_mobile,4)) mobile,
+            DATE_FORMAT(aah.help_time,'%Y-%m-%d %H:%i:%s') as time
+        FROM
+            a_activity_helpdetail aah
+        where activity_id = #{activityId}
+    </select>
+
+    <!--查询活动领卷详情-->
+    <select id="getActivityCouponDetailListByActId" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            bu.`Name` as name,
+            concat(left(bu.Mobile,3),'****',right(bu.Mobile,4)) mobile,
+            DATE_FORMAT(acd.collection_time,'%Y-%m-%d %H:%i:%s') as time
+        FROM
+            a_coupon_detail acd
+            inner join a_broker_user bu on acd.collection_openid = bu.openId
+        where activity_id = #{activityId}
+    </select>
+    <!--获取活动排序-->
+    <select id="getActivityOrder" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            info.ID activityId,
+            (case when char_length(info.activity_name)>8 then concat(left(info.activity_name,8),'...') else info.activity_name end) activityName,
+            ( CASE WHEN ao.list_index IS NOT NULL THEN ao.list_index ELSE 9999 END ) listIndex,
+            am.material_address imgUrl
+        FROM
+            a_activity_info info
+                LEFT JOIN a_activity_orderbycity ao ON info.id = ao.activity_id
+                LEFT JOIN a_activity_material am ON am.activity_id = info.ID
+                AND am.material_type = 3
+        WHERE
+                info.ID IN ( SELECT DISTINCT actity_id FROM a_activity_projects WHERE city_id = #{CityID} )
+          AND now( ) BETWEEN info.release_time
+            AND info.activity_endtime and info.is_del = 0
+          and info.act_status = 2 and info.`status` = 1
+        ORDER BY
+            listIndex,
+            info.release_time DESC;
+    </select>
+    <!--删除排序-->
+    <delete id="delActivityOrder" parameterType="java.util.Map">
+        delete from a_activity_orderbycity where city_id = #{CityID}
+    </delete>
+    <!--添加排序-->
+    <insert id="addActivityOrder" parameterType="java.util.Map">
+        insert into a_activity_orderbycity (id,activity_id,city_id,activity_img_url,list_index,create_time,creator)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (UUID(),#{item.activityId},#{CityID},#{item.imgUrl},#{item.listIndex},now(),#{userId})
+        </foreach>
+    </insert>
+    <!--获取当前活动状态-->
+    <select id="getActivityStatus" parameterType="java.util.Map" resultType="java.lang.String">
+        select (case when info.`status` = 0 then '已禁用'
+                     when info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1 then '已结束'
+                     when info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+                          info.`status` = 1 then '已开始'
+                     when info.act_status = 2 and info.release_time &lt;= now() and info.`status` = 1 then '已发布'
+                     when info.act_status = 2 and info.release_time &gt; now() and info.`status` = 1 then '未发布'
+                     when info.act_status = 1 then '草稿'
+                     else '' end
+                   ) actStatus
+        from a_activity_info info
+        where info.id = #{id}
+    </select>
+
+    <!--报名活动列表-->
+    <select id="getSignUpActivityList" resultType="java.util.Map">
+        select DISTINCT activity_id value,activity_name label from a_activity_signup si inner JOIN (
+        SELECT
+        aap.actity_id,
+        GROUP_CONCAT(distinct aap.project_name) as relationProject
+        FROM
+        a_activity_projects aap
+        WHERE
+        aap.isdel = 0
+        AND aap.`status` = 1
+        <if test="projectList != null and projectList.size() > 0">
+            and aap.project_id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        group by aap.actity_id
+        ) aai ON aai.actity_id = si.activity_id
+    </select>
+
+    <!--根据活动ID查询报名明细-->
+    <select id="getSignUpDetailByActivityId" parameterType="java.lang.String" resultType="java.util.Map">
+        select CAST(@rownum:=@rownum+1 as char) AS rownum,TT.* from (
+                                                                        SELECT
+                                                                            info.activity_no,
+                                                                            aas.activity_name,
+                                                                            (case when aasi.is_first_signin = 1 then ''
+                                                                                  else aas.signup_time end) signup_time,
+                                                                            aas.signup_id,
+                                                                            aas.signup_name customerName,
+                                                                            concat(left(aas.signup_mobile,3),'****',right(aas.signup_mobile,4)) customerMobile,
+                                                                            aas.signup_mobile customerMobileAll,
+                                                                            IFNULL(aasi.signin_time,'') signin_time,
+                                                                            IFNULL(aasi.signin_time_auto,'') signin_time_auto,
+                                                                            IFNULL(aasi.signin_time_autoname,'') signin_time_autoname,
+                                                                            IFNULL(aasi.signin_type,'') signin_type,
+                                                                            IFNULL(aasi.signin_projectname,'') signinProjectName,
+                                                                            (case when info.`status` = 0 then '已禁用'
+                                                                                  when info.activity_endtime &lt;= now() and info.act_status = 2 and info.`status` = 1 then '已结束'
+                                                                                  when info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2 and
+                                                                                       info.`status` = 1 then '已开始'
+                                                                                  when info.act_status = 2 and info.release_time &gt;= now() and info.`status` = 1 then '已发布'
+                                                                                  when info.act_status = 2 and info.release_time &gt; now() and info.`status` = 1 then '未发布'
+                                                                                  when info.act_status = 1 then '草稿'
+                                                                                  else '' end
+                                                                                ) actStatus,
+                                                                            (case aasi.signin_type when 1 then 'APP二维码签到'
+                                                                                                   when 2 then 'PC端二维码签到'
+                                                                                                   when 3 then '确访自动签到' else '' end) signinTypeDesc,
+                                                                            IFNULL(aas.signup_projectname,'') signup_projectname,
+                                                                            IFNULL(aai.relationProject,'') relationProject,
+                                                                            IFNULL(aas.signup_diy_code,'') signup_diy_code
+                                                                        FROM
+                                                                            a_activity_signup aas
+                                                                                INNER JOIN a_activity_info info on aas.activity_id = info.id
+
+                                                                                inner JOIN (
+                                                                                SELECT
+                                                                                    aap.actity_id,
+                                                                                    GROUP_CONCAT(distinct aap.project_name) as relationProject
+                                                                                FROM
+                                                                                    a_activity_projects aap
+                                                                                WHERE
+                                                                                    aap.isdel = 0
+                                                                                  AND aap.`status` = 1
+                                                                                group by 	aap.actity_id
+                                                                            ) aai ON aai.actity_id = aas.activity_id
+                                                                                LEFT JOIN a_activity_signin aasi ON aasi.activity_id = aas.activity_id
+                                                                                AND aasi.signup_id = aas.id
+                                                                        where aas.activity_id= #{activity_id}
+                                                                        order by aas.signup_time desc
+                                                                    ) TT,(SELECT @rownum:=0) r
+    </select>
+
+    <!--查询活动自定义字段-->
+    <select id="getActivityDiyCode" parameterType="java.lang.String" resultType="java.lang.String">
+        select signup_diy_code from a_activity_info where id =#{activity_id} limit 1
+    </select>
+
+    <!--查询活动发起助力人数-->
+    <select id="getActivityHelpCount" parameterType="java.util.Map" resultType="_int">
+        select count(1) from a_activity_help where activity_id = #{id};
+    </select>
+
+
+    <!--查询奖项优惠券-->
+    <select id="selectCouponByProjectId" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+        info.id,
+        info.activity_id activityId,
+        info.coupon_name couponName,
+        info.valid_endtime,
+        (
+        CASE
+
+        WHEN info.coupon_type = 1 THEN
+        '折扣券'
+        WHEN info.coupon_type = 2 THEN
+        '代金券'
+        WHEN info.coupon_type = 3 THEN
+        '礼品券' ELSE ''
+        END
+        ) couponType,
+        info.coupon_value couponValue,
+        CONCAT(
+        DATE_FORMAT( info.begintime, '%Y.%m.%d' ),
+        '-',
+        DATE_FORMAT( info.endtime, '%Y.%m.%d' )) time,
+        (
+        CASE
+
+        WHEN info.valid_type = 1 THEN
+        CONCAT(
+        DATE_FORMAT( info.valid_begintime, '%Y.%m.%d' ),
+        '-',
+        DATE_FORMAT( info.valid_endtime, '%Y.%m.%d' ))
+        WHEN info.valid_type = 2
+        AND info.valid_hours IS NOT NULL THEN
+        concat( '领取后', info.valid_hours, '天内有效' ) ELSE ''
+        END
+        ) validityTime ,
+        (select GROUP_CONCAT(acp.project_name) from a_coupon_project acp where acp.coupon_id=info.id) projectName,
+        info.stock_surplus as stockSurplus,
+        info.stock_no as stockNo
+        FROM
+        a_coupon_info info
+        WHERE
+        info.coupon_status = 2
+        AND info.`status` = 1
+        AND isdel = 0
+        <if test="projectIds!=null and projectIds.size() > 0">
+            and info.id in (select DISTINCT coupon_id from a_coupon_project where project_id in (
+            <foreach collection="projectIds" item="item" separator=",">
+                #{item}
+            </foreach>
+            ))
+        </if>
+
+        <if test="id!=null and id != ''">
+            AND (info.activity_id IS NULL or info.activity_id =#{id})
+        </if>
+        <if test="id==null || id == ''">
+            AND info.activity_id IS NULL
+        </if>
+        AND info.is_vow_award=0
+        AND (info.is_wei_lou = 0 or info.is_wei_lou IS NULL)
+        <if test="helpBegintime!=null and helpBegintime != '' and helpEndtime!=null and helpEndtime != '' ">
+            AND begintime &lt;= #{helpBegintime} and #{helpEndtime} &lt;= endtime
+        </if>
+        ORDER BY
+        info.createtime DESC
+    </select>
+    <!--    更新活动编号-->
+    <update id="updateCouNo" parameterType="java.lang.String">
+        update a_activity_info set activity_no = #{actNo} where id = #{id}
+    </update>
+    <!--    获取数据库中所有的数据数量-->
+    <select id="getActCount" resultType="java.lang.String">
+        select id from a_activity_info
+    </select>
+
+    <!--    新增乘车活动-->
+    <insert id="addRidActivity" parameterType="cn.visolink.system.activity.model.form.RidActivityFrom">
+        INSERT INTO `a_activity_info` (
+            `ID`,
+            `activity_no`,
+            `activity_name`,
+            `activity_projectnames`,
+            `activity_level`,
+            `activity_begintime`,
+            `activity_endtime`,
+            `activity_note`,
+            `status`,
+            `is_del`,
+            createtime,
+            `creator`,
+            edittime,
+            `editor`,
+            `activity_type`,
+            `is_subscribe`,
+            `rid_broker_config`)
+        VALUES(
+                  #{id},
+                  #{ridActivityNo},
+                  #{ridActivityName},
+                  #{projectName},
+                  3,
+                  #{activityBegintime},
+                  #{activityEndtime},
+                  #{activityNote},
+                  1,
+                  0,
+                  now(),
+                  #{userId},
+                  now(),
+                  #{userId},
+                  5,
+                  #{isSubscribe},
+                  1) ;
+    </insert>
+
+    <!--    查询楼盘对应的信息-->
+    <select id="getBuildBookInfoById" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            id buildBookId,
+            ProjectID,
+            ProjectName,
+            ProjectShowName,
+            CityID,
+            CityName,
+            BuildBookName,
+            Address
+        FROM a_build_book
+        WHERE id = #{buildBookId}
+    </select>
+
+    <!--    插入活动对应的楼盘信息到活动楼盘表 addRidActivityBuildBookInfo-->
+    <insert id="addRidActivityBuildBookInfo" parameterType="java.util.Map">
+        INSERT INTO `a_activity_projects` (
+            `id`,
+            `city_id`,
+            `city_name`,
+            `actity_id`,
+            `project_id`,
+            `project_name`,
+            `book_id`,
+            `book_name`,
+            `activity_address`,
+            `status`,
+            `isdel`,
+            `createtime`,
+            `creator`,
+            `edittime`,
+            `editor`)
+        VALUES(
+                  #{id},
+                  #{CityID},
+                  #{CityName},
+                  #{activityId},
+                  #{ProjectID},
+                  #{ProjectName},
+                  #{buildBookId},
+                  #{BuildBookName},
+                  #{Address},
+                  1,
+                  0,
+                  now(),
+                  #{userId},
+                  now(),
+                  #{userId}
+              );
+    </insert>
+
+    <!--    查询所有乘车活动楼盘id集合 判断不可重复添加 getAllRidActBuildBookIds-->
+    <select id="getAllRidActBuildBookIds" resultType="java.lang.String">
+        SELECT
+            aap.book_id
+        FROM a_activity_info aai
+                 LEFT JOIN a_activity_projects aap ON aap.actity_id = aai.id
+        WHERE aai.activity_type = 5 and aap.`project_id` = #{projectId} and aai.is_del = 0
+    </select>
+
+    <!--    更新乘车活动 updateRidActivity-->
+    <update id="updateRidActivity" parameterType="cn.visolink.system.activity.model.form.RidActivityFrom">
+        UPDATE
+            `a_activity_info`
+        SET
+            `activity_name` = #{ridActivityName},
+            `activity_projectnames` = #{projectName},
+            `activity_begintime` = #{activityBegintime},
+            `activity_endtime` = #{activityEndtime},
+            `activity_note` = #{activityNote},
+            `is_del` = 0,
+            `edittime` = now(),
+            `editor` = #{userId},
+            `is_subscribe` = #{isSubscribe},
+            `rid_broker_config` = #{brokerConfig}
+        WHERE `ID` = #{id}
+    </update>
+
+    <!--    更新对应的楼盘信息 updateRidActivityBuildBookInfo-->
+    <update id="updateRidActivityBuildBookInfo" parameterType="java.util.Map">
+        UPDATE
+            `a_activity_projects`
+        SET
+            `city_id` = #{CityID},
+            `city_name` = #{CityName},
+            `project_id` = #{ProjectID},
+            `project_name` = #{ProjectName},
+            `book_id` = #{buildBookId},
+            `book_name` =  #{BuildBookName},
+            `activity_address` = #{Address},
+            `edittime` =  now(),
+            `editor` = #{userId}
+        WHERE `actity_id` = #{activityId};
+    </update>
+
+    <!--    根据id 查询乘车活动详细信息 getRidActivityInfo-->
+    <select id="getRidActivityInfo" parameterType="java.lang.String"
+            resultType="cn.visolink.system.activity.model.vo.RidActivityInfoVo">
+        SELECT
+            aai.`ID` activityId,
+            aai.`activity_no` ridActivityNo,
+            aai.`activity_name` ridActivityName,
+            aai.`activity_note` activityNote,
+            aai.`activity_begintime` activityBegintime,
+            aai.`activity_endtime` activityEndtime,
+            aai.`is_subscribe` isSubscribe,
+            aai.`rid_broker_config` brokerConfig,
+            aap.`city_id` cityId,
+            aap.`city_name` cityName,
+            aap.`project_id` projectId,
+            aap.`project_name` projectName,
+            aap.`book_id` bookId,
+            aap.`book_name` bookName,
+            aap.`activity_address` activityAddress
+        FROM a_activity_info aai
+                 LEFT JOIN a_activity_projects aap ON aap.actity_id = aai.id
+        WHERE aai.`ID` = #{ridActivityId}
+          AND aai.`status` = 1
+          AND aai.`is_del` = 0
+          AND aap.`status` = 1
+          AND aap.`isdel` = 0
+    </select>
+
+    <!--     修改当前乘车活动状态 changeStatus-->
+    <select id="changeStatus" parameterType="cn.visolink.system.activity.model.vo.ChangeStatusVo">
+        UPDATE
+        `a_activity_info`
+        SET
+        <if test="status == 1">
+            `status` = #{status},
+            `disabletime` = null
+        </if>
+        <if test="status == 0">
+            `status` = #{status},
+            `disabletime` = now()
+        </if>
+        where `ID` = #{id}
+    </select>
+    <!--    查询所有乘车活动 -->
+    <select id="queryAllRidActivity" resultType="cn.visolink.system.activity.model.vo.RidActivityInfoVo">
+        SELECT
+            aai.`ID` activityId,
+            aai.`activity_no` ridActivityNo,
+            aai.`activity_name` ridActivityName,
+            aai.`activity_note` activityNote,
+            aai.`activity_begintime` activityBegintime,
+            aai.`activity_endtime` activityEndtime,
+            aai.`is_subscribe` isSubscribe,
+            aai.`rid_broker_config` brokerConfig,
+            aap.`city_id` cityId,
+            aap.`city_name` cityName,
+            aap.`project_id` projectId,
+            aap.`project_name` projectName,
+            aap.`book_id` bookId,
+            aap.`book_name` bookName,
+            aap.`activity_address` activityAddress
+        FROM a_activity_info aai
+                 LEFT JOIN a_activity_projects aap ON aap.actity_id = aai.id
+        WHERE aai.`activity_type` = 5
+          and aai.`status` = 1
+          AND aai.`is_del` = 0
+          AND aap.`status` = 1
+          AND aap.`isdel` = 0
+    </select>
+
+    <!--    条件分页查询全部乘车活动-->
+    <select id="getRidActsByConditions" parameterType="cn.visolink.system.activity.model.vo.RidActConditionsVo"
+            resultType="cn.visolink.system.activity.model.vo.RidActivityInfoVo">
+        SELECT
+        aai.`ID` activityId,
+        aai.`activity_no` ridActivityNo,
+        aai.`activity_name` ridActivityName,
+        aai.`activity_note` activityNote,
+        aai.`activity_begintime` activityBegintime,
+        aai.`activity_endtime` activityEndtime,
+        aai.`is_subscribe` isSubscribe,
+        aai.disabletime disabletime,
+        aap.`city_id` cityId,
+        aap.`city_name` cityName,
+        aap.`project_id` projectId,
+        aap.`project_name` projectName,
+        aap.`book_id` bookId,
+        aap.`book_name` bookName,
+        aap.`activity_address` activityAddress,
+        acc.EmployeeName creator,
+        aai.`activity_type` activityType,
+        aai.status status,
+        aai.createtime createtime
+        FROM a_activity_info aai
+        LEFT JOIN a_activity_projects aap ON aap.actity_id = aai.ID
+        left join b_account acc on aai.creator = acc.ID
+        WHERE aai.`activity_type` = 5
+        <if test="ridActivityNo != null and ridActivityNo != ''">
+            and aai.activity_no like concat('%',#{ridActivityNo},'%')
+        </if>
+        <if test="ridActivityName != null and ridActivityName != ''">
+            and aai.activity_name like concat('%',#{ridActivityName},'%')
+        </if>
+        <if test="status != null and status != ''">
+            <if test="status == 0 or status == 1">
+                and aai.status = #{status}
+            </if>
+            <if test="status == 2">
+                and now() between aai.activity_begintime and aai.activity_endtime
+            </if>
+            <if test="status == 3">
+                and aai.activity_endtime &lt; now()
+            </if>
+        </if>
+        <if test="timeType != null and timeType != ''">
+            <if test="timeType == 0  and activityBegintime != null and activityBegintime != ''  and activityEndtime != null and activityEndtime != ''">
+                and aai.activity_begintime between #{activityBegintime} and #{activityEndtime}
+            </if>
+            <if test="timeType == 1  and activityBegintime != null and activityBegintime != ''  and activityEndtime != null and activityEndtime != ''">
+                and aai.activity_endtime between #{activityBegintime} and #{activityEndtime}
+            </if>
+            <if test="timeType == 2  and activityBegintime != null and activityBegintime != ''  and activityEndtime != null and activityEndtime != ''">
+                and aai.disabletime between #{activityBegintime} and #{activityEndtime}
+            </if>
+        </if>
+        <if test="projectIds != null and projectIds.size() > 0">
+            and aap.project_id in (select DISTINCT project_id from a_activity_projects where isdel = 0 and project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach> )
+        </if>
+        <if test="projectNames != null and projectNames.size() > 0">
+            and aap.project_name in (select DISTINCT project_name from a_activity_projects where isdel = 0 and
+            project_name in
+            <foreach collection="projectNames" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach> )
+        </if>
+        <if test="bookIds != null and bookIds.size() > 0">
+            and aap.book_id in
+            <foreach collection="bookIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="bookNames != null and bookNames.size() > 0">
+            and aap.book_name in
+            <foreach collection="bookNames" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="cityId != null and cityId != ''">
+            and aap.city_id = #{cityId}
+        </if>
+        <if test="cityName != null and cityName != ''">
+            and aap.city_name like concat('%',#{cityName},'%')
+        </if>
+        <if test="creatorName!=null and creatorName!=''">
+            and acc.EmployeeName like concat('%',#{creatorName},'%')
+        </if>
+        and aai.is_del = 0
+        order by aai.createtime desc
+    </select>
+
+    <!--    根据id删除乘车活动-->
+    <update id="delRidActById" parameterType="java.lang.String">
+        update
+            a_activity_info
+        set
+            is_del = 1
+        where id = #{ridActId}
+    </update>
+
+    <!--    条件查询行程列表 getRidActTripDetails-->
+    <select id="getRidActTripDetails" parameterType="cn.visolink.system.activity.model.vo.RidActConditionsVo"
+            resultType="cn.visolink.system.activity.model.vo.RidActDetailsVo">
+        SELECT
+        ard.`id` tripDetailsId,
+        ard.`broker_id` brokerId,
+        ard.`broker_name` brokerName,
+        ard.`broker_mobile` brokerMobile,
+        concat(left(ard.`broker_mobile`,3),'****',right(ard.`broker_mobile`,4)) brokerSecMobile,
+        ard.`activity_id` ridActivityId,
+        aai.`activity_no` ridActivityNo,
+        aai.`activity_name` ridActivityName,
+        ard.`build_book_id` bookId,
+        ard.`build_book_name` bookName,
+        ard.`city_id` cityId,
+        ard.`city_name` cityName,
+        ard.`departure_time` departureTime,
+        ard.`departure_addr` departureAddr,
+        ard.`arrived_addr` arrivedAddr,
+        ard.`sales_attribution_id` salesAttributionId,
+        ard.`sales_attribution_name` salesAttributionName,
+        ard.`sales_attribution_phone` phone,
+        ard.`trip_status` tripStatus,
+        ard.`project_id` projectId,
+        ard.`project_name` projectName,
+        ard.`create_time` createTime
+        FROM
+        `a_rid_details` ard
+        LEFT JOIN `a_activity_info` aai ON aai.id = ard.`activity_id`
+        where 1=1
+        <if test="projectIds != null and projectIds.size() > 0">
+            and ard.project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="projectNames != null and projectNames.size() > 0">
+            and ard.project_name in
+            <foreach collection="projectNames" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="bookIds != null and bookIds.size() > 0">
+            and ard.build_book_id in
+            <foreach collection="bookIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="bookNames != null and bookNames.size() > 0">
+            and ard.build_book_name in
+            <foreach collection="bookNames" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="cityId != null and cityId != ''">
+            and ard.city_id = #{cityId}
+        </if>
+        <if test="cityName != null and cityName != ''">
+            and ard.city_name like concat('%',#{cityName},'%')
+        </if>
+        <if test="brokerName != null and brokerName != ''">
+            and ard.`broker_name` like concat('%',#{brokerName},'%')
+        </if>
+        <if test="brokerMobile != null and brokerMobile != ''">
+            and ard.`broker_mobile` like concat('%',#{brokerMobile},'%')
+        </if>
+        <if test="ridActivityNo != null and ridActivityNo != ''">
+            and aai.activity_no like concat('%',#{ridActivityNo},'%')
+        </if>
+        <if test="ridActivityName != null and ridActivityName != ''">
+            and ard.activity_name like concat('%',#{ridActivityName},'%')
+        </if>
+        <if test="salesAttributionName != null and salesAttributionName != ''">
+            and ard.`sales_attribution_name` like concat('%',#{salesAttributionName},'%')
+        </if>
+        <if test="tripStatus != null and tripStatus != ''">
+            and ard.trip_status like concat('%',#{tripStatus},'%')
+        </if>
+        <if test="timeType != null and timeType != ''">
+            <if test="timeType == 0 and activityBegintime != null and activityBegintime != '' and activityEndtime != null and activityEndtime != ''">
+                and ard.create_time between #{activityBegintime} and #{activityEndtime}
+            </if>
+            <if test="timeType == 1 and activityBegintime != null and activityBegintime != '' and activityEndtime != null and activityEndtime != ''">
+                and ard.departure_time between #{activityBegintime} and #{activityEndtime}
+            </if>
+        </if>
+        order by ard.`create_time` desc
+    </select>
+
+    <!--    查询所有乘车活动id的集合 List<String> getAllRidActivityIds()-->
+    <select id="getAllRidActivityIds" resultType="java.lang.String">
+        SELECT
+            id
+        FROM
+            a_activity_info
+        WHERE activity_type = 5 and is_del = 0
+    </select>
+
+    <!--    查询所有统计数据的id集合 List<String> geAllStatisticsIds();-->
+    <select id="geAllStatisticsIds" resultType="java.lang.String">
+        select  activity_id from a_activity_data_statistics
+    </select>
+
+    <!--    查询当前活动所有乘车人数 getAllRidPeopleCount-->
+    <select id="getAllRidPeopleCount" parameterType="java.lang.String"
+            resultType="cn.visolink.system.activity.model.vo.ActDataStatisticsVo">
+        SELECT
+        activity_id activityId,
+        COUNT(1) dataCount
+        FROM
+        a_rid_details
+        WHERE 1=1
+        <if test="ids != null and ids.size() > 0">
+            and activity_id in
+            <foreach collection="ids" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY(activity_id)
+    </select>
+
+    <!--    查询累计新增乘车报备人数 getNewReportCount(List<String> ids)-->
+    <select id="getNewReportCount" parameterType="java.lang.String"
+            resultType="cn.visolink.system.activity.model.vo.ActDataStatisticsVo">
+        SELECT
+        bcoe.`activity_id` activityId,
+        COUNT(1) dataCount
+        FROM b_clue_opportunity_extend bcoe
+        LEFT JOIN b_project_clues bpc ON bcoe.`ProjectClueId` = bpc.`ProjectClueId`
+        WHERE bcoe.ReportSource = 10
+        <if test="ids != null and ids.size() > 0">
+            and bcoe.`activity_id` in
+            <foreach collection="ids" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND bpc.`ClueStatus` = 1
+        GROUP BY (activityId)
+    </select>
+
+    <!--    查询新增乘车到访人数 getNewRidArrivedCount(String ridActId)-->
+    <select id="getNewRidArrivedCount" parameterType="java.lang.String"
+            resultType="cn.visolink.system.activity.model.vo.ActDataStatisticsVo">
+        SELECT
+        bcoe.`activity_id` activityId,
+        COUNT(1) dataCount
+        FROM b_clue_opportunity_extend bcoe
+        LEFT JOIN b_project_clues bpc ON bcoe.`ProjectClueId` = bpc.`ProjectClueId`
+        WHERE bcoe.ReportSource = 10
+        <if test="ids != null and ids.size() > 0">
+            and bcoe.`activity_id` in
+            <foreach collection="ids" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND bpc.`ClueStatus` = 2
+        GROUP BY (activityId)
+    </select>
+
+    <!--    查询累计乘车到访人数 getAllRidPeopleCountSum(List<String> ids);-->
+    <select id="getAllRidPeopleCountSum" parameterType="java.lang.String"
+            resultType="cn.visolink.system.activity.model.vo.ActDataStatisticsVo">
+        SELECT
+        bcoe.`activity_id` activityId,
+        COUNT(1) dataCount
+        FROM b_clue_opportunity_extend bcoe
+        LEFT JOIN b_project_clues bpc ON bcoe.`ProjectClueId` = bpc.`ProjectClueId`
+        WHERE bpc.`ClueStatus` = 2
+        <if test="ids != null and ids.size() > 0">
+            and bcoe.`activity_id` in
+            <foreach collection="ids" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY (activityId)
+    </select>
+
+    <!--    保存统计数据到数据库 saveStatisticsData-->
+    <insert id="saveStatisticsData" parameterType="cn.visolink.system.activity.model.vo.ActDataStatistics">
+        INSERT INTO `a_activity_data_statistics` (
+            `activity_id`,
+            `rid_sum`,
+            `rid_arrive_sum`,
+            `new_rid_report_sum`,
+            `new_rid_arrive_sum`,
+            `new_rid_buy_sum`,
+            `click_count`
+        )VALUES(
+                   #{activityId},
+                   #{ridSum},
+                   #{ridArriveSum},
+                   #{newRidReportSum},
+                   #{newRidArriveSum},
+                   #{newRidBuySum},
+                   #{clickCount});
+    </insert>
+
+    <!-- 清空表中数据 void flushAllData();   -->
+    <delete id="flushAllData">
+        DELETE FROM a_activity_data_statistics
+    </delete>
+
+    <!--    根据id查询乘车活动统计的数据-->
+    <select id="getActDataStatistics" parameterType="java.lang.String"
+            resultType="cn.visolink.system.activity.model.vo.ActDataStatistics">
+        SELECT
+            `activity_id` activityId,
+            `rid_sum` ridSum,
+            `rid_arrive_sum` ridArriveSum,
+            `rid_buy_sum` ridBuySum,
+            `new_rid_report_sum` newRidReportSum,
+            `new_rid_arrive_sum` newRidArriveSum,
+            `new_rid_buy_sum` newRidBuySum
+        FROM
+            `a_activity_data_statistics`
+        where `activity_id` = #{id}
+    </select>
+
+    <!--    根据活动id查询对应的楼盘名称 getBookNameByActId-->
+    <select id="getBookNameByActId" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT
+            `book_name` bookName
+        FROM
+            `a_activity_projects`
+        WHERE `actity_id` = #{id}
+            limit 1
+    </select>
+
+    <!--    查询全部乘车活动点击次数 getAllClickCount-->
+    <select id="getAllClickCount" resultType="cn.visolink.system.activity.model.vo.ActDataStatisticsVo">
+        SELECT
+            `activity_id` activityId,
+            `click_count` dataCount
+        FROM
+            `a_activity_data_statistics`
+    </select>
+
+    <!--    删除活动统计中的数据 delRidStatisticsById-->
+    <delete id="delRidStatisticsById" parameterType="java.lang.String">
+        DELETE
+        FROM
+            `a_activity_data_statistics`
+        WHERE `activity_id` = #{ridActId} ;
+    </delete>
+
+    <!--    查询项目名称 getProjectName-->
+    <select id="getProjectName" parameterType="java.lang.String" resultType="java.lang.String">
+        select ProjectName from b_project where ID = #{projectId}
+    </select>
+
+    <!--    addActivityHotHomePage 添加首页热推信息 -->
+    <insert id="addActivityHotHomePage" parameterType="java.util.Map">
+        INSERT INTO `a_activity_material` (
+            `id`,
+            `activity_id`,
+            `material_type`,
+            `city_id`,
+            `city_name`,
+            `hot_image_url`,
+            `hot_begin_time`,
+            `hot_end_time`,
+            `createtime`,
+            `creator`,
+            `status`)
+        VALUES
+        (uuid(),
+         #{activityId},
+         10,
+         #{cityId},
+         #{cityName},
+         #{imageUrl},
+         #{startTime},
+         #{endTime},
+         #{createTime},
+         #{creator},
+         0)
+    </insert>
+
+    <!--    验证添加首页热推是否冲突 checkHotHomePage-->
+    <select id="checkHotHomePage" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT count(*) from
+        (SELECT * FROM a_activity_material WHERE city_id like concat('%',#{hotCityId},'%') AND IsDel = 0 and status = 0
+        <if test="flag == 1">
+            and id != #{id}
+        </if>
+        ) aam
+        WHERE #{hotStartTime} BETWEEN aam.hot_begin_time AND aam.hot_end_time
+        OR #{hotEndTime} BETWEEN aam.hot_begin_time AND aam.hot_end_time
+        OR (#{hotStartTime} &lt;= aam.hot_begin_time AND #{hotEndTime} &gt;= aam.hot_end_time)
+    </select>
+
+    <!--    updateActivityHotHomePage-->
+    <update id="updateActivityHotHomePage" parameterType="java.util.Map">
+        UPDATE
+            `a_activity_material`
+        SET
+            `activity_id` = #{activityId},
+            `city_id` = #{cityId},
+            `hot_image_url` = #{imageUrl},
+            `hot_begin_time` = #{startTime},
+            `hot_end_time` = #{endTime},
+            `status` = #{status},
+            `editor` = #{editor},
+            `edittime` = #{editTime}
+        WHERE `id` = #{id}
+    </update>
+
+    <!--    getHotPageInfo-->
+    <select id="getHotPageInfo" parameterType="java.lang.String" resultType="java.util.Map">
+        select
+            id,
+            city_id,
+            activity_id,
+            city_name,
+            material_type,
+            hot_image_url,
+            DATE_FORMAT(hot_begin_time,'%Y-%m-%d %H:%i:%s') hot_begin_time,
+            DATE_FORMAT(hot_end_time,'%Y-%m-%d %H:%i:%s') hot_end_time,
+            click_count,
+            status
+        from  a_activity_material where activity_id = #{id} and material_type = 10 limit 1
+    </select>
+
+    <select id="getCityListByAciId" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            DISTINCT(city_id) CityID,city_name CityName FROM `a_activity_projects` WHERE `actity_id` = #{activityId}
+    </select>
+
+    <select id="getCityNameById" parameterType="java.lang.String" resultType="java.lang.String">
+        select CityName from a_city where ID = #{hotCityId}
+    </select>
+
+    <!--    更新首页热推状态为禁用-->
+    <update id="updateHotPageStatusById" parameterType="java.lang.String">
+        update a_activity_material set status = 1 where id = #{hotId}
+    </update>
+</mapper>

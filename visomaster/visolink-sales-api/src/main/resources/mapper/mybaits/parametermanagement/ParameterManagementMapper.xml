@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.parameter.dao.ParameterManagementDao">
+
+    <!--查询系统所有的参数-->
+    <select id="getSystemAllParams" parameterType="java.util.Map" resultType="java.util.Map">
+        <choose>
+            <when test="type==1">
+                SELECT
+                *
+                FROM S_Dictionary d
+                WHERE IsDel = 0
+                AND Levels &lt; 3
+                AND (d.DictionaryLevel=2
+                AND d.ProjectID=#{projectId} and d.DictCode not in('1002','s_LivingArea','s_WorkArea','s_wylx',"x_oppcustomerage","s_FamilyStru","x_familyincome","x_yxhx","x_IntentionArea","x_yxjd","s_gfyx","s_gfyt","x_mandian","x_kangxing","s_Sshy")
+                or DictionaryLevel=3 or (d.DictionaryLevel=1 and d.DictCode in (select DictCode from S_Dictionary where pid = '8384E489-BE94-0B8E-FD4D-6667914920CB')))
+                union all
+                SELECT
+                *
+                FROM
+                S_Dictionary d
+                WHERE
+                IsDel = 0 and DictionaryLevel = 2  and pid =-1 and ProjectID is null
+                ORDER BY
+                Levels,
+                CAST(ListIndex AS SIGNED),
+                CreateTime
+            </when>
+            <when test="type==2">
+                SELECT
+                *
+                FROM S_Dictionary d
+                WHERE IsDel = 0
+                AND Levels &lt; 3
+                AND d.DictionaryLevel=4
+                AND d.CityId=#{CityId}
+                ORDER BY Levels,CAST(ListIndex AS SIGNED),CreateTime
+            </when>
+            <otherwise>
+                SELECT
+                *
+                FROM S_Dictionary d
+                WHERE IsDel = 0
+                AND Levels &lt; 3
+                AND d.DictionaryLevel=1 and d.DictCode not in('1002','s_LivingArea','s_WorkArea',"x_oppcustomerage","s_FamilyStru","x_familyincome","x_yxhx","x_IntentionArea","x_yxjd","s_gfyx","s_gfyt","x_mandian","x_kangxing","s_Sshy")
+                ORDER BY Levels,CAST(ListIndex AS SIGNED),CreateTime
+            </otherwise>
+
+        </choose>
+    </select>
+
+    <!--系统新增参数-->
+    <insert id="insertSystemParam" parameterType="java.util.Map">
+        INSERT INTO S_Dictionary
+      ( ID ,
+        PID ,
+        ListIndex ,
+        DictCode ,
+        DictName ,
+        DictType ,
+        Levels ,
+        Remark ,
+        IsReadOnly ,
+        FullPath ,
+        Ext1 ,
+        Ext2 ,
+        Ext3 ,
+        Ext4 ,
+        AuthCompanyID ,
+        ProductID ,
+        Creator ,
+        CreateTime ,
+        Editor ,
+        EditTime ,
+        Status ,
+        IsDel,
+        DictionaryLevel,
+        ProjectID,
+        CityId
+      )
+     SELECT
+        #{ID} ,
+        #{PID},
+        #{ListIndex},
+        #{DictCode},
+        #{DictName},
+        #{DictType},
+        #{Levels},
+        #{Remark},
+        #{IsReadOnly},
+        CONCAT(IFNULL(CONCAT((SELECT FullPath FROM S_Dictionary WHERE ID = #{PID}) , '/'),'') , #{DictName}) ,
+        NULL ,
+        NULL ,
+        NULL ,
+        NULL ,
+        #{AuthCompanyID},
+        #{ProductID},
+        #{Creator},
+        NOW() ,
+        NULL ,
+        NULL ,
+        1 ,
+        0,
+        #{DictionaryLevel},
+        #{ProjectID},
+        #{CityId}
+    </insert>
+
+    <!--系统新增二级参数-->
+    <insert id="insertSystemParamSecond" parameterType="java.util.Map">
+    INSERT INTO S_Dictionary
+      ( ID, PID,ListIndex, DictCode, DictName, DictType,
+        Levels, Remark, IsReadOnly,
+        FullPath,
+        AuthCompanyID, ProductID, Creator,
+        CreateTime, Status, IsDel,DictionaryLevel,
+        ParamMode, DictTypeMode,ParamDefaults,
+        DecimalPlaces, Unit, MinVal, MaxVal, StorageMode, ProjectID, CityId
+      )
+     SELECT
+        #{ID}, #{PID},
+        ifnull(MAX(CONVERT(ListIndex, SIGNED)),0) +1,
+         #{DictCode}, #{DictName}, #{DictType},
+        #{Levels}, #{Remark}, #{IsReadOnly},
+        CONCAT(IFNULL(CONCAT((SELECT FullPath FROM S_Dictionary WHERE ID = #{PID}) , '/'),'') , #{DictName}) ,
+        #{AuthCompanyID},#{ProductID},#{Creator},
+        NOW(), 1, 0,#{DictionaryLevel},
+        #{ParamMode}, #{DictTypeMode}, #{ParamDefaults},
+        #{DecimalPlaces}, #{Unit}, #{MinVal}, #{MaxVal}, #{StorageMode}, #{ProjectID}, #{CityId}
+        FROM S_Dictionary WHERE PID = #{PID}
+    </insert>
+
+    <insert id="batchSecondParamChildren" parameterType="java.util.Map">
+        insert into S_Dictionary
+        (ID, PID, ListIndex, DictType,DictCode,DictName,
+        Levels,Creator,CreateTime, Status, IsDel,DictionaryLevel,
+        SelectText, NumVal, IsAllowDel, IsDefault, PublicPid)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+        (
+        #{item.ID},#{item.PID}, #{item.index}, #{map.DictType},#{item.NumVal},#{item.SelectText},
+        #{item.Levels}, #{map.Creator}, NOW(), 1, 0,#{map.DictionaryLevel},
+        #{item.SelectText}, #{item.NumVal}, #{item.IsAllowDel}, #{item.IsDefault}, #{item.PublicPid})
+        </foreach>
+    </insert>
+
+    <!--排序-->
+    <update id="orderParamAdd" parameterType="java.util.Map">
+      update s_dictionary set ListIndex=ListIndex+1 where ID=#{id}
+    </update>
+    <!--排序-->
+    <update id="orderParamDel" parameterType="java.util.Map">
+      update s_dictionary set ListIndex=ListIndex-1 where ID=#{id}
+    </update>
+    <!--修改系统参数-->
+    <update id="modifySystemParam" parameterType="java.util.Map">
+        UPDATE S_Dictionary
+        <trim prefix="set" suffixOverrides=",">
+            <if test="ListIndex !=null and ListIndex != ''">
+                ListIndex = #{ListIndex} ,
+            </if>
+            <if test="ProjectID !=null and ProjectID != ''">
+                ProjectID = #{ProjectID} ,
+            </if>
+            <if test="DictCode !=null and DictCode != ''">
+                DictCode = #{DictCode} ,
+            </if>
+            <if test="DictName !=null and DictName != ''">
+                DictName = #{DictName} ,
+            </if>
+            <if test="Remark !=null and Remark != ''">
+                Remark = #{Remark} ,
+            </if>
+            <if test="DictType !=null and DictType != ''">
+                DictType = #{DictType},
+            </if>
+            <if test="Editor !=null and Editor != ''">
+                Editor = #{Editor},
+            </if>
+            EditTime = NOW(),
+            <if test="DictTypeMode !=null and DictTypeMode != ''">
+                DictTypeMode= #{DictTypeMode},
+            </if>
+            <if test="ParamDefaults !=null and ParamDefaults != ''">
+                ParamDefaults = #{ParamDefaults} ,
+            </if>
+            <if test="DecimalPlaces !=null and DecimalPlaces != ''">
+                DecimalPlaces = #{DecimalPlaces} ,
+            </if>
+            <if test="Unit !=null and Unit != ''">
+                Unit = #{Unit} ,
+            </if>
+            <if test="MinVal !=null and MinVal != ''">
+                MinVal = #{MinVal} ,
+            </if>
+            <if test="MaxVal !=null and MaxVal != ''">
+                MaxVal = #{MaxVal} ,
+            </if>
+            <if test="StorageMode !=null and StorageMode != ''">
+                MaxVal = #{MaxVal} ,
+            </if>
+            <if test="SelectText !=null and SelectText != ''">
+                SelectText = #{SelectText},
+            </if>
+            <if test="NumVal !=null and NumVal != ''">
+                NumVal = #{NumVal},
+            </if>
+            <if test="IsAllowDel !=null and IsAllowDel != ''">
+                IsAllowDel = #{IsAllowDel},
+            </if>
+            <if test="IsDefault !=null and IsDefault != ''">
+                IsDefault = #{IsDefault},
+            </if>
+            <if test="customArrayOne !=null and customArrayOne != ''">
+                customArrayOne = #{customArrayOne},
+            </if>
+            <if test="customArrayTwo !=null and customArrayTwo != ''">
+                customArrayTwo = #{customArrayTwo},
+            </if>
+        </trim>
+        WHERE ID = #{ID}
+    </update>
+
+    <update id="modifyParamTertiary" parameterType="java.util.Map">
+        UPDATE S_Dictionary sd
+        <trim prefix="set" suffixOverrides=",">
+            <if test="DictCode !=null and DictCode != ''">
+                DictCode = #{DictCode} ,
+            </if>
+            <if test="DictName !=null and DictName != ''">
+                DictName = #{DictName} ,
+            </if>
+            <if test="Remark !=null and Remark != ''">
+                Remark = #{Remark} ,
+            </if>
+            <if test="DictType !=null and DictType != ''">
+                DictType = #{DictType},
+            </if>
+            <if test="Editor !=null and Editor != ''">
+                Editor = #{Editor},
+            </if>
+            EditTime = NOW(),
+            <if test="DictTypeMode !=null and DictTypeMode != ''">
+                DictTypeMode= #{DictTypeMode},
+            </if>
+            <if test="ParamDefaults !=null and ParamDefaults != ''">
+                ParamDefaults = #{ParamDefaults} ,
+            </if>
+            <if test="DecimalPlaces !=null and DecimalPlaces != ''">
+                DecimalPlaces = #{DecimalPlaces} ,
+            </if>
+            <if test="Unit !=null and Unit != ''">
+                Unit = #{Unit} ,
+            </if>
+            <if test="MinVal !=null and MinVal != ''">
+                MinVal = #{MinVal} ,
+            </if>
+            <if test="MaxVal !=null and MaxVal != ''">
+                MaxVal = #{MaxVal} ,
+            </if>
+            <if test="StorageMode !=null and StorageMode != ''">
+                MaxVal = #{MaxVal} ,
+            </if>
+            <if test="SelectText !=null and SelectText != ''">
+                SelectText = #{SelectText},
+            </if>
+            <if test="NumVal !=null and NumVal != ''">
+                NumVal = #{NumVal},
+            </if>
+            <if test="IsAllowDel !=null and IsAllowDel != ''">
+                IsAllowDel = #{IsAllowDel},
+            </if>
+            <if test="IsDefault !=null and IsDefault != ''">
+                IsDefault = #{IsDefault},
+            </if>
+            <if test="customArrayOne !=null and customArrayOne != ''">
+                customArrayOne = #{customArrayOne},
+            </if>
+            <if test="customArrayTwo !=null and customArrayTwo != ''">
+                customArrayTwo = #{customArrayTwo},
+            </if>
+        </trim>
+      WHERE sd.ID = #{ID}
+    </update>
+
+    <select id="getInfoById" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT * FROM S_Dictionary WHERE ID = #{ID}
+    </select>
+
+    <!--删除系统参数-->
+    <update id="removeSystemParam" parameterType="java.util.Map">
+        UPDATE S_Dictionary sd SET sd.IsDel = 1 WHERE sd.ID = #{ID}
+    </update>
+
+    <update id="batchRemoveSystemParam" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE S_Dictionary sd SET sd.IsDel = 1 WHERE sd.ID = #{item.ID}
+        </foreach>
+    </update>
+
+    <!--查询子集参数（树形）-->
+    <select id="getSystemTreeChildParams" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+        *
+      FROM S_Dictionary d
+      WHERE IsDel = 0
+        AND FullPath LIKE concat((SELECT FullPath FROM S_Dictionary WHERE ID = #{id}) , '/%')
+       AND (d.`DictionaryLevel`=1 OR (d.`DictionaryLevel`=2 AND d.`ProjectID`=#{projectId}))
+      ORDER BY Levels,ListIndex
+    </select>
+
+    <!--查询系统参数的子数据-->
+    <select id="getSystemChildParams" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+        *
+      FROM S_Dictionary d
+      WHERE IsDel = 0
+        AND PID = #{pid}
+        <choose>
+            <when test="type == 1">
+                AND d.`DictionaryLevel`=2
+                <if test="projectId!=null and projectId!=''">
+                    AND d.`ProjectID`=#{projectId}
+                </if>
+            </when>
+            <when test="type == 2">
+                AND d.`DictionaryLevel`=4
+                <if test="CityId!=null and CityId!=''">
+                    AND d.`CityId`=#{CityId}
+                </if>
+            </when>
+            <otherwise>
+                AND d.`DictionaryLevel`=1
+            </otherwise>
+        </choose>
+        ORDER BY  CAST(ListIndex AS SIGNED)
+      LIMIT ${pageIndex},${pageSize};</select>
+
+    <select id="getChildParams" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+        *
+      FROM S_Dictionary d
+      WHERE IsDel = 0
+        AND PID = #{pid}
+        ORDER BY  CAST(ListIndex AS SIGNED)
+      LIMIT ${pageIndex},${pageSize};</select>
+
+    <select id="getAllChildParamsById" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT * FROM S_Dictionary where PublicPid = #{publicPid} and IsDel = 0
+    </select>
+
+    <select id="getParamsById" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT * FROM S_Dictionary where ID = #{id}
+    </select>
+
+    <select id="getParamsByPid" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT * FROM S_Dictionary where PID = #{pid} and IsDel = 0
+    </select>
+
+    <!--查询子集参数非树形结构总数 -->
+    <select id="getSystemChildParamsCount" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+        count(1) as count
+        FROM S_Dictionary d
+        WHERE IsDel = 0
+        AND PID = #{pid}
+        <choose>
+            <when test="type == 1">
+                AND d.`DictionaryLevel`=2
+                <if test="projectId!=null and projectId!=''">
+                    AND d.`ProjectID`=#{projectId}
+                </if>
+            </when>
+            <when test="type == 2">
+                AND d.`DictionaryLevel`=4
+                <if test="CityId!=null and CityId!=''">
+                    AND d.`CityId`=#{CityId}
+                </if>
+            </when>
+            <otherwise>
+                AND d.`DictionaryLevel`=1
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getChildParamsCount" resultType="java.util.Map" parameterType="java.util.Map">
+    SELECT
+        count(1) as count
+      FROM S_Dictionary d
+      WHERE IsDel = 0
+        AND PID = #{pid};
+    </select>
+
+    <!--查询参数Code是否已存在-->
+    <select id="getSystemParamCodeExists" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+        (SELECT COUNT(1) FROM S_Dictionary WHERE IsDel = 0 AND DictName = #{name} AND DictCode = #{code}) AS A,
+        (SELECT COUNT(1) FROM S_Dictionary WHERE IsDel = 0 AND DictName = #{name} AND DictCode = #{code} AND PID = #{pid}) AS B
+    </select>
+
+    <select id="getSystemParamCodeExists1" parameterType="java.util.Map" resultType="_int">
+        SELECT COUNT(1) FROM S_Dictionary WHERE IsDel = 0 AND DictName = #{DictName} AND DictCode = #{DictCode} AND PID = #{PID}
+    </select>
+
+    <!--启用/禁用参数-->
+    <update id="modifySystemParamStatus" parameterType="java.util.Map">
+        UPDATE S_Dictionary SET Status = #{status} WHERE ID = #{id}
+    </update>
+
+    <select id="getAllProjectList" resultType="java.util.Map">
+    select
+        bp.ID as projectId
+    FROM
+        b_project bp
+    WHERE
+        bp.IsDel = 0
+      AND `Status` = 1
+</select>
+
+    <!--查询参数Code是否已存在-->
+    <select id="getSystemParamName" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM S_Dictionary WHERE IsDel = 0 AND DictName = #{DictName} AND DictionaryLevel = #{DictionaryLevel}
+    </select>
+
+    <select id="getProjectStages" parameterType="string" resultType="map">
+        select * from b_project where PID = #{projectId} and IsDel = 0 and `Status` = 1
+    </select>
+
+    <select id="getProject" parameterType="string" resultType="map">
+      select * from b_project where ID = #{projectId} and IsDel = 0 and `Status` = 1
+    </select>
+
+    <select id="getBankList" resultType="map">
+        select * from x_pro_collection
+        where project_id = #{projectId} and `status` = 1
+        <if test="stageId != null and stageId != ''">and project_fid = #{stageId}</if>
+        <if test="proCollAccount != null and proCollAccount != ''">and pro_coll_account = #{proCollAccount}</if>
+    </select>
+
+    <select id="getProjectIdById" parameterType="string" resultType="string">
+        select ProjectID from s_dictionary where IsDel = 0 and `Status` = 1 and ID = #{id}
+    </select>
+
+    <update id="updateProjectByProjectId" parameterType="map">
+        update b_project
+        set
+        TokerResetType = #{customArrayOne},
+        AnChangResetType = #{customArrayTwo}
+        where ID = #{projectId}
+    </update>
+</mapper>

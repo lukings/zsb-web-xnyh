@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.builddynamic.mapper.BuildDynamicMapper">
+
+    <!--活动楼盘Map-->
+    <resultMap id="BuildBookDynamicMap" type="cn.visolink.system.builddynamic.model.BuildBookDynamic">
+        <result column="id" property="id"/>
+        <result column="build_dynamic_name" property="buildDynamicName"/>
+        <result column="build_dynamic_desc" property="buildDynamicDesc"/>
+        <result column="project_area_id" property="projectAreaId"/>
+        <result column="project_area_name" property="projectAreaName"/>
+        <result column="project_id" property="projectId"/>
+        <result column="project_name" property="projectName"/>
+        <result column="build_book_id" property="buildBookId"/>
+        <result column="build_book_name" property="buildBookName"/>
+        <result column="dynamic_code" property="dynamicCode"/>
+        <result column="dynamic_code_name" property="dynamicCodeName"/>
+        <result column="release_time" property="releaseTime"/>
+        <result column="release_status" property="releaseStatus"/>
+        <result column="status" property="status"/>
+        <result column="is_del" property="isDel"/>
+        <result column="is_jump" property="isJump"/>
+        <result column="jump_type" property="jumpType"/>
+        <result column="jump_type_name" property="jumpTypeName"/>
+        <result column="jump_page_id" property="jumpPageId"/>
+        <result column="jump_page_name" property="jumpPageName"/>
+        <result column="jump_param" property="jumpParam"/>
+        <result column="we_chat_subscribe_desc" property="weChatSubscribeDesc"/>
+        <result column="applets_share_desc" property="appletsShareDesc"/>
+        <result column="applets_share_image_url" property="appletsShareImageUrl"/>
+        <result column="creator" property="creator"/>
+        <result column="creator_name" property="creatorName"/>
+        <result column="create_time" property="createTime"/>
+        <result column="editor" property="editor"/>
+        <result column="editor_name" property="editorName"/>
+        <result column="edit_time" property="editTime"/>
+        <result column="disable_user_id" property="disableUserId"/>
+        <result column="disable_user_name" property="disableUserName"/>
+        <result column="disable_time" property="disableTime"/>
+    </resultMap>
+
+    <!--保存楼盘动态-->
+    <insert id="saveBuildBookDynamic" parameterType="cn.visolink.system.builddynamic.model.BuildBookDynamic">
+        INSERT INTO `a_build_book_dynamic`
+        (`id`, `build_dynamic_name`, `build_dynamic_desc`, `project_area_id`, `project_area_name`, `project_id`, `project_name`, `build_book_id`,
+         `build_book_name`, `dynamic_code`, `dynamic_code_name`, `release_time`, `release_status`, `status`,
+         `is_del`, `is_jump`, `jump_type`, `jump_type_name`, `jump_page_id`, `jump_page_name`, `jump_param`, `we_chat_subscribe_desc`, `applets_share_desc`,
+         `applets_share_image_url`, `creator`, `creator_name`, `create_time`, `editor`, `editor_name`, `edit_time`,
+         `disable_user_id`, `disable_user_name`, `disable_time`)
+         VALUES
+         (uuid(), #{buildDynamicName}, #{buildDynamicDesc}, #{projectAreaId}, #{projectAreaName}, #{projectId}, #{projectName}, #{buildBookId}, #{buildBookName},
+          #{dynamicCode}, #{dynamicCodeName}, #{releaseTime}, #{releaseStatus}, #{status}, #{isDel},#{isJump}, #{jumpType},
+          #{jumpTypeName},#{jumpPageId},#{jumpPageName}, #{jumpParam}, #{weChatSubscribeDesc}, #{appletsShareDesc}, #{appletsShareImageUrl}, #{creator},
+          #{creatorName}, #{createTime}, #{editor}, #{editorName}, #{editTime}, #{disableUserId}, #{disableUserName}, #{disableTime});
+    </insert>
+
+    <!--查询楼盘动态-->
+    <select id="getBuildBookDynamicList" parameterType="java.util.Map" resultMap="BuildBookDynamicMap">
+        select
+            bbd.id,
+            bbd.build_dynamic_name,
+            bbd.build_dynamic_desc,
+            bbd.project_area_id,
+            bbd.project_area_name,
+            bbd.project_id,
+            bbd.project_name,
+            bbd.build_book_id,
+            bbd.build_book_name,
+            bbd.dynamic_code,
+            bbd.dynamic_code_name,
+            bbd.release_time,
+            bbd.release_status,
+            bbd.status,
+            bbd.is_del,
+            bbd.is_jump,
+            bbd.jump_type,
+            bbd.jump_type_name,
+            bbd.jump_page_id,
+            bbd.jump_page_name,
+            bbd.jump_param,
+            bbd.we_chat_subscribe_desc,
+            bbd.applets_share_desc,
+            bbd.applets_share_image_url,
+            bbd.creator,
+            bbd.creator_name,
+            bbd.create_time,
+            bbd.editor,
+            bbd.editor_name,
+            bbd.edit_time,
+            bbd.disable_user_id,
+            bbd.disable_user_name,
+            bbd.disable_time,
+            (case
+                when bbd.status = 0 then '已禁用'
+                when bbd.release_status = 2 and bbd.release_time &lt; now() then '已发布'
+                when bbd.release_status = 2 and bbd.release_time &gt; now() then '未发布'
+                else '' end) as statusName
+        from
+            a_build_book_dynamic bbd
+        <where>
+            <if test="projectIdList != null and projectIdList.size() > 0">
+                and bbd.project_id in
+                <foreach
+                        collection="projectIdList" index="index" item="item" open="("
+                        separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="buildBookName != null and buildBookName != ''">
+                and bbd.build_book_name like CONCAT('%',#{buildBookName},'%')
+            </if>
+            <if test="buildDynamicName != null and buildDynamicName != ''">
+                and bbd.build_dynamic_name like CONCAT('%',#{buildDynamicName},'%')
+            </if>
+            <if test="creatorName != null and creatorName != ''">
+                and bbd.creator_name like CONCAT('%',#{creatorName},'%')
+            </if>
+            <if test="dynamicType != null and dynamicType != ''">
+                and bbd.dynamic_code  = #{dynamicType}
+            </if>
+            <if test="releaseStatusList != null and releaseStatusList.size() > 0">
+                and bbd.release_status in
+                <foreach
+                        collection="releaseStatusList" index="index" item="item" open="("
+                        separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="statusList != null and statusList.size() > 0">
+                and bbd.status in
+                <foreach
+                        collection="statusList" index="index" item="item" open="("
+                        separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dateType != null and dateType != '' and dateType == '1'.toString() ">
+                <if test=" startDate != null and startDate != '' and endDate != null and endDate != ''">
+                    <![CDATA[  and bbd.create_time >= #{startDate} and bbd.create_time <= #{endDate} ]]>
+                </if>
+            </if>
+            <if test="dateType != null and dateType != '' and dateType == '2'.toString() ">
+                <if test=" startDate != null and startDate != '' and endDate != null and endDate != ''">
+                    <![CDATA[  and bbd.release_time >= #{startDate} and bbd.release_time <= #{endDate} ]]>
+                </if>
+            </if>
+            and bbd.is_del = 0
+        </where>
+        order by bbd.create_time desc
+    </select>
+
+    <!--查询楼盘动态详情-->
+    <select id="getBuildBookDynamicById" parameterType="java.lang.String" resultMap="BuildBookDynamicMap">
+        select
+            bbd.id,
+            bbd.build_dynamic_name,
+            bbd.build_dynamic_desc,
+            bbd.project_area_id,
+            bbd.project_area_name,
+            bbd.project_id,
+            bbd.project_name,
+            bbd.build_book_id,
+            bbd.build_book_name,
+            bbd.dynamic_code,
+            bbd.dynamic_code_name,
+            bbd.release_time,
+            bbd.release_status,
+            bbd.status,
+            bbd.is_del,
+            bbd.is_jump,
+            bbd.jump_type,
+            bbd.jump_type_name,
+            bbd.jump_page_id,
+            bbd.jump_page_name,
+            bbd.jump_param,
+            bbd.we_chat_subscribe_desc,
+            bbd.applets_share_desc,
+            bbd.applets_share_image_url,
+            bbd.creator,
+            bbd.creator_name,
+            bbd.create_time,
+            bbd.editor,
+            bbd.editor_name,
+            bbd.edit_time,
+            bbd.disable_user_id,
+            bbd.disable_user_name,
+            bbd.disable_time,
+            (case
+            when bbd.status = 0 then '已禁用'
+            when bbd.release_status = 2 then '已发布'
+            when bbd.release_status = 1 then '未发布'
+            else '' end) as statusName
+        from
+            a_build_book_dynamic bbd
+        where id = #{id}
+    </select>
+
+    <!--修改楼盘动态-->
+    <update id="editBuildBookDynamic" parameterType="cn.visolink.system.builddynamic.model.BuildBookDynamic">
+        update a_build_book_dynamic
+        <set>
+            <if test="buildDynamicName != null and buildDynamicName != ''">
+                build_dynamic_name = #{buildDynamicName},
+            </if>
+            <if test="buildDynamicDesc != null and buildDynamicDesc != ''">
+                build_dynamic_desc = #{buildDynamicDesc},
+            </if>
+            <if test="projectAreaId != null and projectAreaId != ''">
+                project_area_id = #{projectAreaId},
+            </if>
+            <if test="projectAreaName != null and projectAreaName != ''">
+                project_area_name = #{projectAreaName},
+            </if>
+            <if test="projectId != null and projectId != ''">
+                project_id = #{projectId},
+            </if>
+            <if test="projectName != null and projectName != ''">
+                project_name = #{projectName},
+            </if>
+            <if test="buildBookId != null and buildBookId != ''">
+                build_book_id = #{buildBookId},
+            </if>
+            <if test="buildBookName != null and buildBookName != ''">
+                build_book_name = #{buildBookName},
+            </if>
+            <if test="dynamicCode != null and dynamicCode != ''">
+                dynamic_code = #{dynamicCode},
+            </if>
+            <if test="releaseTime != null and releaseTime != ''">
+                release_time = #{releaseTime},
+            </if>
+            <if test="releaseStatus != null and releaseStatus != ''">
+                release_status = #{releaseStatus},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            <if test="isDel != null and isDel != ''">
+                is_del = #{isDel},
+            </if>
+            <if test="isJump != null and isJump != ''">
+                is_jump = #{isJump},
+            </if>
+            <if test="jumpType != null and jumpType != ''">
+                jump_type = #{jumpType},
+            </if>
+            <if test="jumpTypeName != null and jumpTypeName != ''">
+                jump_type_name = #{jumpTypeName},
+            </if>
+            <if test="jumpPageId != null and jumpPageId != ''">
+                jump_page_id = #{jumpPageId},
+            </if>
+            <if test="jumpPageName != null and jumpPageName != ''">
+                jump_page_name = #{jumpPageName},
+            </if>
+            <if test="jumpParam != null and jumpParam != ''">
+                jump_param = #{jumpParam},
+            </if>
+            <if test="weChatSubscribeDesc != null and weChatSubscribeDesc != ''">
+                we_chat_subscribe_desc = #{weChatSubscribeDesc},
+            </if>
+            <if test="appletsShareDesc != null and appletsShareDesc != ''">
+                applets_share_desc = #{appletsShareDesc},
+            </if>
+            <if test="appletsShareImageUrl != null and appletsShareImageUrl != ''">
+                applets_share_image_url = #{appletsShareImageUrl},
+            </if>
+            <if test="editor != null and editor != ''">
+                editor = #{editor},
+            </if>
+            <if test="editorName != null and editorName != ''">
+                editor_name = #{editorName},
+            </if>
+            <if test="editTime != null and editTime != ''">
+                edit_time = #{editTime},
+            </if>
+            <if test="disableUserId != null and disableUserId != ''">
+                disable_user_id = #{disableUserId},
+            </if>
+            <if test="disableUserName != null and disableUserName != ''">
+                disable_user_name = #{disableUserName},
+            </if>
+            <if test="disableTime != null and disableTime != ''">
+                disable_time = #{disableTime},
+            </if>
+        </set>
+            where id = #{id}
+    </update>
+
+    <!--根据项目id查楼盘-->
+    <select id="getBuildListByPojId" resultType="java.util.Map" parameterType="java.lang.String">
+        SELECT
+            id AS BuildBookId,
+            BuildBookName,
+            CityID,
+            CityName
+        FROM
+            a_build_book
+        WHERE
+            ProjectID in
+            <foreach collection="projectId" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        and Status = 1
+        and IsDel = 0
+        and IsShowHeadImg = 1
+    </select>
+
+    <!--字典值查询-->
+    <select id="getBuildDynamicDictList" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+            sd.DictCode,
+            sd.DictName
+        from s_dictionary sd
+        where
+            sd.pid = (select s.id from s_dictionary s where s.DictCode = #{parentCode})
+        and sd.IsDel = 0
+        <if test="childCodeList != null and childCodeList.size() > 0 ">
+            and sd.DictCode in
+            <foreach collection="childCodeList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="projectId != null and projectId != ''">
+            and (sd.DictionaryLevel = 1 or (sd.DictionaryLevel = 2 and sd.projectId = #{projectId}))
+        </if>
+        order by sd.ListIndex asc
+    </select>
+
+    <!--查询新闻-->
+    <select id="getNewsListByCityId" resultType="java.util.Map" parameterType="java.lang.String">
+        select
+            ID as jumpPageId,
+            Title as jumpPageName
+        from a_news
+        where
+            CityId = #{cityId}
+        and IsPublish = 1
+        and Status = 1
+        and IsDel = 0
+        order by ListIndex
+    </select>
+
+    <!--查询户型-->
+    <select id="getHouseListByBookId" resultType="java.util.Map" parameterType="java.lang.String">
+        select
+            ID as jumpPageId,
+            HouseBigType as jumpPageName
+        from a_build_book_warehouse
+        where BuildBookID = #{bookId}
+        and Status = 1
+        and IsDel = 0
+    </select>
+
+    <!--查询活动-->
+    <select id="getActivityListByPojId" resultType="java.util.Map" parameterType="java.lang.String">
+        SELECT
+            info.ID AS jumpPageId,
+            info.activity_name AS jumpPageName
+        FROM
+            a_activity_info info
+            INNER JOIN a_activity_projects ap ON ap.actity_id = info.ID
+            AND ap.STATUS = 1
+            AND ap.isdel = 0
+        WHERE
+            ap.project_id= #{projectId}
+        and info.`status` = 1
+        and info.is_del = 0
+        and info.act_status = 2
+    </select>
+
+</mapper>

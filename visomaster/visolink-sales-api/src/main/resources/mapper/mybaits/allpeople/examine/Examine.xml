@@ -1,0 +1,1482 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.allpeople.examine.dao.ExamineDao">
+
+    <!--获取待审核经纪人-->
+    <select id="getExamineList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		ro.ID as RoleID,
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		ro.IDCard,
+		ro.FrontImgUrl,
+		ro.ReverseImgUrl,
+		ro.HouseImgUrl,
+		ro.AgreementImgUrl,
+		(case ro.AuthenticationType
+		when 1 then '首次'
+		when 2 then '新增'
+		when 3 then '更新'
+		else '' end) AuthenticationType,
+		ro.Status,
+		u.Mobile,
+		u.Name,
+		u.RealName,
+		u.OAAccount,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime,
+		ro.Auditor,
+		DATE_FORMAT(ro.ExamineTime,'%Y-%m-%d %H:%i:%s') as ExamineTime
+		FROM a_user_role ro
+		left join a_broker_user u on ro.BrokerId =u.ID
+		WHERE ro.isDel = 0 and ro.Status = 2
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and u.Mobile like '%${Mobile}%'
+		</if>
+		<if test="CityId!=null and CityId!=''">
+			and ro.CityId = #{CityId}
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName = #{RoleName}
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc) t
+	</select>
+	<!--获取经纪人列表(所有维度默认查询)-->
+	<select id="getBrokerUserList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		SELECT
+		distinct
+		ro.BrokerId as id,
+		ro.RoleName roleName,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) mobile,
+		u.Mobile mobileAll,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) oaaccount,
+		ro.IDCard idCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) status,
+		(case u.BrokerLevel when '1' then '项目级'
+		when '2' then '区域级'
+		when '3' then '集团级' end) BrokerLevel,
+		u.Name name,
+		ro.ID roleID,
+		(case when ro.RoleName = '个人渠道商' then '' else com.companyName end) companyName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as createTime
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		left join s_company_info com on com.ID = ro.CompanyID
+		WHERE ro.isDel = 0 and ro.Status in ('1','2')
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and u.Mobile like '%${Mobile}%'
+		</if>
+		<if test="role!=null and role!=''">
+			and ro.RoleName in (${role})
+		</if>
+		<if test="companyName!=null and companyName!=''">
+			and com.companyName like '%${companyName}%'
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by createTime desc
+		limit #{pageIndex},#{pageSize}
+	</select>
+
+	<!--获取经纪人列表(所有维度默认查询)-->
+	<select id="getBrokerUserListExport" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		SELECT
+		distinct
+		ro.BrokerId as id,
+		ro.RoleName roleName,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) mobile,
+		u.Mobile mobileAll,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) oaaccount,
+		ro.IDCard idCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) status,
+		(case u.BrokerLevel when '1' then '项目级'
+		when '2' then '区域级'
+		when '3' then '集团级' end) BrokerLevel,
+		u.Name name,
+		ro.ID roleID,
+		(case when ro.RoleName = '个人渠道商' then '' else com.companyName end) companyName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as createTime
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		left join s_company_info com on com.ID = ro.CompanyID
+		WHERE ro.isDel = 0 and ro.Status in ('1','2')
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and u.Mobile like '%${Mobile}%'
+		</if>
+		<if test="role!=null and role!=''">
+			and ro.RoleName in (${role})
+		</if>
+		<if test="companyName!=null and companyName!=''">
+			and com.companyName like '%${companyName}%'
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+	</select>
+
+	<select id="getBrokerUserListCount" parameterType="java.util.Map" resultType="_int">
+		 SELECT
+			count(distinct ro.BrokerId)
+		 FROM  a_broker_user u
+			   inner join a_user_role ro on ro.BrokerId =u.ID
+		       left join s_company_info com on com.ID = ro.CompanyID
+		 WHERE ro.isDel = 0 and ro.Status in ('1','2')
+
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and u.Mobile like '%${Mobile}%'
+		</if>
+		<if test="role!=null and role!=''">
+			and ro.RoleName in (${role})
+		</if>
+		<if test="companyName!=null and companyName!=''">
+			and com.companyName like '%${companyName}%'
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+	</select>
+
+	<!--获取经纪人列表(所有维度精确查询)总数-->
+	<select id="getBrokerUserListByAllCount" parameterType="java.util.Map" resultType="_int">
+		select count(0) from (
+		SELECT
+		distinct
+		ro.BrokerId as ID
+		FROM a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		INNER JOIN b_project_clues c on ro.BrokerId = c.ReportUserID and c.SourceType = 4 and c.projectId in (${proIds})
+		WHERE ro.isDel = 0 and u.RegistProject in (${regProjectID})
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>)
+	</select>
+
+	<!--获取经纪人列表(所有维度精确查询)-->
+	<select id="getBrokerUserListByAll" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		distinct
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) Mobile,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) OAAccount,
+		ro.IDCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) Status,
+		u.RegistFrom,
+		(case when u.RegistFrom = '策划推广' then (
+		select ExtenActivityName from a_extension where ID = u.RegistRefcommend)
+		else u.RegistRefcommend end) as RegistRefcommend,
+		(select ProjectName from b_project where ID = u.RegistProject) RegistProject,
+		u.Name,
+		u.RealName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		INNER JOIN b_project_clues c on ro.BrokerId = c.ReportUserID and c.SourceType = 4 and c.projectId in (${proIds})
+		WHERE ro.isDel = 0 and u.RegistProject in (${regProjectID})
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+		) t
+		limit #{pageIndex},#{pageSize}
+	</select>
+
+	<!--获取经纪人列表(按推荐客户所属项目)数量-->
+	<select id="getBrokerUserListByProCount" parameterType="java.util.Map" resultType="_int">
+		select count(0) from (
+		SELECT
+		distinct
+		ro.BrokerId as ID
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		INNER JOIN b_project_clues c on ro.BrokerId = c.ReportUserID and c.SourceType = 4 and c.projectId in (${proIds})
+		WHERE ro.isDel = 0
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		) t
+
+	</select>
+	<!--获取经纪人列表(按推荐客户所属项目)-->
+	<select id="getBrokerUserListByPro" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		distinct
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) Mobile,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) OAAccount,
+		ro.IDCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) Status,
+		u.RegistFrom,
+		(case when u.RegistFrom = '策划推广' then (
+		select ExtenActivityName from a_extension where ID = u.RegistRefcommend)
+		else u.RegistRefcommend end) as RegistRefcommend,
+		(select ProjectName from b_project where ID = u.RegistProject) RegistProject,
+		u.Name,
+		u.RealName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		INNER JOIN b_project_clues c on ro.BrokerId = c.ReportUserID and c.SourceType = 4 and c.projectId in (${proIds})
+		WHERE ro.isDel = 0
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="emnameOrUserName!=null and emnameOrUserName!=''">
+			and (ba.UserName like '%${emnameOrUserName}%' or ba.EmployeeName like '%${emnameOrUserName}%')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+		) t
+		limit #{pageIndex},#{pageSize}
+	</select>
+	<!--获取经纪人列表(按注册项目查询)数量-->
+	<select id="getBrokerUserListByRegCount" parameterType="java.util.Map" resultType="_int">
+		select count(0) from (
+		SELECT
+		distinct
+		ro.BrokerId as ID
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		WHERE ro.isDel = 0 and u.RegistProject in (${regProjectID})
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		) t
+
+	</select>
+
+	<!--获取经纪人列表(按注册项目查询)-->
+	<select id="getBrokerUserListByReg" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		distinct
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) Mobile,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) OAAccount,
+		ro.IDCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) Status,
+		u.RegistFrom,
+		(case when u.RegistFrom = '策划推广' then (
+		select ExtenActivityName from a_extension where ID = u.RegistRefcommend)
+		else u.RegistRefcommend end) as RegistRefcommend,
+		(select ProjectName from b_project where ID = u.RegistProject) RegistProject,
+		u.Name,
+		u.RealName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		WHERE ro.isDel = 0 and u.RegistProject in (${regProjectID})
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="emnameOrUserName!=null and emnameOrUserName!=''">
+			and (ba.UserName like '%${emnameOrUserName}%' or ba.EmployeeName like '%${emnameOrUserName}%')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+		) t
+		limit #{pageIndex},#{pageSize}
+	</select>
+	<!--获取经纪人列表(查询无注册项目的人员)数量-->
+	<select id="getBrokerUserListByNRegCount" parameterType="java.util.Map" resultType="_int">
+		select count(0) from (
+		SELECT
+		distinct
+		ro.BrokerId as ID
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		WHERE ro.isDel = 0 and u.RegistProject is null
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="authenticationStatus!=null and authenticationStatus!=''">
+			and u.AuthenticationStatus = #{authenticationStatus}
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序大客户活动分享' or a.RegistFrom = '小程序楼盘动态分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and b.Name like concat('%',#{recommend},'%'))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+
+		<if test="weChatUserName!=null and weChatUserName!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where (a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序大客户活动分享' or a.RegistFrom = '小程序楼盘动态分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and b.WeChatUserName like concat('%',#{weChatUserName},'%')))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		) t
+
+	</select>
+	<!--获取经纪人列表(查询无注册项目的人员)-->
+	<select id="getBrokerUserListByNReg" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		distinct
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) Mobile,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) OAAccount,
+		ro.IDCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) Status,
+		(case u.BrokerLevel when '1' then '项目级'
+		when '2' then '区域级'
+		when '3' then '集团级' end) BrokerLevel,
+		u.RegistFrom,
+		(case when aex.ExtenActivityName is not null then aex.ExtenActivityName
+		else u.RegistRefcommend end) as RegistRefcommend,
+		'' RegistProject,
+		u.Name,
+		u.RealName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		left join a_extension aex on aex.ID = u.RegistRefcommend and (u.RegistFrom = '策划推广' or u.RegistFrom = '旭客家首页推广码' or u.RegistFrom = '旭客家楼盘推广码'
+		or u.RegistFrom = '旭客家户型推广码' or u.RegistFrom = '旭客家活动推广码' or u.RegistFrom = '旭客家新闻推广码')
+		WHERE ro.isDel = 0 and u.RegistProject is null
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="authenticationStatus!=null and authenticationStatus!=''">
+			and u.AuthenticationStatus = #{authenticationStatus}
+		</if>
+		<if test="brokerLevel!=null and brokerLevel!=''">
+			and u.BrokerLevel = #{brokerLevel}
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序大客户活动分享' or a.RegistFrom = '小程序楼盘动态分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and b.Name like concat('%',#{recommend},'%'))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+
+		<if test="weChatUserName!=null and weChatUserName!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where (a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序大客户活动分享' or a.RegistFrom = '小程序楼盘动态分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and b.WeChatUserName like concat('%',#{weChatUserName},'%')))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="emnameOrUserName!=null and emnameOrUserName!=''">
+			and (ba.UserName like '%${emnameOrUserName}%' or ba.EmployeeName like '%${emnameOrUserName}%')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+		) t
+		limit #{pageIndex},#{pageSize}
+	</select>
+
+	<!--获取经纪人列表(所有维度精确查询)导出-->
+	<select id="getBrokerUserListByAllExcel" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		distinct
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		u.Mobile MobileAll,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) Mobile,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) OAAccount,
+		ro.IDCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) Status,
+		u.RegistFrom,
+		(case when u.RegistFrom = '策划推广' then (
+		select ExtenActivityName from a_extension where ID = u.RegistRefcommend)
+		else u.RegistRefcommend end) as RegistRefcommend,
+		(select ProjectName from b_project where ID = u.RegistProject) RegistProject,
+		u.Name,
+		u.RealName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime,
+        s.CustomerCnt,
+        s.VisitCnt,
+        s.SubCnt,
+        s.DealCnt,
+        s.InvalidCnt
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		INNER JOIN b_project_clues c on ro.BrokerId = c.ReportUserID and c.SourceType = 4 and c.projectId in (${proIds})
+		LEFT JOIN (
+		SELECT
+		ReportUserID,
+		sum( CASE WHEN ClueStatus &lt; 9 THEN 1 ELSE 0 END ) AS CustomerCnt,
+		sum( CASE WHEN ClueStatus &lt; 9 AND ClueStatus &gt; 1 THEN 1 ELSE 0 END ) AS VisitCnt,
+		sum( CASE WHEN ClueStatus = 7 THEN 1 ELSE 0 END ) AS SubCnt,
+		sum( CASE WHEN ClueStatus = 8 THEN 1 ELSE 0 END ) AS DealCnt,
+		sum(
+		CASE
+		WHEN now() &gt; BrokerCustomerExpiryDate and ClueStatus &lt;8
+		OR ClueStatus = 9 THEN
+		1 ELSE 0
+		END
+		) AS InvalidCnt
+		FROM
+		b_project_clues clue
+		WHERE
+		clue.SourceType = 4 and EXISTS ( SELECT ID FROM a_broker_user abu where abu.ID = clue.ReportUserID )
+		GROUP BY
+		ReportUserID
+		) s ON u.ID = s.ReportUserID
+		WHERE ro.isDel = 0 and u.RegistProject in (${regProjectID})
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="emnameOrUserName!=null and emnameOrUserName!=''">
+			and (ba.UserName like '%${emnameOrUserName}%' or ba.EmployeeName like '%${emnameOrUserName}%')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+		) t
+
+	</select>
+
+	<!--获取经纪人列表(按推荐客户所属项目)Excel-->
+	<select id="getBrokerUserListByProExcel" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		distinct
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		u.Mobile MobileAll,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) Mobile,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) OAAccount,
+		ro.IDCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) Status,
+		u.RegistFrom,
+		(case when u.RegistFrom = '策划推广' then (
+		select ExtenActivityName from a_extension where ID = u.RegistRefcommend)
+		else u.RegistRefcommend end) as RegistRefcommend,
+		(select ProjectName from b_project where ID = u.RegistProject) RegistProject,
+		u.Name,
+		u.RealName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime,
+        s.CustomerCnt,
+        s.VisitCnt,
+        s.SubCnt,
+        s.DealCnt,
+        s.InvalidCnt
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		INNER JOIN b_project_clues c on ro.BrokerId = c.ReportUserID and c.SourceType = 4 and c.projectId in (${proIds})
+		LEFT JOIN (
+		SELECT
+		ReportUserID,
+		sum( CASE WHEN ClueStatus &lt; 9 THEN 1 ELSE 0 END ) AS CustomerCnt,
+		sum( CASE WHEN ClueStatus &lt; 9 AND ClueStatus &gt; 1 THEN 1 ELSE 0 END ) AS VisitCnt,
+		sum( CASE WHEN ClueStatus = 7 THEN 1 ELSE 0 END ) AS SubCnt,
+		sum( CASE WHEN ClueStatus = 8 THEN 1 ELSE 0 END ) AS DealCnt,
+		sum(
+		CASE
+		WHEN now() &gt; BrokerCustomerExpiryDate and ClueStatus &lt;8
+		OR ClueStatus = 9 THEN
+		1 ELSE 0
+		END
+		) AS InvalidCnt
+		FROM
+		b_project_clues clue
+		WHERE
+		clue.SourceType = 4 and EXISTS ( SELECT ID FROM a_broker_user abu where abu.ID = clue.ReportUserID )
+		GROUP BY
+		ReportUserID
+		) s ON u.ID = s.ReportUserID
+		WHERE ro.isDel = 0
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="emnameOrUserName!=null and emnameOrUserName!=''">
+			and (ba.UserName like '%${emnameOrUserName}%' or ba.EmployeeName like '%${emnameOrUserName}%')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+		) t
+
+	</select>
+
+
+	<!--获取经纪人列表(按注册项目查询)Excel-->
+	<select id="getBrokerUserListByRegExcel" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		distinct
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		u.Mobile MobileAll,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) Mobile,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) OAAccount,
+		ro.IDCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) Status,
+		u.RegistFrom,
+		(case when u.RegistFrom = '策划推广' then (
+		select ExtenActivityName from a_extension where ID = u.RegistRefcommend)
+		else u.RegistRefcommend end) as RegistRefcommend,
+		(select ProjectName from b_project where ID = u.RegistProject) RegistProject,
+		u.Name,
+		u.RealName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime,
+		s.CustomerCnt,
+		s.VisitCnt,
+		s.SubCnt,
+		s.DealCnt,
+		s.InvalidCnt
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		LEFT JOIN (
+		SELECT
+		ReportUserID,
+		sum( CASE WHEN ClueStatus &lt; 9 THEN 1 ELSE 0 END ) AS CustomerCnt,
+		sum( CASE WHEN ClueStatus &lt; 9 AND ClueStatus &gt; 1 THEN 1 ELSE 0 END ) AS VisitCnt,
+		sum( CASE WHEN ClueStatus = 7 THEN 1 ELSE 0 END ) AS SubCnt,
+		sum( CASE WHEN ClueStatus = 8 THEN 1 ELSE 0 END ) AS DealCnt,
+		sum(
+		CASE
+		WHEN now() &gt; BrokerCustomerExpiryDate and ClueStatus &lt;8
+		OR ClueStatus = 9 THEN
+		1 ELSE 0
+		END
+		) AS InvalidCnt
+		FROM
+		b_project_clues clue
+		WHERE
+		clue.SourceType = 4 and EXISTS ( SELECT ID FROM a_broker_user abu where abu.ID = clue.ReportUserID )
+		GROUP BY
+		ReportUserID
+		) s ON u.ID = s.ReportUserID
+		WHERE ro.isDel = 0 and u.RegistProject in (${regProjectID})
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序楼盘动态分享' or a.RegistFrom = '小程序大客户活动分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and (b.Name like concat('%',#{recommend},'%')
+			or b.WeChatUserName like concat('%',#{recommend},'%')))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="emnameOrUserName!=null and emnameOrUserName!=''">
+			and (ba.UserName like '%${emnameOrUserName}%' or ba.EmployeeName like '%${emnameOrUserName}%')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+		) t
+
+	</select>
+
+	<!--获取经纪人列表(查询无注册项目的人员)Excel-->
+	<select id="getBrokerUserListByNRegExcel" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		distinct
+		ro.BrokerId as ID,
+		ro.CityName,
+		ro.RoleName,
+		u.Mobile MobileAll,
+		concat(left(u.Mobile,3),'****',right(u.Mobile,4)) Mobile,
+		(case when (u.AccountId is null or u.AccountId= '') then '未绑定'
+		when (u.AccountId is not null and u.AccountId!= '') then '已绑定' else '' end) OAAccount,
+		ro.IDCard,
+		(case ro.Status when '0' then '禁用'
+		when '1' then '启用'
+		when '2' then '待审核'
+		when '3' then '审核驳回' end) Status,
+		(case u.BrokerLevel when '1' then '项目级'
+		when '2' then '区域级'
+		when '3' then '集团级' end) BrokerLevel,
+		u.RegistFrom,
+		(case when aex.ExtenActivityName is not null then aex.ExtenActivityName
+		else u.RegistRefcommend end) as RegistRefcommend,
+		'' RegistProject,
+		u.Name,
+		u.RealName,
+		DATE_FORMAT(ro.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime,
+		0 CustomerCnt,
+		0 VisitCnt,
+		0 InvalidCnt
+		FROM  a_broker_user u
+		inner join a_user_role ro on ro.BrokerId =u.ID
+		left join a_extension aex on aex.ID = u.RegistRefcommend and (u.RegistFrom = '策划推广' or u.RegistFrom = '旭客家首页推广码' or u.RegistFrom = '旭客家楼盘推广码'
+		or u.RegistFrom = '旭客家户型推广码' or u.RegistFrom = '旭客家活动推广码' or u.RegistFrom = '旭客家新闻推广码')
+		WHERE ro.isDel = 0 and u.RegistProject is null
+		<if test="RegistFroms!=null and RegistFroms!=''">
+			and u.RegistFrom in (${RegistFroms})
+		</if>
+		<if test="Name!=null and Name!=''">
+			and u.Name like '%${Name}%'
+		</if>
+		<if test="brokerLevel!=null and brokerLevel!=''">
+			and u.BrokerLevel = #{brokerLevel}
+		</if>
+		<if test="recommend!=null and recommend!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where ((a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序大客户活动分享' or a.RegistFrom = '小程序楼盘动态分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and b.Name like concat('%',#{recommend},'%'))
+			or ((a.RegistFrom = 'APP推荐' or a.RegistFrom = 'APP小程序名片分享' or a.RegistFrom = 'APP海报名片分享') and a.RegistRefcommend like concat('%',#{recommend},'%'))))
+		</if>
+
+		<if test="weChatUserName!=null and weChatUserName!=''">
+			and (u.id in (select a.id from a_broker_user a
+			left JOIN a_broker_user b on a.RegistRefcommend = b.OpenId
+			where (a.RegistFrom = '小程序分享' or a.RegistFrom = '小程序首页分享' or a.RegistFrom = '小程序新闻分享'
+			or a.RegistFrom = '小程序楼盘分享' or a.RegistFrom = '小程序户型分享' or a.RegistFrom = '小程序活动分享' or a.RegistFrom = '小程序名片分享' or a.RegistFrom = '小程序大客户活动分享' or a.RegistFrom = '小程序楼盘动态分享'
+			or a.RegistFrom = '海报分享' or a.RegistFrom = '海报楼盘分享' or a.RegistFrom = '海报活动分享' or a.RegistFrom = '海报名片分享')
+			and b.WeChatUserName like concat('%',#{weChatUserName},'%')))
+		</if>
+		<if test="isOA!=null and isOA==1 and isOA!=''">
+			and u.AccountId is not null and u.AccountId !=''
+		</if>
+		<if test="isOA!=null and isOA==0 and isOA!=''">
+			and (u.AccountId is null or u.AccountId ='')
+		</if>
+		<if test="emnameOrUserName!=null and emnameOrUserName!=''">
+			and (ba.UserName like '%${emnameOrUserName}%' or ba.EmployeeName like '%${emnameOrUserName}%')
+		</if>
+		<if test="Mobile!=null and Mobile!=''">
+			and (u.Mobile like '%${Mobile}%' or ro.IDCard like '%${Mobile}%')
+		</if>
+		<if test="RoleName!=null and RoleName!=''">
+			and ro.RoleName in (${RoleName})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ro.Status = #{Status}
+		</if>
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and ro.CreateTime between #{beginTime} and #{endTime}
+		</if>
+		order by ro.CreateTime desc
+		) t
+	</select>
+
+	<!--更新经纪人状态-->
+	<update id="updatePeople" parameterType="java.util.Map">
+		update a_user_role
+		<set>
+			Status = #{Status},
+			<if test="RejectionReason!=null and RejectionReason!=''">
+			  RejectionReason = #{RejectionReason},
+			</if>
+			<if test="Remarks!=null and Remarks!=''">
+				Remarks = #{Remarks},
+			</if>
+		</set>
+		where BrokerId in (${ids})
+	</update>
+	<!--获取城市-->
+	<select id="getCitys" resultType="java.util.Map">
+		select ID,CityName from a_city where IsDel = 0
+	</select>
+	<!--获取经纪人信息-->
+	<select id="getBrokerUser" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.Examine">
+		SELECT
+			u.id,
+			u.Mobile mobileAll,
+			concat(left(u.Mobile,3),'****',right(u.Mobile,4)) mobile,
+			u.Name name,
+			u.OAAccount oaaccount,
+			(case u.Gender when '1' then '男'
+						   when '2' then '女'
+			  else '无' end) gender,
+			DATE_FORMAT(u.CreateTime,'%Y-%m-%d %H:%i:%s') as createTime,
+			(case u.BrokerLevel when '1' then '项目级'
+								when '2' then '区域级'
+								when '3' then '集团级' end) BrokerLevel,
+			(case ro.Status when '0' then '禁用'
+							when '1' then '启用'
+							when '2' then '待审核'
+							when '3' then '审核驳回' end) status,
+			r.IDCard idCard,
+			ro.ID roleID,
+			(case when ro.RoleName = '个人渠道商' then '' else com.companyName end) companyName,
+			r.RoleName roleName
+		FROM
+			a_broker_user u
+			LEFT JOIN a_user_role r ON r.BrokerId = u.ID
+			inner join a_user_role ro on ro.BrokerId =u.ID
+			left join s_company_info com on com.ID = ro.CompanyID
+		WHERE ro.isDel = 0 and ro.Status in ('1','2')
+			and u.ID = #{id}
+		limit 1
+	</select>
+	<!--获取推荐客户信息-->
+	<select id="getBrokerUserCustomer" parameterType="java.util.Map"  resultType="cn.visolink.system.allpeople.examine.model.Customer">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		c.CustomerName,
+		concat(left(c.CustomerMobile,3),'****',right(c.CustomerMobile,4)) CustomerMobile,
+		c.ProjectName,
+		(
+		CASE
+
+		WHEN now() &gt; c.BrokerCustomerExpiryDate and c.ClueStatus &lt;8
+		OR c.ClueStatus = 9 THEN
+		'失效'
+		WHEN c.ClueStatus = 1 THEN
+		'推荐成功'
+		WHEN c.ClueStatus &gt; 1
+		AND c.ClueStatus &lt; 7 THEN
+		'已到访'
+		WHEN c.ClueStatus = 7 THEN
+		'已认购'
+		WHEN c.ClueStatus = 8 THEN
+		'已签约'
+		END
+		) CurrentState,
+		c.SalesAttributionName AS Zygw,
+		(
+		CASE
+
+		WHEN c.SalesAttributionId IS NOT NULL
+		AND c.SalesAttributionId != '' THEN
+		( SELECT Mobile FROM b_account WHERE Id = c.SalesAttributionId ) ELSE ''
+		END
+		) ZygwMobile,
+		DATE_FORMAT( c.ReportCreateTime, '%Y-%m-%d %H:%i:%s' ) AS ReportCreateTime,
+		DATE_FORMAT( c.TheFirstVisitDate, '%Y-%m-%d %H:%i:%s' ) AS TheFirstVisitDate,
+		DATE_FORMAT(
+		(
+		SELECT
+		t.ContractDate
+		FROM
+		b_opportunity_trade t
+		WHERE
+		t.OpportunityClueId = ( SELECT OpportunityClueId FROM b_project_opportunity WHERE ProjectClueId = c.ProjectClueId )
+		and t.ClueStatus = '签约' and t.TradeStatus = '激活'
+		ORDER BY
+		t.ContractDate DESC
+		LIMIT 1
+		),
+		'%Y-%m-%d %H:%i:%s'
+		) AS ContractDate,
+		DATE_FORMAT(
+		(
+		CASE
+
+		WHEN now() &gt; c.BrokerCustomerExpiryDate and c.ClueStatus &lt;8 then c.BrokerCustomerExpiryDate
+		WHEN c.ClueStatus = 9 THEN
+		InvalidDate
+		END
+		),
+		'%Y-%m-%d %H:%i:%s'
+		) AS ExpireDate
+		FROM
+		b_project_clues c
+		WHERE
+		c.ReportUserID = #{ID}
+		<if test="CustomerName!=null and CustomerName!=''">
+			and c.CustomerName like '%${CustomerName}%'
+		</if>
+		<if test="CustomerMobile!=null and CustomerMobile!=''">
+			and c.CustomerMobile like '%${CustomerMobile}%'
+		</if>
+		order by c.ReportCreateTime desc) t
+	</select>
+	<!--获取经纪人修改日志-->
+	<select id="getBrokerUserEditLog" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.UserEdit">
+		select @rownum:=@rownum+1 as num,t.* from (select @rownum:=0) r,(
+		SELECT
+		EditField,
+		(case when EditField='性别' and BeforeChange=1 then '男'
+		when EditField='性别' and BeforeChange=2 then '女'
+		when EditField='性别' and BeforeChange='' then ''
+		else BeforeChange end) BeforeChange,
+		(case when EditField='性别' and AfterAlteration=1 then '男'
+		when EditField='性别' and AfterAlteration=2 then '女'
+		when EditField='性别' and AfterAlteration='' then ''
+		else AfterAlteration end) AfterAlteration,
+		DATE_FORMAT( CreateTime, '%Y-%m-%d %H:%i:%s' ) AS CreateTime
+		FROM
+		a_user_edit_log
+		WHERE
+		BrokerId = #{BrokerId}
+		<if test="EditField!=null and EditField!=''">
+			and EditField = #{EditField}
+		</if>
+		 order by CreateTime desc) t
+	</select>
+	<!--获取所有主项目-->
+	<select id="getProjectList" resultType="java.util.Map" parameterType="java.util.Map">
+		SELECT
+			p.ID,
+			p.ProjectName
+		FROM
+			a_city_project c
+				inner JOIN b_project p ON c.ProjectID = p.id and p.IsDel = 0
+		<where>
+			<if test="CityID!=null and CityID!=''">
+				and c.CityID = #{CityID}
+			</if>
+		</where>
+	</select>
+	<!--获取所有注册项目-->
+	<select id="getAllProject" resultType="java.util.Map">
+		SELECT
+			ID,
+			ProjectName
+		FROM
+			b_project
+		WHERE
+				ID IN ( SELECT RegistProject FROM a_broker_user WHERE RegistProject IS NOT NULL AND RegistProject != '' GROUP BY RegistProject )  and IsDel = 0;
+	</select>
+
+	<!--获取经纪人推荐信息根据openID-->
+	<select id="getExamineByOpenId" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			a.Name,
+			a.WeChatUserName,
+			ab.EmployeeName,
+			ab.UserName
+		FROM
+			a_broker_user a
+				LEFT JOIN b_account ab ON a.AccountId = ab.id
+		WHERE
+			a.OpenId = #{OpenId}
+			LIMIT 1;
+	</select>
+
+	<!--获取所有经纪人推荐信息根据openID-->
+	<select id="getExamineListByOpenId" parameterType="java.util.List" resultType="java.util.Map">
+		SELECT DISTINCT
+			a.Name,
+			a.WeChatUserName,
+			a.OpenId,
+			ab.EmployeeName,
+			ab.UserName
+		FROM
+			a_broker_user a
+				LEFT JOIN b_account ab ON a.AccountId = ab.id
+		WHERE
+			a.OpenId in
+			<foreach collection="openIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+	</select>
+
+	<!--获取经纪人推荐信息根据海报ID-->
+	<select id="getExamineByHBID" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+		    a.Name,
+			a.WeChatUserName,
+			ab.EmployeeName,
+			ab.UserName
+		FROM
+			a_broker_user a
+				LEFT JOIN a_book_poster b ON a.OpenId = b.OpenId
+				LEFT JOIN b_account ab ON b.AccountId = ab.id
+		WHERE
+			b.id = #{OpenId}
+			LIMIT 1
+	</select>
+	<select id="getNewsById" resultType="java.lang.String" parameterType="java.lang.String">
+		select Title
+		from a_news where id = #{id}
+	</select>
+	<select id="getBuildBookById" resultType="java.lang.String" parameterType="java.lang.String">
+		select ProjectShowName from a_build_book where id = #{id}
+	</select>
+
+	<select id="getCityById" resultType="java.lang.String" parameterType="java.lang.String">
+		select CityName from a_city where id = #{id}
+	</select>
+
+	<select id="getActivityById" resultType="java.lang.String" parameterType="java.lang.String">
+		select activity_name from a_activity_info
+		where id = #{id}
+	</select>
+
+	<select id="getActivityPosterById" resultType="java.lang.String" parameterType="java.lang.String">
+		select b.activity_name from a_book_poster p INNER JOIN a_activity_info b on p.ActivityId = b.id
+		where p.id = #{id}
+	</select>
+
+	<select id="getBuildBookPosterById" resultType="java.lang.String" parameterType="java.lang.String">
+		select b.ProjectShowName from a_book_poster p
+			INNER JOIN a_build_book b on p.BookId = b.id
+		where p.id = #{id}
+	</select>
+
+	<select id="getCardPosterById" resultType="java.lang.String" parameterType="java.lang.String">
+		select ba.UserName from a_book_poster p
+									INNER JOIN c_user_card c on p.CardId = c.id
+									INNER JOIN b_account ba on ba.id = c.account_id
+		where p.id = #{id}
+	</select>
+
+	<select id="getUserNameByCardId" resultType="java.lang.String" parameterType="java.lang.String">
+		select ba.UserName from c_user_card c
+			INNER JOIN b_account ba on ba.id = c.account_id
+		where c.id = #{id}
+	</select>
+
+	<!--查询用户开户行信息-->
+	<select id="getUserCardList" parameterType="java.lang.String" resultType="java.util.Map">
+		select id,FID fid,FNUMBER fnumber,FNAME fname,
+			   concat('**** **** **** ',right(card_no,4)) cardNo,
+			   card_user_name cardName,
+			   (case when is_authentication = 1 then '是' else '否' end) isAuthentication
+		from a_broker_user_card where broker_id = #{brokerId} and isdel = 0
+	</select>
+	<select id="getDKHActivityById" parameterType="java.lang.String" resultType="java.lang.String">
+		select activename from a_accountactive where id = #{id} and isdel = 0
+	</select>
+	<select id="getLPDTById" parameterType="java.lang.String" resultType="java.lang.String">
+		select build_dynamic_name from a_build_book_dynamic where id = #{id} and is_del = 0
+	</select>
+	<!--获取项目区域-->
+	<select id="getOrgIdsByPros" parameterType="java.util.List" resultType="java.lang.String">
+		select DISTINCT AreaID from b_project
+		where id in (
+		  <foreach collection="proIds" item="item" separator=",">
+			  #{item}
+		  </foreach>
+			);
+	</select>
+	<!--获取落地页-->
+	<select id="getExtenJumpTo" parameterType="java.lang.String" resultType="java.lang.String">
+		select JumpToName from a_extension where ID = #{id};
+	</select>
+	<!--获取落地页(户型)-->
+	<select id="getBuildHouseById"  parameterType="java.lang.String" resultType="java.lang.String">
+		select HouseBigType from a_build_book_warehouse where ID = #{id};
+	</select>
+
+	<update id="addblacklist" parameterType="java.lang.String">
+		update s_company_info set isBlock = #{type}
+        where ID = #{id}
+	</update>
+
+	<update id="channelAudit" parameterType="java.util.Map">
+		update s_company_info_examine
+		set examineStatus = #{examineStatus},
+		    <if test="rejectionReason!=null and rejectionReason!=''">
+				rejectionReason = #{rejectionReason},
+			</if>
+		    examineUser = #{examineUser},
+		    examineTime = now()
+		where ID = #{id}
+	</update>
+
+	<select id="channelRegistration" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.ChannelRegistration">
+		SELECT
+			( CASE WHEN companyAttr = '1' THEN '个人' ELSE '公司' END ) companyAttr,
+			ID id,
+			companyName,
+			createTime,
+			handler,
+			( CASE WHEN examineStatus = '1' THEN '待审核' WHEN examineStatus = '2' THEN '审核通过' WHEN examineStatus = '3' THEN '拒绝' ELSE '' END ) examineStatus,
+			rejectionReason
+		FROM
+			s_company_info_examine
+        where 1=1
+            <if test="name!=null and name!=''">
+             and companyName like '%${name}%'
+			</if>
+			<if test="status!=null and status!=''">
+				and examineStatus = #{status}
+			</if>
+	</select>
+
+	<select id="channelManagement" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.ChannelRegistration">
+		SELECT
+		( CASE WHEN com.companyAttr = '1' THEN '个人' ELSE '公司' END ) companyAttr,
+		com.ID id,
+		com.companyName,
+		com.createTime,
+		com.handler,
+		com.companyCode,
+		( CASE WHEN com.isBlock = '1' THEN '是' ELSE '否' END ) isBlock,
+		con.contract_name contractName,
+		con.id contractId,
+		(case when now() BETWEEN con.start_time and con.end_time then '有效' else '无效' end ) contractStatus,
+		con.create_time conCreateTime
+		FROM
+		s_company_info com
+		left join a_broker_user_contract con on com.ID = con.companyId
+		where 1=1
+		  <if test="proIds!=null and proIds.size()>0">
+			  and con.id in (select contract_id from a_broker_user_contract_pro where project_id in (
+			    <foreach collection="proIds" item="item" separator=",">
+					#{item}
+				</foreach>
+			  ))
+		  </if>
+		<if test="name!=null and name!=''">
+			and com.companyName like '%${name}%'
+		</if>
+		<if test="companyCode!=null and companyCode!=''">
+			and com.companyCode like '%${companyCode}%'
+		</if>
+		<if test="isBlock!=null and isBlock!=''">
+			and com.isBlock = #{isBlock}
+		</if>
+		<if test="contractStatus!=null and contractStatus=='1'.toString()">
+			and now() BETWEEN con.start_time and con.end_time
+		</if>
+		<if test="contractStatus!=null and contractStatus=='2'.toString()">
+			and (con.start_time is null or con.end_time is null or now() &lt; con.start_time or now() &gt; con.end_time)
+		</if>
+		ORDER BY com.id,con.create_time desc
+
+	</select>
+
+	<select id="channelDetail2" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.ChannelRegistration">
+		SELECT
+			( CASE WHEN companyAttr = '1' THEN '个人' ELSE '公司' END ) companyAttr,
+			ID id,
+			companyName,
+			createTime,
+			handler,
+			handlerCardNo,
+			handleMobile,
+			legalPerson,
+			legalCardNo,
+			companyAddress,
+			legalCardPortraitUrl,
+			legalCardEmblemUrl,
+			businessLicenseUrl,
+			handlerCardPortraitUrl,
+			handlerCardEmblemUrl,
+			bankCardNo,
+			bankCardUserName,
+			bankOfDeposit,
+			valueAddedTaxRate,
+			creditCode,
+			qualification,
+			incorporationTime,
+			companyMobile
+		FROM
+			s_company_info_examine
+		where ID = #{id}
+	</select>
+
+	<select id="channelDetail1" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.ChannelRegistration">
+		SELECT
+			( CASE WHEN companyAttr = '1' THEN '个人' ELSE '公司' END ) companyAttr,
+			ID id,
+			companyName,
+			createTime,
+			handler,
+			handlerCardNo,
+			handleMobile,
+			legalPerson,
+			legalCardNo,
+			companyAddress,
+			legalCardPortraitUrl,
+			legalCardEmblemUrl,
+			businessLicenseUrl,
+			handlerCardPortraitUrl,
+			handlerCardEmblemUrl,
+			bankCardNo,
+			bankCardUserName,
+			bankOfDeposit,
+			valueAddedTaxRate,
+			creditCode,
+			qualification,
+			incorporationTime,
+			companyMobile,
+			companyCode
+		FROM
+			s_company_info
+		where ID = #{id}
+	</select>
+
+	<select id="getChannelContracts" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.ChannelContract">
+		select t.projectNames proNames,con.contract_url contractUrl,
+			   con.start_time startTime,(case when con.contract_status = '1' then '待审批'
+											  when con.contract_status = '2' then '审批通过'
+											  when con.contract_status = '3' then '驳回' else '' end) contractStatus,
+			   con.end_time endTime,con.contract_no contractNo
+		from a_broker_user_contract con
+				 INNER JOIN (
+				select GROUP_CONCAT(bp.ProjectName) projectNames,uu.contract_id
+				from a_broker_user_contract_pro uu
+						 INNER JOIN b_project bp on bp.id = uu.project_id
+				group by uu.contract_id
+			) t on t.contract_id = con.id
+        where companyId = #{id}
+	</select>
+</mapper>

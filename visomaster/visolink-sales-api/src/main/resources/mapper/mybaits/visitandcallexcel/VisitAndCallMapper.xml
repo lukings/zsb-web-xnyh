@@ -1,0 +1,907 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.visitandcallexcel.dao.VisitAndCallExcelDao">
+
+    <!--查询项目名称，区域名称-->
+    <select id="getProjectNameList" resultType="java.util.Map" parameterType="java.util.Map">
+        select projectName,areaName from b_project
+        where id in (${projectId})
+    </select>
+
+    <!--新访统计台账-->
+    <select id="getExcelNewVisitList" resultType="cn.visolink.system.visitandcallexcel.model.ExcelModelVisitAndCall" parameterType="java.util.Map">
+        select t.number,t.areaName,t.projectName,t.opportunityClueId,t.actualVisitsCount,t.customerName,t.customerLB,
+               t.sourceTypeDesc,t.mainMediaName,t.subMediaName,t.performanceAttributor,t.clueStatus,
+               t.visitDate,t.customerMobile,t.salesAttributionName from (
+        select proj.areaName,proj.projectName,oppo.opportunityClueId,ifnull(oppo.ActualVisitsCount,1) actualVisitsCount,
+        oppo.customerName,'新访' as 'customerLB',oppo.SourceTypeOldDesc as sourceTypeDesc,oppo.mainMediaName,oppo.subMediaName,
+        (CASE oppo.SourceTypeOld
+        WHEN '1' THEN oppo.PerformanceAttributor
+        WHEN '2' THEN oppo.ReportUserName
+        WHEN '3' THEN '' END) performanceAttributor,
+        (CASE oppo.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus ,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number,
+        DATE_FORMAT(oppo.theFirstVisitDate,'%Y-%m-%d %H:%i') as visitDate,oppo.salesAttributionName,
+        <if test="statusCode!=null and statusCode=='complete'.toString()">
+            oppo.customerMobile
+        </if>
+        <if test="statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (oppo.customerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        from b_project_opportunity oppo
+        inner join b_project proj on proj.id=oppo.projectId
+        where projectId in (${projectId}) and IsRepurchase=0
+        <if test="beginTime!=null  and endTime!=null ">
+            and TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName != null and saleName != ''">
+            and SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and CustomerMobile like CONCAT('%',#{customerMobile},'%')
+        </if>) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+        order by t.visitDate desc
+    </select>
+
+    <!--复访统计台账-->
+    <select id="getExcelOldVisitList" resultType="cn.visolink.system.visitandcallexcel.model.ExcelModelVisitAndCall" parameterType="java.util.Map">
+        select t.number,t.areaName,t.projectName,t.opportunityClueId,t.actualVisitsCount,t.customerName,t.customerLB,t.sourceTypeDesc,t.mainMediaName,
+        t.subMediaName,t.performanceAttributor,t.clueStatus,t.visitDate,t.salesAttributionName,t.customerMobile from (
+        select proj.areaName,proj.projectName,oppo.opportunityClueId,ifnull(bre.visitAgainCount,1) actualVisitsCount,
+        oppo.customerName,'复访' as 'customerLB',oppo.SourceTypeOldDesc as sourceTypeDesc,oppo.mainMediaName,oppo.subMediaName,
+        (CASE oppo.SourceTypeOld
+        WHEN '1' THEN oppo.PerformanceAttributor
+        WHEN '2' THEN oppo.ReportUserName
+        WHEN '3' THEN '' END) performanceAttributor,
+        (CASE oppo.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number,
+        DATE_FORMAT(bre.reVisitRecordTime,'%Y-%m-%d %H:%i') as visitDate,oppo.salesAttributionName,
+            <if test="statusCode!=null and statusCode=='complete'.toString()">oppo.customerMobile
+            </if>
+            <if test="
+        statusCode!=null and statusCode=='hidden'.toString()">
+                INSERT (oppo.customerMobile, 4, 4, '****') AS customerMobile
+            </if>
+            from b_re_visit_record bre
+            inner join b_project_opportunity oppo on bre.OpportunityClueId=oppo.OpportunityClueId
+            inner join b_project proj on proj.id=oppo.projectId
+            where oppo.projectId in (${projectId})
+            <if test="beginTime!=null and endTime!=null">
+                and bre.reVisitRecordTime BETWEEN #{beginTime} and #{endTime}
+            </if>
+            <if test="saleName != null and saleName != ''">
+                and oppo.SalesAttributionName like CONCAT('%',#{saleName},'%')
+            </if>
+            <if test="customerName != null and customerName != ''">
+                and oppo.CustomerName like CONCAT('%',#{customerName},'%')
+            </if>
+            <if test="customerMobile != null and customerMobile != ''">
+                and oppo.CustomerMobile like CONCAT('%',#{customerMobile},'%')
+            </if>
+        ) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+        order by t.visitDate desc
+    </select>
+
+    <!--来访统计台账-->
+    <select id="getExcelAllVisitList" resultType="cn.visolink.system.visitandcallexcel.model.ExcelModelVisitAndCall" parameterType="java.util.Map">
+        select t.number,t.areaName,t.projectName,t.opportunityClueId,t.actualVisitsCount,t.customerName,t.customerLB,t.sourceTypeDesc,t.mainMediaName,
+        t.subMediaName,t.performanceAttributor,t.clueStatus,t.visitDate,t.salesAttributionName,t.customerMobile from (
+        select proj.areaName,proj.projectName,oppo.opportunityClueId,ifnull(oppo.ActualVisitsCount,1) actualVisitsCount,
+        oppo.customerName,'新访' as 'customerLB',oppo.SourceTypeOldDesc as sourceTypeDesc,oppo.mainMediaName,oppo.subMediaName,
+        (CASE oppo.SourceTypeOld
+        WHEN '1' THEN oppo.PerformanceAttributor
+        WHEN '2' THEN oppo.ReportUserName
+        WHEN '3' THEN '' END) performanceAttributor,
+        (CASE oppo.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus ,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number,
+        DATE_FORMAT(oppo.theFirstVisitDate,'%Y-%m-%d %H:%i') as visitDate,oppo.salesAttributionName,
+        <if test="statusCode!=null and statusCode=='complete'.toString()">oppo.customerMobile
+        </if>
+        <if test="
+        statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (oppo.customerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        from b_project_opportunity oppo
+        inner join b_project proj on proj.id=oppo.projectId
+        where projectId in (${projectId}) and IsRepurchase=0
+        <if test="beginTime!=null  and endTime!=null ">
+            and TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+        </if>
+        <if test="saleName != null and saleName != ''">
+            and SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and CustomerMobile like CONCAT('%',#{customerMobile},'%')
+        </if>
+        union all
+        select proj.areaName,proj.projectName,oppo.opportunityClueId,ifnull(bre.visitAgainCount,1) actualVisitsCount,
+        oppo.customerName,'复访' as 'customerLB',oppo.SourceTypeOldDesc as sourceTypeDesc,oppo.mainMediaName,oppo.subMediaName,
+        (CASE oppo.SourceTypeOld
+        WHEN '1' THEN oppo.PerformanceAttributor
+        WHEN '2' THEN oppo.ReportUserName
+        WHEN '3' THEN '' END) performanceAttributor,
+        (CASE oppo.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number,
+        DATE_FORMAT(bre.reVisitRecordTime,'%Y-%m-%d %H:%i') as visitDate,oppo.salesAttributionName,
+        <if test="statusCode!=null and statusCode=='complete'.toString()">
+            oppo.customerMobile
+        </if>
+        <if test="statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (oppo.customerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        from b_re_visit_record bre
+        inner join b_project_opportunity oppo on bre.OpportunityClueId=oppo.OpportunityClueId
+        inner join b_project proj on proj.id=oppo.projectId
+        where oppo.projectId in (${projectId})
+        <if test="beginTime!=null  and endTime!=null ">
+            and bre.reVisitRecordTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName != null and saleName != ''">
+            and oppo.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and oppo.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and oppo.CustomerMobile like CONCAT('%',#{customerMobile},'%')
+        </if>
+        ) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+        order by t.visitDate desc
+    </select>
+
+    <!--来电统计台账-->
+    <select id="getExcelComeCallList" resultType="cn.visolink.system.visitandcallexcel.model.ExcelModelVisitAndCall" parameterType="java.util.Map">
+        SELECT clue.customerName,DATE_FORMAT( rec.followUpDate,'%Y-%m-%d %H:%i') as followUpDate,ifnull(clue.salesAttributionName,'无归属') as saleName,
+        proj.projectName,proj.areaName,clue.mainMediaName,clue.subMediaName,
+        (CASE clue.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus ,
+        '新客' as 'customerLB','来电' as 'followUpWay',
+        <if test="statusCode!=null and statusCode=='complete'.toString()">
+            clue.CustomerMobile AS customerMobile
+        </if>
+        <if test="statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (clue.CustomerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        FROM b_followup_record rec
+        INNER JOIN b_project proj ON proj.id = rec.projectId
+        inner join b_project_clues clue   ON clue.ProjectClueId = rec.ProjectClueId
+        AND clue.IsRepurchase = 0
+        AND clue.ReportCreateTime = rec.FollowUpDate
+        WHERE rec.FollowUpWay = '200101' AND clue.ProjectID in (${projectId})
+        <if test="beginTime!=null  and endTime!=null ">
+            AND clue.ReportCreateTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName!=null and saleName!=''">
+            and clue.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and clue.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and clue.CustomerMobile like CONCAT('%',#{customerMobile},'%')
+        </if>
+        order by clue.ReportCreateTime desc
+    </select>
+
+    <!--去电统计台账-->
+    <select id="getExcelGoCallList" resultType="cn.visolink.system.visitandcallexcel.model.ExcelModelVisitAndCall" parameterType="java.util.Map">
+        SELECT clue.customerName, DATE_FORMAT( rec.followUpDate,'%Y-%m-%d %H:%i') as followUpDate,ifnull(clue.salesAttributionName,'无归属')  as saleName,
+        proj.projectName,proj.areaName,clue.mainMediaName,clue.subMediaName,
+        (CASE clue.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus ,
+        '新客' as 'customerLB','去电' as 'followUpWay',
+        <if test="statusCode!=null and statusCode=='complete'.toString()">
+            clue.CustomerMobile AS customerMobile
+        </if>
+        <if test="statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (clue.CustomerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        FROM b_followup_record rec
+        INNER JOIN b_project proj ON proj.id = rec.projectId
+        INNER JOIN b_project_clues clue ON clue.ProjectClueId = rec.ProjectClueId
+        AND clue.IsRepurchase = 0
+        AND clue.ReportCreateTime = rec.FollowUpDate
+        WHERE rec.FollowUpWay = '200102' AND clue.ProjectID in (${projectId})
+        <if test="beginTime!=null  and endTime!=null ">
+            AND clue.ReportCreateTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName!=null and saleName!=''">
+            and clue.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and clue.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and clue.CustomerMobile like CONCAT('%',#{customerMobile},'%')
+        </if>
+        order by clue.ReportCreateTime desc
+    </select>
+
+    <!--查询新访台账-->
+    <select id="getNewVisitList" resultType="java.util.Map" parameterType="java.util.Map">
+        select t.number,t.areaName,t.projectName,t.opportunityClueId,t.actualVisitsCount,t.customerName,t.customerLB,t.sourceTypeDesc,t.mainMediaName,
+        t.subMediaName,t.performanceAttributor,t.clueStatus,t.visitDate,t.salesAttributionName,t.customerMobile from (
+        select proj.areaName,proj.projectName,oppo.opportunityClueId,ifnull(oppo.ActualVisitsCount,1) actualVisitsCount,
+        oppo.customerName,'新访' as 'customerLB',oppo.SourceTypeOldDesc as sourceTypeDesc,oppo.mainMediaName,oppo.subMediaName,
+        (CASE oppo.SourceTypeOld
+        WHEN '1' THEN oppo.PerformanceAttributor
+        WHEN '2' THEN oppo.ReportUserName
+        WHEN '3' THEN '' END) performanceAttributor,
+        (CASE oppo.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus ,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number,
+        DATE_FORMAT(oppo.theFirstVisitDate,'%Y-%m-%d %H:%i') as visitDate,oppo.salesAttributionName,
+        <if test="statusCode!=null and statusCode=='complete'.toString()">
+            oppo.customerMobile
+        </if>
+        <if test="statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (oppo.customerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        from b_project_opportunity oppo
+        inner join b_project proj on proj.id=oppo.projectId
+        where projectId in (${projectId}) and IsRepurchase=0
+        <if test="beginTime!=null  and endTime!=null ">
+            and TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName != null and saleName != ''">
+            and SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and CustomerMobile ${customerMobile}
+        </if>) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+        order by t.visitDate desc
+        limit #{index},#{size}
+    </select>
+
+    <!--查询复访台账-->
+    <select id="getOldVisitList" resultType="java.util.Map" parameterType="java.util.Map">
+        select t.number,t.areaName,t.projectName,t.opportunityClueId,t.actualVisitsCount,t.customerName,t.customerLB,t.sourceTypeDesc,t.mainMediaName,
+        t.subMediaName,t.performanceAttributor,t.clueStatus,t.visitDate,t.salesAttributionName,t.customerMobile from (
+        select proj.areaName,proj.projectName,oppo.opportunityClueId,ifnull(bre.visitAgainCount,1) actualVisitsCount,
+        oppo.customerName,'复访' as 'customerLB',oppo.SourceTypeOldDesc as sourceTypeDesc,oppo.mainMediaName,oppo.subMediaName,
+        (CASE oppo.SourceTypeOld
+        WHEN '1' THEN oppo.PerformanceAttributor
+        WHEN '2' THEN oppo.ReportUserName
+        WHEN '3' THEN '' END) performanceAttributor,
+        (CASE oppo.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number,
+        DATE_FORMAT(bre.reVisitRecordTime,'%Y-%m-%d %H:%i') as visitDate,oppo.salesAttributionName,
+        <if test="statusCode!=null and statusCode=='complete'.toString()">oppo.customerMobile
+        </if>
+        <if test="
+        statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (oppo.customerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        from b_re_visit_record bre
+        inner join b_project_opportunity oppo on bre.OpportunityClueId=oppo.OpportunityClueId
+        inner join b_project proj on proj.id=oppo.projectId
+        where oppo.projectId in (${projectId})
+        <if test="beginTime!=null and endTime!=null">
+            and bre.reVisitRecordTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+        <if test="saleName != null and saleName != ''">
+            and oppo.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and oppo.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and oppo.CustomerMobile ${customerMobile}
+        </if>
+        ) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+        order by t.visitDate desc
+        limit #{index},#{size}
+    </select>
+
+    <!--查询来访台账-->
+    <select id="getAllVisitList" resultType="java.util.Map" parameterType="java.util.Map">
+        select t.number,t.areaName,t.projectName,t.opportunityClueId,t.actualVisitsCount,t.customerName,t.customerLB,t.sourceTypeDesc,t.mainMediaName,
+        t.subMediaName,t.performanceAttributor,t.clueStatus,t.visitDate,t.salesAttributionName,t.customerMobile from (
+        select proj.areaName,proj.projectName,oppo.opportunityClueId,ifnull(oppo.ActualVisitsCount,1) actualVisitsCount,
+        oppo.customerName,'新访' as 'customerLB',oppo.SourceTypeOldDesc as sourceTypeDesc,oppo.mainMediaName,oppo.subMediaName,
+        (CASE oppo.SourceTypeOld
+        WHEN '1' THEN oppo.PerformanceAttributor
+        WHEN '2' THEN oppo.ReportUserName
+        WHEN '3' THEN '' END) performanceAttributor,
+        (CASE oppo.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus ,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number,
+        DATE_FORMAT(oppo.theFirstVisitDate,'%Y-%m-%d %H:%i') as visitDate,oppo.salesAttributionName,
+            <if test="statusCode!=null and statusCode=='complete'.toString()">oppo.customerMobile
+            </if>
+            <if test="
+        statusCode!=null and statusCode=='hidden'.toString()">
+                INSERT (oppo.customerMobile, 4, 4, '****') AS customerMobile
+            </if>
+            from b_project_opportunity oppo
+            inner join b_project proj on proj.id=oppo.projectId
+            where projectId in (${projectId}) and IsRepurchase=0
+            <if test="beginTime!=null  and endTime!=null ">
+                and TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+            </if>
+
+            <if test="saleName != null and saleName != ''">
+                and SalesAttributionName like CONCAT('%',#{saleName},'%')
+            </if>
+            <if test="customerName != null and customerName != ''">
+                and CustomerName like CONCAT('%',#{customerName},'%')
+            </if>
+            <if test="customerMobile != null and customerMobile != ''">
+                and oppo.CustomerMobile ${customerMobile}
+            </if>
+            union all
+            select proj.areaName,proj.projectName,oppo.opportunityClueId,ifnull(bre.visitAgainCount,1) actualVisitsCount,
+            oppo.customerName,'复访' as 'customerLB',oppo.SourceTypeOldDesc as sourceTypeDesc,oppo.mainMediaName,oppo.subMediaName,
+            (CASE oppo.SourceTypeOld
+            WHEN '1' THEN oppo.PerformanceAttributor
+            WHEN '2' THEN oppo.ReportUserName
+            WHEN '3' THEN '' END) performanceAttributor,
+            (CASE oppo.clueStatus
+            WHEN '1' THEN '未到访'
+            WHEN '2' THEN '已到访'
+            WHEN '3' THEN '排小卡'
+            WHEN '4' THEN '排大卡'
+            WHEN '5' THEN '订房'
+            WHEN '6' THEN '认筹'
+            WHEN '7' THEN '认购'
+            WHEN '8' THEN '签约'
+            WHEN '9' THEN '作废'
+            END) clueStatus,
+            (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number,
+            DATE_FORMAT(bre.reVisitRecordTime,'%Y-%m-%d %H:%i') as visitDate,oppo.salesAttributionName,
+            <if test="statusCode!=null and statusCode=='complete'.toString()">
+                oppo.customerMobile
+            </if>
+            <if test="statusCode!=null and statusCode=='hidden'.toString()">
+                INSERT (oppo.customerMobile, 4, 4, '****') AS customerMobile
+            </if>
+            from b_re_visit_record bre
+            inner join b_project_opportunity oppo on bre.OpportunityClueId=oppo.OpportunityClueId
+            inner join b_project proj on proj.id=oppo.projectId
+            where oppo.projectId in (${projectId})
+            <if test="beginTime!=null  and endTime!=null ">
+                and bre.reVisitRecordTime BETWEEN #{beginTime} and #{endTime}
+            </if>
+
+            <if test="saleName != null and saleName != ''">
+                and oppo.SalesAttributionName like CONCAT('%',#{saleName},'%')
+            </if>
+            <if test="customerName != null and customerName != ''">
+                and oppo.CustomerName like CONCAT('%',#{customerName},'%')
+            </if>
+            <if test="customerMobile != null and customerMobile != ''">
+                and oppo.CustomerMobile ${customerMobile}
+            </if>
+        ) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+        order by t.visitDate desc
+        limit #{index},#{size}
+    </select>
+
+    <!--查询来电台账-->
+    <select id="getComeCallList" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT clue.customerName,DATE_FORMAT( rec.followUpDate,'%Y-%m-%d %H:%i') as followUpDate,ifnull(clue.salesAttributionName,'无归属') as saleName,
+        proj.projectName,proj.areaName,clue.mainMediaName,clue.subMediaName,
+        (CASE clue.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus ,
+        '新客' as 'customerLB','来电' as 'followUpWay',
+        <if test="statusCode!=null and statusCode=='complete'.toString()">
+            clue.CustomerMobile AS customerMobile
+        </if>
+        <if test="statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (clue.CustomerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        FROM b_followup_record rec
+        INNER JOIN b_project proj ON proj.id = rec.projectId
+        inner join b_project_clues clue   ON clue.ProjectClueId = rec.ProjectClueId AND clue.IsRepurchase = 0
+        AND clue.ReportCreateTime = rec.FollowUpDate
+        WHERE rec.FollowUpWay = '200101' AND clue.ProjectID in (${projectId})
+        and rec.FollowUpType = 1
+        <if test="beginTime!=null  and endTime!=null ">
+            AND clue.ReportCreateTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName!=null and saleName!=''">
+            and clue.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and clue.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and clue.CustomerMobile ${customerMobile}
+        </if>
+        order by clue.ReportCreateTime desc
+        limit #{index},#{size}
+    </select>
+
+    <!--查询去电台账-->
+    <select id="getGoCallList" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT clue.customerName, DATE_FORMAT( rec.followUpDate,'%Y-%m-%d %H:%i') as followUpDate,ifnull(clue.salesAttributionName,'无归属')  as saleName,
+        proj.projectName,proj.areaName,clue.mainMediaName,clue.subMediaName,
+        (CASE clue.clueStatus
+        WHEN '1' THEN '未到访'
+        WHEN '2' THEN '已到访'
+        WHEN '3' THEN '排小卡'
+        WHEN '4' THEN '排大卡'
+        WHEN '5' THEN '订房'
+        WHEN '6' THEN '认筹'
+        WHEN '7' THEN '认购'
+        WHEN '8' THEN '签约'
+        WHEN '9' THEN '作废'
+        END) clueStatus ,
+        '新客' as 'customerLB','去电' as 'followUpWay',
+        <if test="statusCode!=null and statusCode=='complete'.toString()">
+            clue.CustomerMobile AS customerMobile
+        </if>
+        <if test="statusCode!=null and statusCode=='hidden'.toString()">
+            INSERT (clue.CustomerMobile, 4, 4, '****') AS customerMobile
+        </if>
+        FROM  b_followup_record rec
+        INNER JOIN b_project proj ON proj.id = rec.projectId
+        INNER JOIN b_project_clues clue ON clue.ProjectClueId = rec.ProjectClueId
+        AND clue.IsRepurchase = 0
+        AND clue.ReportCreateTime = rec.FollowUpDate
+        WHERE rec.FollowUpWay = '200102' AND clue.ProjectID in (${projectId})
+        and rec.FollowUpType = 1
+        <if test="beginTime!=null  and endTime!=null ">
+            AND clue.ReportCreateTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName!=null and saleName!=''">
+            and clue.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and clue.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and clue.CustomerMobile ${customerMobile}
+        </if>
+        order by clue.ReportCreateTime desc
+        limit #{index},#{size}
+    </select>
+
+    <!--获取新访的总数-->
+    <select id="getNewVisitCount" resultType="int" parameterType="java.util.Map">
+        select count(*) from (
+        select opportunityClueId,
+        (case when IsRepurchase != 1 and VisitNumber = 0 then 1 else VisitNumber end) as number
+        from b_project_opportunity
+        where projectId in (${projectId}) and IsRepurchase=0
+        <if test="beginTime!=null  and endTime!=null ">
+            and TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName != null and saleName != ''">
+            and SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and CustomerMobile ${customerMobile}
+        </if>) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+    </select>
+
+    <!--获取复访的总数-->
+    <select id="getOldVisitCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+        select count(*) from (
+        select oppo.opportunityClueId,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number
+        from b_re_visit_record bre
+        inner join b_project_opportunity oppo on bre.OpportunityClueId=oppo.OpportunityClueId
+        where oppo.projectId in (${projectId})
+        <if test="beginTime!=null  and endTime!=null ">
+            and bre.reVisitRecordTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName != null and saleName != ''">
+            and oppo.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and oppo.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and oppo.CustomerMobile ${customerMobile}
+        </if>
+        ) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+    </select>
+
+    <!--获取来访的总数-->
+    <select id="getAllVisitCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+        select count(*) from (
+        select oppo.opportunityClueId,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number
+        from b_project_opportunity oppo
+        where oppo.projectId in (${projectId}) and oppo.IsRepurchase=0
+        <if test="beginTime!=null and endTime!=null">
+            and TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName != null and saleName != ''">
+            and SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and CustomerMobile ${customerMobile}
+        </if>
+        union all
+        select oppo.opportunityClueId,
+        (case when oppo.IsRepurchase != 1 and oppo.VisitNumber = 0 then 1 else oppo.VisitNumber end) as number
+        from b_re_visit_record bre
+        inner join b_project_opportunity oppo on bre.OpportunityClueId=oppo.OpportunityClueId
+        where oppo.projectId in (${projectId})
+        <if test="beginTime!=null  and endTime!=null ">
+            and bre.reVisitRecordTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName != null and saleName != ''">
+            and oppo.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and oppo.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and oppo.CustomerMobile ${customerMobile}
+        </if>
+        ) t
+        where 1=1
+        <if test="max != null and min != null">
+            <if test="max == 0">
+                and t.number &gt;= #{min}
+            </if>
+            <if test="max != 0">
+                and t.number &gt;= #{min} and t.number &lt;= #{max}
+            </if>
+        </if>
+    </select>
+
+    <!--获取来电的总数-->
+    <select id="getComeCallCount" resultType="int" parameterType="java.util.Map">
+        SELECT count(*) number
+        FROM b_followup_record rec
+        INNER JOIN b_project proj ON proj.id = rec.projectId
+        inner join b_project_clues clue   ON clue.ProjectClueId = rec.ProjectClueId AND clue.IsRepurchase = 0
+        AND clue.ReportCreateTime = rec.FollowUpDate
+        WHERE rec.FollowUpWay = '200101' AND clue.ProjectID in (${projectId})
+        and rec.FollowUpType = 1
+        <if test="beginTime!=null  and endTime!=null ">
+            AND clue.ReportCreateTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName!=null and saleName!=''">
+            and clue.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and clue.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and clue.CustomerMobile ${customerMobile}
+        </if>
+    </select>
+
+    <!--获取去电的总数-->
+    <select id="getGoCallCount" resultType="int" parameterType="java.util.Map">
+        SELECT count(*) number
+        FROM  b_followup_record rec
+        INNER JOIN b_project proj ON proj.id = rec.projectId
+        INNER JOIN b_project_clues clue ON clue.ProjectClueId = rec.ProjectClueId
+        AND clue.IsRepurchase = 0
+        AND clue.ReportCreateTime = rec.FollowUpDate
+        WHERE rec.FollowUpWay = '200102' AND clue.ProjectID in (${projectId})
+        and rec.FollowUpType = 1
+        <if test="beginTime!=null  and endTime!=null ">
+            AND clue.ReportCreateTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+
+        <if test="saleName!=null and saleName!=''">
+            and clue.SalesAttributionName like CONCAT('%',#{saleName},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and clue.CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and clue.CustomerMobile ${customerMobile}
+        </if>
+    </select>
+
+    <!--查询判客结果-->
+    <select id="getReceptionCustomerInfoList" resultType="cn.visolink.system.visitandcallexcel.model.ExcelModelVisitAndCall" parameterType="java.util.Map">
+        select bpc.customerName,bpc.SourceTypeOld as sourceType,bpc.reportUserID,bpc.projectName,
+        <if test="mobileCode != null and mobileCode != '' and mobileCode == 'hidden'.toString">
+            INSERT (bpc.CustomerMobile, 4, 4, '****') AS customerMobile,
+        </if>
+        <if test="mobileCode != null and mobileCode != '' and mobileCode == 'full'.toString">
+            bpc.customerMobile,
+        </if>
+        (CASE bpc.SourceTypeOld
+            WHEN '1' THEN bpc.PerformanceAttributorOld
+            ELSE bpc.reportUserName END) reportUserName,
+        bpc.SourceTypeOldDesc as sourceTypeDesc,
+        (CASE bpc.clueStatus
+            WHEN '1' THEN '未到访'
+            WHEN '2' THEN '已到访'
+            WHEN '3' THEN '排小卡'
+            WHEN '4' THEN '排大卡'
+            WHEN '5' THEN '订房'
+            WHEN '6' THEN '认筹'
+            WHEN '7' THEN '认购'
+            WHEN '8' THEN '签约'
+            WHEN '9' THEN '作废' END) clueStatus,
+        bpc.salesAttributionName,
+        DATE_FORMAT(bpc.reportCreateTime,'%Y-%m-%d %H:%i:%s') as reportCreateTime,
+        DATE_FORMAT(bpc.TheFirstVisitDate,'%Y-%m-%d %H:%i:%s') as theFirstVisitDate,
+        (CASE bpc.SourceTypeOld
+            WHEN '1' THEN DATE_FORMAT(bpc.LastRefreshReportExpireDate,'%Y-%m-%d %H:%i:%s')
+            ELSE DATE_FORMAT(bpc.SalesTheLatestFollowDate,'%Y-%m-%d %H:%i:%s') END) lastRefTime,
+        DATE_FORMAT(bpc.ReportExpireDate,'%Y-%m-%d %H:%i:%s') as reportExpireDate,
+        DATE_FORMAT(bpc.TokerVisitExpireDate,'%Y-%m-%d %H:%i:%s') as tokerVisitExpireDate,
+        (CASE bpc.clueStatus
+            WHEN '9' THEN '失败'
+            ELSE '成功' END) resultCode,
+        bpc.invalidReason,
+        bpc.reportTeamId,
+        DATE_FORMAT(bpc.InvalidDate,'%Y-%m-%d %H:%i:%s') as invalidDate,
+        coe.InterceptionTime as guestTime
+        from  b_project_clues bpc
+        inner join b_clue_opportunity_extend coe on bpc.ProjectClueId = coe.ProjectClueId
+        where projectId = #{projectId}
+        <if test="beginTime != null  and endTime != null and randCode == 'report'.toString()">
+            AND ReportCreateTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+        <if test="beginTime != null  and endTime != null and randCode == 'visit'.toString()">
+            AND TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+        </if>
+        <if test="reportName != null and reportName != ''">
+            and (ReportUserName like CONCAT('%',#{reportName},'%')
+            or PerformanceAttributor like concat('%',#{reportName},'%'))
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and CustomerMobile like CONCAT('%',#{customerMobile},'%')
+        </if>
+        <if test="sourceTypeList != null and sourceTypeList.size() > 0">
+            and SourceTypeOld in
+            <foreach collection="sourceTypeList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="resultCode != null and resultCode != '' and resultCode == 'all'.toString()">
+            and clueStatus &gt; 1
+        </if>
+        <if test="resultCode != null and resultCode != '' and resultCode == 'success'.toString()">
+            and clueStatus &gt; 1 and clueStatus &lt; 9
+        </if>
+        <if test="resultCode != null and resultCode != '' and resultCode == 'failure'.toString()">
+            and clueStatus=9
+        </if>
+        order by ReportCreateTime desc
+        <if test="index != null and size != null">
+        limit ${index},${size}
+        </if>
+    </select>
+
+    <!--查询判客台账总数-->
+    <select id="getVisitCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+        select count(*) number
+        from  b_project_clues
+        where projectId=#{projectId}
+        <if test="beginTime != null  and endTime != null and randCode == 'report'.toString()">
+            AND ReportCreateTime BETWEEN #{beginTime} and #{endTime}
+        </if>
+        <if test="beginTime != null  and endTime != null and randCode == 'visit'.toString()">
+            AND TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+        </if>
+        <if test="reportName != null and reportName != ''">
+            and (ReportUserName like CONCAT('%',#{reportName},'%')
+            or PerformanceAttributor like concat('%',#{reportName},'%'))
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and CustomerName like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and CustomerMobile like CONCAT('%',#{customerMobile},'%')
+        </if>
+        <if test="sourceTypeList != null and sourceTypeList.size() > 0">
+            and SourceTypeOld in
+            <foreach collection="sourceTypeList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="resultCode != null and resultCode != '' and resultCode == 'all'.toString()">
+            and clueStatus &gt; 1
+        </if>
+        <if test="resultCode != null and resultCode != '' and resultCode == 'success'.toString()">
+            and clueStatus &gt; 1 and clueStatus &lt; 9
+        </if>
+        <if test="resultCode != null and resultCode != '' and resultCode == 'failure'.toString()">
+            and clueStatus=9
+        </if>
+    </select>
+
+</mapper>

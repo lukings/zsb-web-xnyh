@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.print.dao.PrintDao">
+
+    <!--查询默认模板-->
+    <select id="findTemplateNoProId" parameterType="java.lang.String" resultType="cn.visolink.system.print.model.PrintTemplate">
+		SELECT
+			ID,
+			PrintManner,
+			PrintType,
+			ProjectId,
+			PrintTemplate,
+			'1' IsDefault,
+			`Status`
+		FROM
+			b_project_print_template
+		WHERE
+			PrintType = #{printType} and IsDel = 0
+		  	and ProjectId is null
+			limit 1
+	</select>
+	<!--根据项目ID查询模板-->
+	<select id="findTemplateByProId" parameterType="java.lang.String" resultType="cn.visolink.system.print.model.PrintTemplate">
+		SELECT
+		ID,
+		PrintManner,
+		PrintType,
+		ProjectId,
+		PrintTemplate,
+		'0' IsDefault,
+		`Status`
+		FROM
+		b_project_print_template
+		WHERE
+		PrintType = #{printType} and IsDel = 0 and ProjectId = #{projectId}
+		limit 1
+	</select>
+	<!--获取打印字段-->
+	<select id="getAllField" resultType="cn.visolink.system.print.model.PrintField">
+		SELECT
+			ID,
+			FieldName,
+			FieldValue,
+			FieldType
+		FROM
+			b_print_field
+		WHERE
+			IsDel = 0
+			order by CreateTime;
+	</select>
+	<!--获取打印方式字典-->
+	<select id="getPrintCountDist" resultType="java.util.Map">
+		SELECT
+			DictCode,
+			DictName
+		FROM
+			s_dictionary
+		WHERE
+			pid = ( SELECT ID FROM s_dictionary WHERE DictCode = 'p_type' )
+	</select>
+	<!--创建模板-->
+	<insert id="addTemplate" parameterType="cn.visolink.system.print.model.PrintTemplate">
+		insert into b_project_print_template(ID,PrintManner,PrintType,ProjectId,PrintTemplate,Status,IsDel,CreateUser,CreateTime)
+		values(uuid(),#{PrintManner},#{PrintType},#{ProjectId},#{PrintTemplate},1,0,#{CreateUser},now())
+	</insert>
+	<!--更新模板-->
+	<update id="updateTemplate" parameterType="cn.visolink.system.print.model.PrintTemplate">
+		update b_project_print_template
+		<set>
+			<if test="PrintManner!=null and PrintManner!=''">
+				PrintManner = #{PrintManner},
+			</if>
+			<if test="PrintType!=null and PrintType!=''">
+				PrintType = #{PrintType},
+			</if>
+			<if test="PrintTemplate!=null and PrintTemplate!=''">
+				PrintTemplate = #{PrintTemplate},
+			</if>
+			<if test="Status!=null and Status!=''">
+				Status = #{Status},
+			</if>
+			<if test="IsDel!=null and IsDel!=''">
+				IsDel = #{IsDel},
+			</if>
+			<if test="CreateUser!=null and CreateUser!=''">
+				EditUser = #{CreateUser},
+			</if>
+			EditTime = now(),
+		</set>
+		where ID = #{ID}
+	</update>
+
+</mapper>

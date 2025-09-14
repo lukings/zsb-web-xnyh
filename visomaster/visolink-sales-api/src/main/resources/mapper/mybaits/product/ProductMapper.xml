@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.product.dao.ProductMapper">
+    <!--获取产品列表-->
+    <select id="getAllProductList" resultType="java.util.Map">
+        select ID,ProductName from s_product where ProductType=1 and IsDel=0 and Status=1
+    </select>
+
+    <!--获取以授权公司列表-->
+    <select id="getAuthedProductList" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+	spcr.ProductID,
+	sp.ProductName,
+	sp.ProductType,
+	sp.ProductCategory,
+	  sp.TemplateId,
+		cpr.appId,
+		cwi.nick_name,
+		spcr.startTime,
+		spcr.endTime,
+		cpr.TyQrCode
+FROM
+	s_productcompanyrel spcr
+	LEFT JOIN s_product sp ON sp.ID = spcr.ProductID
+	Left join s_companyprocedurerel cpr on cpr.productId=spcr.ProductID and cpr.companyId=spcr.CompanyID
+	left join cltm_wechat_info cwi on cpr.appId=cwi.authorizer_appid
+WHERE
+	spcr.CompanyCode =#{companyCode} and sp.ProductCategory='WECHART'
+    </select>
+</mapper>

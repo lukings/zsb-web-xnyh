@@ -1,0 +1,871 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.projectmanager.dao.HousingManagementDao">
+    <!--查询活动列表-->
+    <select id="getTradeCstList" parameterType="cn.visolink.system.projectmanager.model.TradeCstForm"
+            resultType="cn.visolink.system.projectmanager.model.TradeCstData">
+        SELECT
+        trade.RoomID roomId,
+        trade.RoomName roomInfo,
+        opp.CustomerName cstName,
+        opp.CustomerMobile cstMobileAll,
+        concat(left(opp.CustomerMobile,3),'****',right(opp.CustomerMobile,4)) cstMobile,
+        opp.projectId projectId,
+        opp.ProjectName projectName,
+        trade.ClueStatus clueStatus,
+        opp.SourceTypeOldDesc sourceType,
+        ba.EmployeeName zygw,
+        trade.HtTotal htTotal,
+        (
+        CASE
+        WHEN trade.ClueStatus = '认购' THEN
+        trade.OrderDate
+        WHEN trade.ClueStatus = '签约' THEN
+        trade.ContractDate ELSE ( CASE WHEN trade.ContractDate IS NOT NULL THEN trade.ContractDate ELSE trade.OrderDate END )
+        END
+        ) tradeDate,
+        trade.remarks tradeRemarks,
+        ba1.EmployeeName checkOutCreator,
+        tco.create_time checkOutCreateTime,
+        ba2.EmployeeName approver,
+        tco.edit_time approvalTime,
+        tco.remarks checkOutRemarks
+        FROM
+        b_opportunity_trade trade
+        INNER JOIN b_project_opportunity opp ON opp.OpportunityClueId = trade.OpportunityClueId
+        LEFT JOIN b_account ba ON ba.UserName = trade.Zygw
+        LEFT JOIN b_opportunity_trade_check_out tco ON tco.TradeGUID = trade.TradeGUID
+        AND trade.ClueStatus = '退房'
+        LEFT JOIN b_account ba1 ON ba1.id = tco.creator
+        LEFT JOIN b_account ba2 ON ba2.id = tco.editor
+        where opp.projectId in (
+            <foreach collection="projectIds" index="index" item="item" separator=",">
+                #{item}
+            </foreach>
+        )
+        <if test="roomInfo!=null and roomInfo!=''">
+            and trade.RoomName like concat('%',#{roomInfo},'%')
+        </if>
+        <if test="salesName!=null and salesName!=''">
+            and ba.EmployeeName like concat('%',#{salesName},'%')
+        </if>
+        <if test="search!=null and search!=''">
+            and (opp.CustomerName like concat('%',#{search},'%')
+              or opp.CustomerMobile like concat('%',#{search},'%'))
+        </if>
+        <if test="clueStatus != null and clueStatus.size() > 0">
+            and trade.ClueStatus in
+            <foreach collection="clueStatus" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        order by trade.CreateTime desc
+    </select>
+
+    <!--根据用户账号查询用户名称-->
+    <select id="getUserNameByUserCode" parameterType="java.lang.String" resultType="java.lang.String">
+        select EmployeeName from b_account where UserName = #{UserCode} limit 1
+    </select>
+
+    <!--获取数据-->
+    <select id="getDataList" parameterType="java.lang.String" resultType="java.util.Map">
+        ${sqlValue}
+    </select>
+
+    <!--根据楼栋ID单元编号查询房间ID-->
+    <select id="getHousingSalesRoom" parameterType="java.lang.String" resultType="String">
+        select RoomGUID from b_housing_sales_control where BldGUID = #{BldGUID} and IsDel = 0
+    </select>
+
+    <insert id="addProColl" parameterType="cn.visolink.system.projectmanager.model.Vo.ProCollAccountVo">
+        insert into x_pro_collection(id,project_id,project_fid,pro_coll_account,coll_bank
+        ,bank_no,kingdee_bank_no,creator,create_time,account_type,bank_cst_name,bank_cst_mobile,signing_time)
+        values(uuid(),#{projectId},#{projectFid},#{proCollAccount},#{collBank},#{bankNo},#{kingdeeBankNo},#{creator},NOW(),
+               #{accountType},#{bankCstName},#{bankCstMobile},#{signingTime})
+    </insert>
+
+    <update id="updateProColl" parameterType="cn.visolink.system.projectmanager.model.Vo.ProCollAccountVo">
+        update x_pro_collection
+        <set>
+            <if test="proCollAccount!=null and proCollAccount!=''">
+                pro_coll_account = #{proCollAccount},
+            </if>
+            <if test="collBank!=null and collBank!=''">
+                coll_bank = #{collBank},
+            </if>
+            <if test="bankNo!=null and bankNo!=''">
+                bank_no = #{bankNo},
+            </if>
+            <if test="accountType!=null and accountType!=''">
+                account_type = #{accountType},
+            </if>
+            <if test="bankCstName!=null and bankCstName!=''">
+                bank_cst_name = #{bankCstName},
+            </if>
+            <if test="bankCstMobile!=null and bankCstMobile!=''">
+                bank_cst_mobile = #{bankCstMobile},
+            </if>
+            <if test="signingTime!=null and signingTime!=''">
+                signing_time = #{signingTime},
+            </if>
+            updator = #{updator},
+            update_time = now(),
+        </set>
+        where id = #{id}
+    </update>
+
+    <insert id="addProCollEditLog" parameterType="cn.visolink.system.projectmanager.model.Vo.ProCollAccountVo">
+        insert into x_pro_coll_edit_log(project_id,project_fid,pro_coll_account,coll_bank
+            ,bank_no,creator,create_time,account_type,bank_cst_name,bank_cst_mobile,signing_time
+            ,x_pro_coll_id,old_pro_coll_account,old_coll_bank,old_bank_no,old_account_type,old_bank_cst_name,
+            old_bank_cst_mobile,old_signing_time)
+        values(#{projectId},#{projectFid},#{proCollAccount},#{collBank},#{bankNo},
+               #{updator},now(),#{accountType},#{bankCstName},#{bankCstMobile},#{signingTime},#{id},
+               #{oldProCollAccount},#{oldCollBank},#{oldBankNo},#{oldAccountType},#{oldBankCstName},
+               #{oldBankCstMobile},#{oldSigningTime})
+    </insert>
+
+    <select id="getProColl" parameterType="java.lang.String" resultType="cn.visolink.system.projectmanager.model.Vo.ProCollAccountVo">
+        select project_id projectId,pro_coll_account proCollAccount,
+               coll_bank collBank,bank_no bankNo,
+               account_type accountType,bank_cst_name bankCstName,
+               bank_cst_mobile bankCstMobile,signing_time signingTime
+        from x_pro_collection
+        where id = #{id}
+    </select>
+
+    <select id="getProCollEdit" parameterType="java.lang.String" resultType="cn.visolink.system.projectmanager.model.Vo.ProCollAccountVo">
+        SELECT
+            lo.create_time createTime,
+            ba.EmployeeName creator,
+            lo.old_bank_no oldBankNo,
+            lo.old_coll_bank oldCollBank,
+            ( CASE WHEN lo.old_account_type = 1 THEN '认购收款'
+              WHEN lo.old_account_type = 2 THEN '直播收款' ELSE '其他' END )  oldAccountType,
+            lo.old_signing_time oldSigningTime,
+            lo.old_bank_cst_name oldBankCstName,
+            lo.old_bank_cst_mobile oldBankCstMobile,
+            lo.old_pro_coll_account oldProCollAccount,
+            lo.bank_no bankNo,
+            lo.coll_bank collBank,
+            ( CASE WHEN lo.account_type = 1 THEN '认购收款'
+                   WHEN lo.account_type = 2 THEN '直播收款' ELSE '其他' END ) accountType,
+            lo.signing_time signingTime,
+            lo.bank_cst_name bankCstName,
+            lo.bank_cst_mobile bankCstMobile,
+            lo.pro_coll_account proCollAccount
+        FROM
+            x_pro_coll_edit_log lo
+                INNER JOIN b_account ba ON ba.id = lo.creator
+        WHERE
+            lo.x_pro_coll_id = #{id}
+    </select>
+
+    <select id="getXcollection" parameterType="java.util.Map" resultType="cn.visolink.system.projectmanager.model.Vo.ProCollAccountVo">
+        SELECT
+            bp.ProjectName projectName,
+            pro.project_id projectId,
+            ( CASE WHEN pro.account_type = 1 THEN '认购收款'
+                   WHEN pro.account_type = 2 THEN '直播收款' ELSE '其他' END ) accountType,
+            pro.pro_coll_account proCollAccount,
+            pro.coll_bank collBank,
+            ( CASE WHEN pro.is_ok = 1 THEN '是' ELSE '否' END ) isOk,
+            pro.bank_no bankNo,
+            pro.bank_cst_name bankCstName,
+            pro.bank_cst_mobile bankCstMobile,
+            pro.id
+        FROM
+            x_pro_collection pro
+                INNER JOIN b_project bp ON bp.ID = pro.project_id
+        WHERE
+            pro.project_id IN (
+              <foreach collection="list" item="item" separator=",">
+                  #{item}
+              </foreach>
+                )
+            <if test="proCollAccount!=null and proCollAccount!=''">
+                and pro.pro_coll_account like '%${proCollAccount}%'
+            </if>
+            <if test="bankNo!=null and bankNo!=''">
+                and pro.bank_no like '%${bankNo}%'
+            </if>
+            <if test="mobile!=null and mobile!=''">
+                and pro.bank_cst_mobile like '%${mobile}%'
+            </if>
+            <if test="accountType!=null and accountType!=''">
+                and pro.account_type = #{accountType}
+            </if>
+            <if test="isOk!=null">
+                and pro.is_ok = #{isOk}
+            </if>
+    </select>
+    <select id="getRefundApprovalById" parameterType="java.lang.String" resultType="cn.visolink.system.projectmanager.model.Vo.RefundApprovalVo">
+        SELECT
+            re.project_id projectId,
+            bp.ProjectName projectName,
+            re.id,
+            re.status,
+            trade.RoomName roomName,
+            trade.CstName cstName,
+            trade.CstMobile cstMobile,
+            re.refund_approval_status refundApprovalStatus,
+            re.creator,
+            re.createTime,
+            re.remarks,
+            re.rejection_reasons rejectionReasons
+        FROM
+            b_refund_approval re
+                LEFT JOIN b_project bp ON re.project_id = bp.id
+                LEFT JOIN b_opportunity_trade trade ON re.trade_id = trade.TradeGUID
+        WHERE re.id = #{id}
+    </select>
+    <select id="getRefundApproval" parameterType="java.util.Map" resultType="cn.visolink.system.projectmanager.model.Vo.RefundApprovalVo">
+        SELECT
+            re.project_id projectId,
+            bp.ProjectName projectName,
+            re.id,
+            rem.ItemType itemType,
+            rem.ItemName itemName,
+            trade.RoomName roomName,
+            trade.CstName cstName,
+            trade.CstMobile cstMobile,
+            (
+                CASE
+
+                    WHEN re.refund_approval_status = 1 THEN
+                        '待审核'
+                    WHEN re.refund_approval_status = 2 THEN
+                        '退款中'
+                    WHEN re.refund_approval_status = 3 THEN
+                        '已退款'
+                    WHEN re.refund_approval_status = 4 THEN
+                        '退款失败'
+                    WHEN re.refund_approval_status = 5 THEN
+                        '退款驳回' ELSE ''
+                    END
+                ) refundApprovalStatusDesc,
+            re.refund_approval_status refundApprovalStatus,
+            rem.ReceivableStatus receivableStatus,
+            rem.YsAmount ysAmount,
+            re.service_charge serviceCharge,
+            rem.YsDate ysDate,
+            rem.PayDate payDate,
+            rem.coll_bank collBank,
+            rem.bank_no bankNo,
+            rem.bank_cst_mobile bankCstMobile,
+            ba.Name creator,
+            re.createTime,
+            re.remarks,
+            re.rejection_reasons rejectionReasons
+        FROM
+            b_refund_approval re
+                LEFT JOIN a_broker_user ba ON ba.ID = re.creator
+                LEFT JOIN b_project bp ON re.project_id = bp.id
+                LEFT JOIN b_opportunity_trade trade ON re.trade_id = trade.TradeGUID
+                LEFT JOIN b_returned_money rem ON re.fee_id = rem.FeeGUID
+        WHERE
+            re.project_id IN (
+            <foreach collection="list" item="item" separator=",">
+                #{item}
+            </foreach>
+                )
+          <if test="search!=null and search!=''">
+              AND ( trade.CstName LIKE '%${search}%' OR trade.CstMobile LIKE '%${search}%' )
+          </if>
+          <if test="ItemType != null and ItemType != ''">
+              AND rem.ItemType = #{ItemType}
+          </if>
+          <if test="ItemName != null and ItemName != ''">
+              AND rem.ItemName = #{ItemName}
+          </if>
+          <if test="RoomName != null and RoomName != ''">
+              AND trade.RoomName = #{RoomName}
+          </if>
+          <if test="ReceivableStatus != null and ReceivableStatus != ''">
+              AND rem.ReceivableStatus = #{ReceivableStatus}
+          </if>
+          <if test="YsDate != null and YsDate != ''">
+              AND rem.YsDate BETWEEN #{startTime} and #{endTime}
+          </if>
+          <if test="PayDate != null and PayDate != ''">
+              AND rem.YsDate BETWEEN #{startTime} and #{endTime}
+          </if>
+          order by re.createTime desc
+    </select>
+
+    <select id="getReturnedMoney" parameterType="java.util.Map" resultType="cn.visolink.system.projectmanager.model.Vo.FeeVo">
+        SELECT
+            re.ProjectID projectId,
+            bp.ProjectName projectName,
+            re.id,
+            re.ItemType itemType,
+            re.ItemName itemName,
+            trade.RoomName roomName,
+            trade.CstName cstName,
+            trade.CstMobile cstMobile,
+            trade.paymentMethodCode paymentMethodCode,
+            ( CASE WHEN trade.paymentMethodCode = 1 THEN '线下' WHEN trade.paymentMethodCode = 2 THEN '线上' ELSE '' END ) paymentMethodCodeDesc,
+            ba.EmployeeName zygw,
+            re.ReceivableStatus receivableStatus,
+            re.YsAmount ysAmount,
+            re.YsDate ysDate,
+            re.PayDate payDate,
+            re.coll_bank collBank,
+            re.bank_no bankNo,
+            re.bank_cst_mobile bankCstMobile,
+            re.refund_reason refundReason
+        FROM
+            b_returned_money re
+                INNER JOIN b_project bp ON bp.id = re.ProjectID
+                INNER JOIN b_opportunity_trade trade ON trade.TradeGUID = re.TradeGUID
+                LEFT JOIN b_account ba ON ba.UserName = trade.Zygw
+        WHERE
+            re.ProjectID IN (
+            <foreach collection="list" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+            and (trade.TradeStatus = '激活' or trade.CloseReason like '%转签约%')
+            <if test="search!=null and search!=''">
+                AND ( trade.CstName LIKE '%${search}%' OR trade.CstMobile LIKE '%${search}%' )
+            </if>
+            <if test="itemType != null and itemType != ''">
+                AND re.ItemType = #{itemType}
+            </if>
+            <if test="roomName != null and roomName != ''">
+                AND trade.RoomName like '%${roomName}%'
+            </if>
+            <if test="itemName != null and itemName != ''">
+                AND re.ItemName = #{itemName}
+            </if>
+            <if test="receivableStatus != null and receivableStatus != ''">
+                AND re.ReceivableStatus = #{receivableStatus}
+            </if>
+            <if test="type4 != null and type4 == '1'.toString() and startTime!='' and endTime!=''">
+                AND re.YsDate BETWEEN #{startTime} and #{endTime}
+            </if>
+            <if test="type4 != null and type4 == '2'.toString() and startTime!='' and endTime!=''">
+                AND re.PayDate BETWEEN #{startTime} and #{endTime}
+            </if>
+            <if test="paymentMethodCode != null and paymentMethodCode != ''">
+                AND trade.paymentMethodCode = #{paymentMethodCode}
+            </if>
+            order by re.CreateTime desc
+    </select>
+
+    <update id="updateRefundApproval" parameterType="java.util.Map">
+        update b_refund_approval
+        set <if test="approver != null and approver != ''">approver = #{approver}, </if>
+            <if test="status != null">status = #{status}, </if>
+            <if test="refundApprovalStatus != null">refund_approval_status = #{refundApprovalStatus}, </if>
+
+            <if test="rejectionReasons!=null and rejectionReasons!=''">
+                rejection_reasons = #{rejectionReasons},
+            </if>
+            <if test="failureReason!=null and failureReason!=''">
+                failure_reason = #{failureReason},
+            </if>
+            approver_time = now()
+        where id = #{id}
+    </update>
+
+    <resultMap type="cn.visolink.system.projectmanager.model.OrderTemplate" id="orderTemplateMap">
+        <result property="id" column="id" />
+        <result property="projectId" column="project_id" />
+        <result property="subTemplateUrl" column="sub_template_url" />
+        <result property="subTemplateName" column="sub_template_name" />
+        <result property="creator" column="creator" />
+        <result property="createTime" column="create_time" />
+        <result property="updator" column="updator" />
+        <result property="updateTime" column="update_time" />
+        <result property="status" column="status" />
+        <result property="isDel" column="is_del" />
+        <result property="sxActivityName" column="sx_activity_name" />
+        <result property="projectName" column="project_name" />
+    </resultMap>
+
+    <sql id="orderTemplateFields">
+        select id, project_id, sub_template_url, sub_template_name, creator, create_time, updator, update_time, `status`, is_del
+    </sql>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="selectSignProtocolTemplates" resultMap="orderTemplateMap" parameterType="cn.visolink.system.projectmanager.model.OrderTemplate">
+        select
+        a.id, a.project_id, a.sub_template_url, a.sub_template_name, b.project_name,
+        a.creator, a.create_time, a.updator, a.update_time, a.`status`, a.is_del, b.sx_activity_name
+        from x_order_template a
+        left join x_open_activity b
+        ON a.project_id = b.project_id
+        where a.is_del = 0
+        <if test="projectId != null and projectId != ''">
+            and a.project_id in ${projectId}
+        </if>
+        <if test="subTemplateName != null and subTemplateName != ''">
+            and a.sub_template_name = #{subTemplateName}
+        </if>
+        <if test="sxActivityName != null and sxActivityName != ''">
+            and b.sx_activity_name = #{sxActivityName}
+        </if>
+    </select>
+
+    <update id="updateSignProtocolTemplatesStatus">
+        update x_order_template
+        set `status` = #{status},
+        update_time = NOW()
+        where id = #{id}
+    </update>
+
+    <!--新增所有列-->
+    <insert id="saveOrderTemplate" parameterType="cn.visolink.system.projectmanager.model.OrderTemplate">
+        insert into x_order_template(id, project_id, sub_template_url, sub_template_name, creator, create_time,
+         status, is_del)
+        values (#{id}, #{projectId}, #{subTemplateUrl}, #{subTemplateName}, #{creator}, NOW(), 1, 0)
+    </insert>
+
+    <select id="getOrderTemplate" resultMap="orderTemplateMap" parameterType="integer">
+        <include refid="orderTemplateFields"/>
+        from x_order_template
+        where is_del = 0
+        AND id = #{id}
+    </select>
+
+    <!--通过主键修改数据-->
+    <update id="updateOrderTemplate" parameterType="cn.visolink.system.projectmanager.model.OrderTemplate">
+        update x_order_template
+        <set>
+            <if test="projectId != null and projectId != ''">
+                project_id = #{projectId},
+            </if>
+
+            sub_template_url = #{subTemplateUrl},
+
+            <if test="subTemplateName != null and subTemplateName != ''">
+                sub_template_name = #{subTemplateName},
+            </if>
+            <if test="updator != null and updator != ''">
+                updator = #{updator},
+            </if>
+            update_time = NOW()
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="selectGroupOrderTemplate" resultMap="orderTemplateMap">
+        <include refid="orderTemplateFields"/>
+        from x_order_template
+        where project_id = null
+    </select>
+    <insert id="addOrderNode" parameterType="java.util.Map">
+        insert into x_order_node_record(id,order_no,node_type,node_type_name,record_time,creator,create_time)
+        values(uuid(),#{orderNo},#{node_type},#{node_type_name},now(),#{creator},now())
+    </insert>
+
+    <update id="updateXorder" parameterType="java.lang.String">
+        update x_order set status = 2,reality_pay_time = now(),
+                           pay_status = 2
+         where order_no = #{orderNo}
+    </update>
+
+    <update id="updateOppStatus" parameterType="java.lang.String">
+        delete from b_customerpublicpool where ProjectClueId = #{projectClueId};
+        update b_project_clues set IsSalesVisitExpire = 0,IsSalesFollowExpire = 0 where ProjectClueId = #{projectClueId};
+        update b_project_opportunity set IsSalesVisitExpire = 0,IsSalesFollowExpire = 0 where ProjectClueId = #{projectClueId};
+        update b_project_clues set ClueStatus = 7 where ProjectClueId = #{projectClueId} and ClueStatus &lt; 7;
+        update b_project_opportunity set ClueStatus = 7 where ProjectClueId = #{projectClueId} and ClueStatus &lt; 7;
+    </update>
+
+    <update id="updateReturnedMoney" parameterType="java.lang.String">
+        update b_returned_money
+        set SsAmount = YsAmount,
+            PayDate = now(),
+            UpdateTime = now(),
+            ReceivableStatus = '已收齐'
+         where id = #{id}
+    </update>
+
+    <select id="getTradeMapByRemId" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            opp.*,
+            o.order_no orderNo,
+            trade.RoomID,
+            trade.RoomName
+        FROM
+            b_returned_money rem
+                INNER JOIN b_opportunity_trade trade ON rem.TradeGUID = trade.TradeGUID
+                INNER JOIN x_order o ON o.trade_id = trade.TradeGUID
+                INNER JOIN b_project_opportunity opp ON opp.OpportunityClueId = trade.OpportunityClueId
+        WHERE
+            rem.id = #{id}
+    </select>
+
+    <update id="updateRoomStatus">
+        update t_mm_build_room
+        set status_enum = #{statusEnum}
+        <if test="isTradeLock != null">, is_trade_lock = #{isTradeLock}</if>
+        where room_id = #{roomId}
+    </update>
+
+    <update id="updateHousingSalesControl" parameterType="java.lang.String">
+        update b_housing_sales_control set IsDel = 1 where RoomGUID = #{roomId}
+    </update>
+
+    <!--新增消息-->
+    <insert id="insertMessage" parameterType="java.util.List">
+        insert into s_message (
+        ID,Subject,Content,Sender,SendTime,MessageType,IsDel,Receiver,IsRead,ReadTime,IsPush,IsNeedPush,ProjectClueId
+        )
+        values
+        <foreach collection="list" item="message" index="index" open="" close="" separator=",">
+            (
+            UUID(),#{message.subject},#{message.content},'系统自动',now(),#{message.messageType},0,
+            #{message.receiver},0,now(),#{message.isPush},#{message.isNeedPush},#{message.projectClueId}
+            )
+        </foreach>
+
+    </insert>
+
+    <!--添加跟进记录表-->
+    <insert id="savaFollowupRecord" parameterType="java.util.Map">
+        insert into b_followup_record(FollowRecordId,FollowUpWay,CommunicationContent,FollowUpDetail,UserId,
+                                      FollowUpDate,ProjectId,FollowUpType,IsDel,ProjectClueId,OpportunityClueId,SaleCustomerId,CreateTime,CreateUserId,JobOrgID,EmployeeName,orgName)
+        values
+        (uuid(),#{followUpWay},#{CommunicationContent},#{FollowUpDetail},#{userId},
+         #{followUpDate},#{projectId},2,0,#{clueId},#{oppoId},#{customerId},now(),#{userId},#{JobOrgID},#{EmployeeName},#{orgName})
+    </insert>
+
+    <select id="getOrderInfoById" resultType="map" parameterType="string">
+        select a.*
+        from x_order a
+        WHERE a.trade_id =
+        (
+            select
+            b.trade_id
+            from b_refund_approval b
+            WHERE id = #{id}
+        )
+    </select>
+
+    <select id="getBankInfoByProjectId" parameterType="string" resultType="map">
+        select * from x_pro_collection where project_id = #{projectId} and `status` = 1
+    </select>
+
+    <update id="updateOrder" parameterType="java.util.Map">
+        update x_order
+        <set>
+            <!--<if test="customerName!=null and customerName!=''">-->
+            <!--main_cst_name = #{customerName},-->
+            <!--</if>-->
+
+            <!--<if test="oppGuid!=null and oppGuid!=''">-->
+            <!--main_opp_id = #{oppGuid},-->
+            <!--</if>-->
+
+            <if test="TradeStatus!=null and TradeStatus!=''">
+                trade_status = #{TradeStatus},
+            </if>
+
+            <if test="status!=null and status!=''">
+                status = #{status},
+            </if>
+
+            <if test="closeReason!=null and closeReason!=''">
+                trade_close_reason = #{closeReason},
+            </if>
+
+
+                trade_close_time = NOW(),
+
+
+            <if test="electronicStatus!=null and electronicStatus!=''">
+                electronic_seal_status = #{electronicStatus},
+            </if>
+
+            <if test="performanceTime!=null and performanceTime!=''">
+                performance_time = #{performanceTime},
+            </if>
+
+            <if test="payStatus!=null and payStatus!=''">
+                pay_status = #{payStatus},
+            </if>
+            <if test="isLockRoom!=null">
+                is_lock_room = #{isLockRoom},
+            </if>
+            edit_time=now()
+        </set>
+        where trade_id=#{tradeGuid}
+    </update>
+
+    <update id="updateOppTradeVo" parameterType="java.util.Map">
+        update b_opportunity_trade
+        set TradeStatus = #{TradeStatus},
+        CloseReason = #{CloseReason},
+        IsClosed = #{IsClosed},
+        <if test="ClueStatus!=null and ClueStatus!=''">
+            ClueStatus = #{ClueStatus},
+        </if>
+        UpdateTime = NOW()
+        where TradeGUID = #{TradeGUID}
+    </update>
+
+    <update id="updateBankInfo" parameterType="map">
+        update b_returned_money
+        set
+        <if test="bank_no != null and bank_no != ''">bank_no = #{bank_no}, </if>
+        <if test="coll_bank != null and coll_bank != ''">coll_bank = #{coll_bank}, </if>
+        <if test="bank_cst_mobile != null and bank_cst_mobile != ''">bank_cst_mobile = #{bank_cst_mobile}, </if>
+        UpdateTime = NOW()
+        where TradeGUID = #{TradeGUID}
+    </update>
+
+    <select id="getOppTradeVo" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OppTradeVo">
+        select OpportunityClueId opportunityClueId,
+        TradeGUID tradeGUID,
+        IntentionID intentionID,
+        ContractGuid contractGuid,
+        RoomID roomID,
+        RoomName roomName,
+        IsClosed isClosed,
+        IsDeleted isDeleted,
+        ContractDate contractDate,
+        CreateTime createTime,
+        UpdateTime updateTime,
+        CstName cstName,
+        CstMobile cstMobile,
+        CjBldArea cjBldArea,
+        CjBldPrice cjBldPrice,
+        PrjectGUID prjectGUID,
+        ProjectFQGUID projectFQGUID,
+        OrderGUID orderGUID,
+        OrderDate orderDate,
+        OrderYwgsDate orderYwgsDate,
+        ContractYwGsDate contractYwGsDate,
+        ClueStatus clueStatus,
+        SourceType sourceType,
+        TradeStatus tradeStatus,
+        CloseReason closeReason,
+        TnArea tnArea,
+        BuyerAllCardIds buyerAllCardIds,
+        HtTotal htTotal,
+        Zygw zygw,
+        CjTnPrice cjTnPrice,
+        remarks
+        from b_opportunity_trade
+        where TradeGUID = #{tradeGUID}
+    </select>
+
+    <select id="getOppData" parameterType="java.lang.String" resultType="java.util.Map">
+        select * from b_project_opportunity where OpportunityClueId =#{opportunityClueId}
+    </select>
+
+    <select id="getOldOppTradeVoList" parameterType="java.lang.String" resultType="cn.visolink.system.openQuotation.model.OppTradeVo">
+        select opportunityClueId,
+               clueStatus
+        from b_opportunity_trade
+        where OpportunityClueId = #{opportunityClueId}
+              and TradeGUID != #{tradeGUID} and TradeStatus = "激活"
+    </select>
+
+    <select id="getCardType" parameterType="java.lang.String" resultType="java.lang.String">
+        select max(TransactionType) from b_customer_row_card
+        where OpportunityClueId = #{opportunityClueId} and IsDel = 0
+    </select>
+
+    <update id="updateOppTStatus" parameterType="java.lang.String">
+        update b_project_clues set ClueStatus = #{clueStatus} where ProjectClueId = #{projectClueId};
+        update b_project_opportunity set ClueStatus = #{clueStatus} where ProjectClueId = #{projectClueId};
+    </update>
+
+    <!--保存订单节点记录-->
+    <insert id="saveOrderNodeRecord" parameterType="cn.visolink.system.openQuotation.model.OrderNodeRecord">
+        INSERT INTO `x_order_node_record`
+        (`id`, `order_no`, `node_type`, `node_type_name`, `reason`,
+         `record_time`, `is_del`, `creator`, `create_time`,bind_person,unbind_person,unbind_reason,mobile,receive_person)
+         VALUES
+        (uuid(), #{orderNo},  #{nodeType},  #{nodeTypeName},  #{reason}, now(), 0,  #{creator}, now(),
+        #{bindPerson},#{unbindPerson},#{unbindReason},#{mobile},#{receivePerson})
+    </insert>
+
+    <update id="updateReturnedMoneyByTradeGUID" parameterType="map">
+        update b_returned_money a
+        set a.SsAmount = a.YsAmount,
+        a.PayDate = NOW(),
+        a.UpdateTime = NOW(),
+        a.ReceivableStatus = '已收齐'
+        WHERE TradeGUID = #{trade_guid}
+    </update>
+
+    <select id="getNameByUserId" resultType="string" parameterType="string">
+        select EmployeeName from b_account where IsDel = 0 and `Status` = 1 and ID = #{userId}
+    </select>
+
+    <select id="getMaxId" resultType="integer">
+        select max(id) from x_order_template
+    </select>
+
+    <select id="getCountByProjectId" resultType="integer" parameterType="string">
+        select count(project_id) from x_order_template where `status` = 1 and is_del = 0 and project_id = #{projectId}
+    </select>
+
+    <select id="getDealCstList" parameterType="cn.visolink.system.projectmanager.model.DealCstForm" resultType="cn.visolink.system.projectmanager.model.DealCstData">
+        SELECT
+            trade.RoomID roomId,
+            trade.RoomName roomInfo,
+            opp.CustomerName cstName,
+            opp.CustomerMobile cstMobile,
+            opp.projectId projectId,
+            opp.ProjectName projectName,
+            opp.CustomerCardNum customerCardNum,
+            opp.ReportUserName reportUserName,
+            opp.PerformanceAttributorOld performanceAttributorOld,
+            opp.ReportCreateTime reportCreateTime,
+            '有效' clueValidity,
+            opp.ReportExpireDate reportExpireDate,
+            opp.TheFirstVisitDate theFirstVisitDate,
+            trade.ClueStatus clueStatus,
+            opp.SourceTypeOldDesc sourceType,
+            opp.SalesAttributionName zygw,
+            trade.HtTotal htTotal,
+            trade.OrderDate orderDate,
+            trade.ContractDate contractDate,
+            'main' remarks
+        FROM
+            b_opportunity_trade trade
+                INNER JOIN b_project_opportunity opp ON opp.OpportunityClueId = trade.OpportunityClueId
+        where trade.TradeStatus = '激活' and
+            opp.projectId in (
+            <foreach collection="projectIds" index="index" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+            <if test="roomInfo!=null and roomInfo!=''">
+                and trade.RoomName like concat('%',#{roomInfo},'%')
+            </if>
+            <if test="zygw!=null and zygw!=''">
+                and opp.SalesAttributionName like concat('%',#{zygw},'%')
+            </if>
+            <if test="search!=null and search!=''">
+                and (opp.CustomerName like concat('%',#{search},'%')
+                or opp.CustomerMobile like concat('%',#{search},'%'))
+            </if>
+            <if test="clueStatus!= null and clueStatus!=''">
+                and trade.ClueStatus = #{clueStatus}
+            </if>
+
+            <if test="reportUserName!=null and reportUserName!=''">
+                and opp.ReportUserName like concat('%',#{reportUserName},'%')
+            </if>
+            <if test="performanceAttributorOld!=null and performanceAttributorOld!=''">
+                and opp.PerformanceAttributorOld like concat('%',#{performanceAttributorOld},'%')
+            </if>
+            <if test="sourceType!=null and sourceType!=''">
+                and opp.SourceTypeOld = #{sourceType}
+            </if>
+
+            <if test="timeType != null and timeType == '1'.toString() and startTime!='' and endTime!=''">
+                AND opp.ReportCreateTime BETWEEN #{startTime} and #{endTime}
+            </if>
+            <if test="timeType != null and timeType == '2'.toString() and startTime!='' and endTime!=''">
+                AND opp.TheFirstVisitDate BETWEEN #{startTime} and #{endTime}
+            </if>
+            <if test="timeType != null and timeType == '3'.toString() and startTime!='' and endTime!=''">
+                AND trade.OrderDate BETWEEN #{startTime} and #{endTime}
+            </if>
+            <if test="timeType != null and timeType == '4'.toString() and startTime!='' and endTime!=''">
+                AND trade.ContractDate BETWEEN #{startTime} and #{endTime}
+            </if>
+            order by trade.CreateTime desc
+    </select>
+
+    <select id="getDealCstIds" parameterType="cn.visolink.system.projectmanager.model.DealCstForm" resultType="java.lang.String">
+        SELECT distinct
+        opp.OpportunityClueId
+        FROM
+        b_opportunity_trade trade
+        INNER JOIN b_project_opportunity opp ON opp.OpportunityClueId = trade.OpportunityClueId
+        where trade.TradeStatus = '激活' and
+        opp.projectId in (
+        <foreach collection="projectIds" index="index" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+        <if test="roomInfo!=null and roomInfo!=''">
+            and trade.RoomName like concat('%',#{roomInfo},'%')
+        </if>
+        <if test="zygw!=null and zygw!=''">
+            and opp.SalesAttributionName like concat('%',#{zygw},'%')
+        </if>
+        <if test="search!=null and search!=''">
+            and (opp.CustomerName like concat('%',#{search},'%')
+            or opp.CustomerMobile like concat('%',#{search},'%'))
+        </if>
+        <if test="clueStatus!= null and clueStatus!=''">
+            and trade.ClueStatus = #{clueStatus}
+        </if>
+
+        <if test="reportUserName!=null and reportUserName!=''">
+            and opp.ReportUserName like concat('%',#{reportUserName},'%')
+        </if>
+        <if test="performanceAttributorOld!=null and performanceAttributorOld!=''">
+            and opp.PerformanceAttributorOld like concat('%',#{performanceAttributorOld},'%')
+        </if>
+        <if test="sourceType!=null and sourceType!=''">
+            and opp.SourceTypeOld = #{sourceType}
+        </if>
+
+        <if test="timeType != null and timeType == '1'.toString() and startTime!='' and endTime!=''">
+            AND opp.ReportCreateTime BETWEEN #{startTime} and #{endTime}
+        </if>
+        <if test="timeType != null and timeType == '2'.toString() and startTime!='' and endTime!=''">
+            AND opp.TheFirstVisitDate BETWEEN #{startTime} and #{endTime}
+        </if>
+        <if test="timeType != null and timeType == '3'.toString() and startTime!='' and endTime!=''">
+            AND trade.OrderDate BETWEEN #{startTime} and #{endTime}
+        </if>
+        <if test="timeType != null and timeType == '4'.toString() and startTime!='' and endTime!=''">
+            AND trade.ContractDate BETWEEN #{startTime} and #{endTime}
+        </if>
+    </select>
+
+    <select id="getDealRelationCst" parameterType="java.util.List" resultType="cn.visolink.system.projectmanager.model.DealCstData">
+        select
+            null roomId,
+            null roomInfo,
+            opp.CustomerName cstName,
+            opp.CustomerMobile cstMobile,
+            opp.projectId projectId,
+            opp.ProjectName projectName,
+            opp.CustomerCardNum customerCardNum,
+            opp.ReportUserName reportUserName,
+            opp.PerformanceAttributorOld performanceAttributorOld,
+            opp.ReportCreateTime reportCreateTime,
+            (case when es.clue_validity = 1 then '有效'
+                  when es.clue_validity = 2 then '放弃'
+                  when es.clue_validity = 3 then '无效'
+                  when es.clue_validity = 4 then '作废'
+                  when es.clue_validity = 5 then '渠道逾期'	else '' end) clueValidity,
+            opp.ReportExpireDate reportExpireDate,
+            opp.TheFirstVisitDate theFirstVisitDate,
+            (case when opp.ClueStatus = 2 then '到访'
+                  when opp.ClueStatus = 3 then '排小卡'
+                  when opp.ClueStatus = 4 then '排大卡'
+                  when opp.ClueStatus = 7 then '认购'
+                  when opp.ClueStatus = 8 then '签约'
+                  when opp.ClueStatus = 9 then '作废' else '' end) clueStatus,
+            opp.SourceTypeOldDesc sourceType,
+            opp.SalesAttributionName zygw,
+            null htTotal,
+            null orderDate,
+            null contractDate,
+            concat(oppmain.CustomerCardNum,'-',oppmain.CustomerName) remarks
+        from b_project_opportunity opp
+                 INNER JOIN b_clue_opportunity_extend es on opp.ProjectClueId = es.ProjectClueId
+                 INNER JOIN b_intention_relationship sh on opp.OpportunityClueId = sh.RelationshipOpportunityClueId
+                 INNER JOIN b_project_opportunity oppmain on oppmain.OpportunityClueId = sh.OpportunityClueId
+        where sh.OpportunityClueId in (
+          <foreach collection="list" item="item" separator=",">
+              #{item}
+          </foreach>);
+    </select>
+
+</mapper>

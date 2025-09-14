@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.ruleEditLog.dao.RuleEditDao">
+
+    <!--查询修改批次-->
+    <select id="getRuleEditBatch" parameterType="java.util.Map"
+            resultType="cn.visolink.system.ruleEditLog.model.RuleEditLogBatch">
+        SELECT
+        sr.id,
+        sr.rule_type ruleType,
+        sr.edit_params editParams,
+        ba.EmployeeName creator,
+        sr.create_time createTime,
+        (select GROUP_CONCAT(enclosureUrl) from b_rule_enclosure where editBatchId = sr.id) enclosureList
+        FROM
+        s_rule_edit_log_batch sr
+        INNER JOIN b_account ba ON sr.creator = ba.id
+        WHERE sr.edit_type = 2
+        <if test="projectId!=null and projectId!=''">
+            AND sr.project_id = #{projectId}
+        </if>
+        <if test="brokerRuleId!=null and brokerRuleId!=''">
+            AND sr.broker_rule_id = #{brokerRuleId}
+        </if>
+        <if test="ruleType!=null and ruleType!=''">
+            AND sr.rule_type_code = #{ruleType}
+        </if>
+        <if test="editParams!=null and editParams!=''">
+            AND sr.edit_params like concat('%',#{editParams},'%')
+        </if>
+        ORDER BY
+        sr.create_time DESC
+    </select>
+    <!--查询修改详情-->
+    <select id="getRuleEditLogDetails" parameterType="java.util.Map" resultType="cn.visolink.system.ruleEditLog.model.RuleEditLogDetail">
+        SELECT
+            param,
+            before_edit beforeEdit,
+            after_edit afterEdit
+        FROM
+            s_rule_edit_log_detail
+        WHERE
+            batch_id = #{batchId};
+    </select>
+
+    <!--插入修改详情数据-->
+    <insert id="addRuleEditLogBetails" parameterType="cn.visolink.system.ruleEditLog.model.RuleEditLogDetail">
+        insert into s_rule_edit_log_detail
+        (id,batch_id,param,before_edit,after_edit,project_id,creator,create_time)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (uuid(),#{item.batchId},#{item.param},#{item.beforeEdit,},#{item.afterEdit},#{item.projectId},#{item.creator},now())
+        </foreach>
+    </insert>
+
+    <!--插入修改批次数据-->
+    <insert id="addRuleEditBatch" parameterType="cn.visolink.system.ruleEditLog.model.RuleEditLogBatch">
+        INSERT INTO s_rule_edit_log_batch (id,rule_type,rule_type_code,edit_params,edit_type,project_id,
+                                           broker_rule_id,creator,create_time)
+        VALUES
+        (#{id},#{ruleType},#{ruleTypeCode},#{editParams},#{editType},#{projectId},#{brokerRuleId},#{creator},now());
+    </insert>
+    <!--查询页面参数-->
+    <select id="getSearchTypeParam" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+        rule_type name,
+        rule_type_code code
+        FROM
+        s_rule_edit_log_batch
+        WHERE
+        edit_type = #{editType}
+        <if test="projectId!=null and projectId!=''">
+            AND project_id = #{projectId}
+        </if>
+        <if test="brokerRuleId!=null and brokerRuleId!=''">
+            AND broker_rule_id = #{brokerRuleId}
+        </if>
+        GROUP BY rule_type_code
+    </select>
+
+    <!--查询页面参数-->
+    <select id="getSearchParams" parameterType="java.util.Map" resultType="java.lang.String">
+        SELECT DISTINCT
+        edit_params
+        FROM
+        s_rule_edit_log_batch
+        WHERE
+        edit_type = 2
+        <if test="projectId!=null and projectId!=''">
+            AND project_id = #{projectId}
+        </if>
+        <if test="brokerRuleId!=null and brokerRuleId!=''">
+            AND broker_rule_id = #{brokerRuleId}
+        </if>
+    </select>
+
+
+</mapper>

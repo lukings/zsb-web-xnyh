@@ -1,0 +1,2904 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.allpeople.contentManagement.dao.ContentDao">
+
+	<!--获取轮播图片-->
+	<select id="getBuildingPhotos" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		select ap.ID,
+		ap.ListIndex,
+		ap.CityID,
+		ap.CityName,
+		ap.JumpBuildId,
+		ap.ImgName,
+		ap.ImgDesc,
+		ap.newImgUrl,
+		ap.ImgUrl,
+		ap.Status,
+		ap.ImgJumpUrl,
+		ap.JumpType,
+		ap.JumpToName,
+		ap.ShowBeginTime,
+		ap.ShowEndTime,
+		ifnull(cc.count,0) ClickNum,
+		(case when ap.ShowBeginTime is null and ap.ShowEndTime is null then '永久'
+		else CONCAT_WS('~',DATE_FORMAT(ap.ShowBeginTime,'%Y-%m-%d %H:%i:%s'),DATE_FORMAT(ap.ShowEndTime,'%Y-%m-%d %H:%i:%s')) end) BeginAndEndTimeDesc,
+		ap.CreateTime,
+		ba.EmployeeName Creator,
+		ap.IsShow,
+		ap.MiNiImgUrl,
+		ap.isSupernatant
+		from a_build_book_photo ap
+		left join b_account ba on ba.id = ap.Creator
+		left join (select book_photo_id,count(1) count from a_build_book_photo_cilck GROUP BY book_photo_id) cc on cc.book_photo_id = ap.id
+		where ap.TypeName = #{TypeName} and ap.IsDel = 0
+		<if test="ids!=null and ids!='' and (CityIDs==null or CityIDs=='')">
+			and ap.CityID in (${ids})
+		</if>
+		<if test="CityIDs!=null and CityIDs!='' and (ids==null or ids=='')">
+			and ap.CityID in (${CityIDs})
+		</if>
+		<if test="Status!=null and Status!=''">
+			and ap.Status = #{Status}
+		</if>
+		<if test="ShowTime!=null and ShowTime!=''">
+			and ((ShowBeginTime is null and ShowEndTime is null) or (#{ShowTime} BETWEEN ShowBeginTime and ShowEndTime) )
+		</if>
+		order by ap.CreateTime desc
+	</select>
+
+	<!--获取轮播图片(排序用)-->
+	<select id="getBuildingPhotosOrder" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		select ID,
+			   ListIndex,
+			   CityID,
+			   CityName,
+			   ImgName,
+			   ImgDesc,
+			   newImgUrl ImgUrl,
+			   Status,
+			   ImgJumpUrl,
+			   JumpType,
+			   JumpToName,
+			   IsShow
+		from a_build_book_photo
+		where TypeName = '4' and IsDel = 0 and Status = 1
+		  and ((ShowBeginTime is null and ShowEndTime is null) or (now() BETWEEN ShowBeginTime and ShowEndTime) )
+		  and CityID = #{CityID}
+		order by ListIndex
+	</select>
+	<!--获取新闻排序用-->
+	<select id="getNewsOrder" parameterType="java.util.Map" resultType="java.util.Map">
+		select ID,
+			   (case when char_length(Title)>8 then concat(left(Title,8),'...') else Title end) title,
+			   HeadImgUrl,ListIndex from a_news
+		where CityId = #{CityID}
+		  and IsDel = 0 and IsPublish = 1 and `Status` = 1 ORDER BY ListIndex,PublishTime desc;
+	</select>
+	<!--更新新闻排序-->
+	<update id="updateNewsOrder" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=";">
+			update a_news
+			<set>
+				ListIndex=#{item.ListIndex}
+			</set>
+			where ID = #{item.ID}
+		</foreach>
+	</update>
+	<!--更新轮播图片-->
+	<update id="updateBuildingPhoto" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		update a_build_book_photo
+		<set>
+			<if test="CityID!=null and CityID!=''">
+				CityID = #{CityID},
+			</if>
+			<if test="CityName!=null and CityName!=''">
+				CityName = #{CityName},
+			</if>
+			<if test="ImgUrl!=null and ImgUrl!=''">
+				ImgUrl = #{ImgUrl},
+			</if>
+			<if test="ImgName!=null and ImgName!=''">
+				ImgName = #{ImgName},
+			</if>
+			<if test="ImgDesc!=null and ImgDesc!=''">
+				ImgDesc = #{ImgDesc},
+			</if>
+			<if test="ListIndex!=null and ListIndex!=''">
+				ListIndex = #{ListIndex},
+			</if>
+			<if test="Status!=null and Status!=''">
+				Status = #{Status},
+			</if>
+			<if test="ImgJumpUrl!=null">
+				ImgJumpUrl = #{ImgJumpUrl},
+			</if>
+			<if test="JumpType!=null and JumpType!=''">
+				JumpType = #{JumpType},
+			</if>
+			<if test="JumpToName!=null">
+				JumpToName = #{JumpToName},
+			</if>
+			<if test="JumpBuildId!=null">
+				JumpBuildId = #{JumpBuildId},
+			</if>
+			<if test="IsShow!=null and IsShow!=''">
+				IsShow = #{IsShow},
+			</if>
+			<if test="IsDel!=null and IsDel!=''">
+				IsDel = #{IsDel},
+			</if>
+			<if test="newImgUrl !=null and newImgUrl !=''">
+				newImgUrl = #{newImgUrl},
+			</if>
+			ShowBeginTime = #{ShowBeginTime},
+			ShowEndTime = #{ShowEndTime},
+			<if test="Creator!=null and Creator!=''">
+				Editor = #{Creator},
+			</if>
+			<if test="MiNiImgUrl!=null and MiNiImgUrl!=''">
+				MiNiImgUrl = #{MiNiImgUrl},
+			</if>
+			<if test="isSupernatant!=null and isSupernatant!=''">
+				isSupernatant = #{isSupernatant},
+			</if>
+			EditTime = now(),
+		</set>
+		where ID = #{ID}
+	</update>
+	<!--添加轮播图片-->
+	<insert id="addBuildingPhoto" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		insert into a_build_book_photo(ID,CityID,CityName,ImgUrl,ImgName,ImgDesc,ListIndex,
+									   Creator,CreateTime,Status,TypeName,ImgJumpUrl,JumpType,JumpToName,IsShow,IsDel,ShowBeginTime,ShowEndTime,MiNiImgUrl,isSupernatant,JumpBuildId,newImgUrl)
+		values(#{ID},#{CityID},#{CityName},#{ImgUrl},#{ImgName},#{ImgDesc},#{ListIndex},
+			   #{Creator},now(),#{Status},#{TypeName},#{ImgJumpUrl},#{JumpType},#{JumpToName},'1',0,#{ShowBeginTime},#{ShowEndTime},#{MiNiImgUrl},#{isSupernatant},#{JumpBuildId},#{newImgUrl})
+	</insert>
+	<!--获取原图片路径（轮播）-->
+	<select id="getOldPhoto" parameterType="String" resultType="String">
+		select ImgUrl from a_build_book_photo where ID = #{ID}
+	</select>
+	<!--获取原图片路径（新闻）-->
+	<select id="getOldPhotoNews" parameterType="String" resultType="String">
+		select HeadImgUrl from a_news where ID = #{ID}
+	</select>
+	<!--查询新闻列表-->
+	<select id="getNewsList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.News">
+		select @rownum:=@rownum+1 AS num, n.* from (SELECT @rownum:=0) r,(
+		select ID,BelongArea,ProjectID,ProjectName,
+		CityId,CityName,Title,Content,Author,`Type`,
+		Summary,HeadImgUrl,HeadImgName,JumpUrl,(case IsPublish when 1 then '已发布' else '未发布' end) IsPublish,IsGuessLike,
+		IsTop,ClickNum,Creator,CreateTime,Status,IsDel,PublishTime,GROUP_CONCAT(t_dict.DictName) as NewsType,t_build_book.BuildBookName,
+		(IFNULL(WaterNum,0) + IFNULL(t_user_news.ReadCount,0) ) as ReadCount
+		from
+		a_news
+		left join
+		(select DictCode,DictName from S_Dictionary where pid in (
+		SELECT id FROM S_Dictionary where dictcode = 'news_type') ) t_dict
+		ON FIND_IN_SET(t_dict.DictCode,a_news.NewsType)
+		left join
+		(select
+		t_nbb.news_id ,
+		group_concat(t_bb.BuildBookName) as BuildBookName
+		from a_news_build_book t_nbb ,a_build_book t_bb
+		where  t_nbb.build_book_id =t_bb.ID
+		<if test="BuildingID!=null and BuildingID!=''" >
+			and t_nbb.build_book_id in (${BuildingID})
+		</if>
+		GROUP BY t_nbb.news_id ) t_build_book
+		on t_build_book.news_id = a_news.id
+
+		left join
+		(select NewsId , count(UserId) as ReadCount
+		from a_user_book_news where NewsId is not null GROUP BY NewsId) t_user_news
+		on t_user_news.NewsId = a_news.id
+
+		<where>
+			IsDel = 0
+			<if test="ids!=null and ids!='' and (CityIDs==null or CityIDs=='')">
+				and CityId in (${ids})
+			</if>
+			<if test="CityIDs!=null and CityIDs!='' and (ids==null or ids=='')">
+				and CityId in (${CityIDs})
+			</if>
+			<if test="BelongArea!=null and BelongArea!=''">
+				and BelongArea like '%${BelongArea}%'
+			</if>
+			<if test="BuildingID!=null and BuildingID!=''" >
+				and t_build_book.BuildBookName is not null
+			</if>
+			<if test="NewsType!=null and NewsType!=''">
+				and t_dict.DictCode in (${NewsType})
+			</if>
+			<if test="Title!=null and Title!=''">
+				and Title like '%${Title}%'
+			</if>
+			<if test="ProjectName!=null and ProjectName!=''">
+				and ProjectName like '%${ProjectName}%'
+			</if>
+			<if test="Author!=null and Author!=''">
+				and Author like '%${Author}%'
+			</if>
+			<if test="IsPublish!=null and IsPublish!=''">
+				and IsPublish = #{IsPublish}
+			</if>
+			<if test="reportTime==1 and beginTime!=null and beginTime!='' and beginTime!=undefined and endTime!=null and endTime!='' and endTime!=undefined  ">
+				and CreateTime between #{beginTime} and #{endTime}
+			</if>
+			<if test="reportTime==2  and beginTime!=null and beginTime!='' and beginTime!=undefined and endTime!=null and endTime!='' and endTime!=undefined ">
+				and PublishTime between #{beginTime} and #{endTime}
+			</if>
+
+		</where>
+		GROUP BY ID
+		order by CreateTime desc
+		) n
+	</select>
+	<!--获取新闻详情-->
+	<select id="getNewsDetail" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.News">
+		select ID,BelongArea,ProjectID,ProjectName,CityId,CityName,Title,Summary,Content,Author,HeadImgUrl,HeadImgName,IsPublish,NewsType,WaterNum,IFNULL(t_user_news.ReadCount,0) as ReadCount  from a_news
+																																																		  left join
+																																																	  (select NewsId , count(UserId) as ReadCount
+																																																	   from a_user_book_news where NewsId is not null GROUP BY NewsId) t_user_news
+																																																	  on t_user_news.NewsId = a_news.id
+		where ID = #{ID}
+	</select>
+	<!--新增新闻-->
+	<insert id="addNews" parameterType="cn.visolink.system.allpeople.contentManagement.model.News">
+		insert into a_news(ID,BelongArea,ProjectID,ProjectName,CityId,CityName,Title,Content,Author,`Type`,Summary,HeadImgUrl,HeadImgName,JumpUrl,IsPublish,IsGuessLike,IsTop,ClickNum,Creator,CreateTime,Status,IsDel,PublishTime,NewsType,WaterNum)
+		values (
+		<choose>
+			<when test="ID!=null and ID!=''">
+				#{ID}
+			</when>
+			<otherwise>
+				uuid()
+			</otherwise>
+		</choose>
+		,#{BelongArea},#{ProjectID},#{ProjectName},#{CityId},#{CityName},#{Title},#{Content},#{Author},#{Type},#{Summary},#{HeadImgUrl},#{HeadImgName},#{JumpUrl},#{IsPublish},#{IsGuessLike},#{IsTop},0,#{Creator},now(),1,0,#{PublishTime},#{NewsType},#{WaterNum})
+	</insert>
+	<!--修改新闻-->
+	<select id="updateNews" parameterType="cn.visolink.system.allpeople.contentManagement.model.News">
+		update a_news
+		<set>
+			<if test="BelongArea!=null and BelongArea!=''">
+				BelongArea = #{BelongArea},
+			</if>
+			<if test="ProjectID!=null and ProjectID!=''">
+				ProjectID = #{ProjectID},
+			</if>
+			<if test="ProjectName!=null and ProjectName!=''">
+				ProjectName = #{ProjectName},
+			</if>
+			<if test="CityId!=null and CityId!=''">
+				CityId = #{CityId},
+			</if>
+			<if test="CityName!=null and CityName!=''">
+				CityName = #{CityName},
+			</if>
+			<if test="Title!=null and Title!=''">
+				Title = #{Title},
+			</if>
+			<if test="Content!=null and Content!=''">
+				Content = #{Content},
+			</if>
+			<if test="Author!=null and Author!=''">
+				Author = #{Author},
+			</if>
+			<if test="Type!=null and Type!=''">
+				`Type` = #{Type},
+			</if>
+			<if test="Summary!=null and Summary!=''">
+				Summary = #{Summary},
+			</if>
+			<if test="HeadImgUrl!=null and HeadImgUrl!=''">
+				HeadImgUrl = #{HeadImgUrl},
+			</if>
+			<if test="HeadImgName!=null and HeadImgName!=''">
+				HeadImgName = #{HeadImgName},
+			</if>
+			<if test="JumpUrl!=null and JumpUrl!=''">
+				JumpUrl = #{JumpUrl},
+			</if>
+			<if test="IsPublish!=null and IsPublish!=''">
+				IsPublish = #{IsPublish},
+			</if>
+			<if test="IsGuessLike!=null and IsGuessLike!=''">
+				IsGuessLike = #{IsGuessLike},
+			</if>
+			<if test="IsTop!=null and IsTop!=''">
+				IsTop = #{IsTop},
+			</if>
+			<if test="ClickNum!=null and ClickNum!=''">
+				ClickNum = #{ClickNum},
+			</if>
+			<if test="Status!=null and Status!=''">
+				Status = #{Status},
+			</if>
+			<if test="IsDel!=null and IsDel!=''">
+				IsDel = #{IsDel},
+			</if>
+			<if test="PublishTime!=null and PublishTime!=''">
+				PublishTime = #{PublishTime},
+			</if>
+			<if test="NewsType!=null and NewsType!=''">
+				NewsType = #{NewsType},
+			</if>
+			<if test="WaterNum!=null and WaterNum!=''">
+				WaterNum = #{WaterNum},
+			</if>
+			Editor = #{Editor},
+			EditTime = now(),
+		</set>
+		where ID = #{ID}
+	</select>
+	<!--查询旭客家反馈列表-->
+	<select id="getFeedbackList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.Feedback">
+		select @rownum:=@rownum+1 AS num, n.* from (SELECT @rownum:=0) r,(
+		SELECT
+		uf.ID,
+		uf.FeedbackUserId,
+		uf.FeedBackUserName,
+		uf.FeedBackUserMobile,
+		uf.ProblemDesc,
+		uf.FeedBackUserRole,
+		uf.ImgUrl,
+		uf.HandleUserId,
+		DATE_FORMAT(uf.HandleTime,'%Y-%m-%d %H:%i:%s') as HandleTime,
+		uf.HandleDesc,
+		DATE_FORMAT(uf.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime,
+		uf.`Status`,
+		uf.IsDel,
+		uf.ProjectId,
+		uf.ProjectName,
+		uf.BuildBookId,
+		uf.BuildBookName,
+		uf.type,
+		(case when uf.type = 0 then '系统问题'
+		when uf.type = 1 then '咨询问题'
+		when uf.type = 2 then '优化建议' end) as typeName,
+		CONCAT(ba.EmployeeName,'-',ba.UserName) as HandleUserName
+		FROM
+		a_user_feedback uf
+		left join b_account ba on uf.HandleUserId = ba.id
+		<where>
+			uf.IsDel = 0 and uf.SystemSource = 1
+			<if test="projectList!=null and projectList.size() > 0">
+				and uf.ProjectId in
+				<foreach collection="projectList" index="index" item="item" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="buildBookIdList!=null and buildBookIdList.size() > 0">
+				and uf.BuildBookId in
+				<foreach collection="buildBookIdList" index="index" item="item" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="FeedBackUserName!=null and FeedBackUserName!=''">
+				and uf.FeedBackUserName like '%${FeedBackUserName}%'
+			</if>
+			<if test="FeedBackUserMobile!=null and FeedBackUserMobile!=''">
+				and uf.FeedBackUserMobile like '%${FeedBackUserMobile}%'
+			</if>
+			<if test="statusList !=null and statusList.size() > 0">
+				and uf.Status in
+				<foreach collection="statusList" index="index" item="item" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="problemTypeList !=null and problemTypeList.size() > 0">
+				and uf.type in
+				<foreach collection="problemTypeList" index="index" item="item" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="FeedBackUserRole!=null and FeedBackUserRole!=''">
+				and uf.FeedBackUserRole = #{FeedBackUserRole}
+			</if>
+			<if test="HandleUserName!=null and HandleUserName!=''">
+				and ba.EmployeeName like CONCAT('%',#{HandleUserName},'%')
+			</if>
+			<if test="timeType == '1'.toString() and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+				and uf.CreateTime between #{beginTime} and DATE_ADD(#{endTime},INTERVAL 1 DAY)
+			</if>
+			<if test="timeType == '2'.toString() and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+				and uf.HandleTime between #{beginTime} and  DATE_ADD(#{endTime},INTERVAL 1 DAY)
+			</if>
+		</where>
+		order by CreateTime desc) n
+	</select>
+
+
+
+
+	<!--查询旭客汇反馈列表-->
+	<select id="getAllFeedbackList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.Feedback">
+		select @rownum:=@rownum+1 AS num, n.* from (SELECT @rownum:=0) r,(
+		SELECT
+		uf.ID,
+		uf.FeedbackUserId,
+		uf.FeedBackUserName,
+		uf.FeedBackUserMobile,
+		uf.ProblemDesc,
+		uf.FeedBackUserRole,
+		uf.ImgUrl,
+		uf.HandleUserId,
+		DATE_FORMAT(uf.HandleTime,'%Y-%m-%d %H:%i:%s') as HandleTime,
+		uf.HandleDesc,
+		DATE_FORMAT(uf.CreateTime,'%Y-%m-%d %H:%i:%s') as CreateTime,
+		uf.`Status`,
+		uf.IsDel,
+		uf.ProjectId,
+		uf.ProjectName,
+		uf.BuildBookId,
+		uf.BuildBookName,
+		uf.FeedbackModule,
+		(case
+		when uf.SystemSource = 1 then '高科通小程序'
+		when uf.SystemSource = 2 then '高科通App'
+		else ''end) as FeedbackName,
+		uf.type,
+		(case when uf.type = 0 then '系统问题'
+		when uf.type = 1 then '咨询问题'
+		when uf.type = 2 then '优化建议' end) as typeName,
+		CONCAT(ba.EmployeeName,'-',ba.UserName) as HandleUserName
+		FROM
+		a_user_feedback uf
+		left join b_account ba on uf.HandleUserId = ba.id
+		<where>
+			uf.IsDel = 0 and uf.SystemSource = 2
+			<if test="projectList!=null and projectList.size() > 0">
+				and uf.ProjectId in
+				<foreach collection="projectList" index="index" item="item" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<!--<if test="buildBookIdList!=null and buildBookIdList.size() > 0">-->
+			<!--and uf.BuildBookId in-->
+			<!--<foreach collection="buildBookIdList" index="index" item="item" open="("-->
+			<!--separator="," close=")">-->
+			<!--#{item}-->
+			<!--</foreach>-->
+			<!--</if>-->
+			<if test="FeedBackUserName!=null and FeedBackUserName!=''">
+				and uf.FeedBackUserName like '%${FeedBackUserName}%'
+			</if>
+			<if test="FeedBackUserMobile!=null and FeedBackUserMobile!=''">
+				and uf.FeedBackUserMobile like '%${FeedBackUserMobile}%'
+			</if>
+			<if test="statusList !=null and statusList.size() > 0">
+				and uf.Status in
+				<foreach collection="statusList" index="index" item="item" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="problemTypeList !=null and problemTypeList.size() > 0">
+				and uf.type in
+				<foreach collection="problemTypeList" index="index" item="item" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+
+			<if test="FeedbackModuleList !=null and FeedbackModuleList.size() > 0">
+				and uf.FeedbackModule in
+				<foreach collection="FeedbackModuleList" index="index" item="item" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="FeedBackUserRole!=null and FeedBackUserRole!=''">
+				and uf.FeedBackUserRole = #{FeedBackUserRole}
+			</if>
+			<if test="HandleUserName!=null and HandleUserName!=''">
+				and ba.EmployeeName like CONCAT('%',#{HandleUserName},'%')
+			</if>
+			<if test="timeType == '1'.toString() and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+				and uf.CreateTime between #{beginTime} and DATE_ADD(#{endTime},INTERVAL 1 DAY)
+			</if>
+			<if test="timeType == '2'.toString() and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+				and uf.HandleTime between #{beginTime} and  DATE_ADD(#{endTime},INTERVAL 1 DAY)
+			</if>
+		</where>
+		order by CreateTime desc) n
+	</select>
+	<!--查询反馈详情-->
+	<select id="getFeedbackDetail" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.Feedback">
+		SELECT
+			HandleDesc
+		FROM
+			a_user_feedback
+		WHERE
+			ID = #{ID}
+	</select>
+	<!--更新反馈信息-->
+	<update id="updateFeedback" parameterType="java.util.Map">
+		update a_user_feedback set HandleUserId = #{HandleUserId},HandleTime = now(),HandleDesc = #{HandleDesc},
+								   Status = #{Status},Editor = #{Editor},EditTime = now()
+		where ID = #{ID}
+	</update>
+	<!--获取楼书列表-->
+	<select id="getAllBuilding" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingBook">
+		select n.* from (
+		SELECT
+		bb.ID,
+		bb.ProjectID,
+		bb.ProjectName,
+		bb.ProjectShowName,
+		bb.BelongArea,
+		bb.CityID,
+		bb.CityName,
+		bb.FloorSpace,
+		bb.BuildSapce,
+		ifnull(DATE_FORMAT( bb.OpenTime, '%Y-%m' ),'待定') OpenTime,
+		ifnull(DATE_FORMAT( bb.Delivery, '%Y-%m' ),'待定') Delivery,
+		(case bb.IsAllPerfect when 0 then '否'
+		when 1 then '是' end) IsAllPerfect,
+		(case bb.IsShowHeadImg when 0 then '否'
+		when 1 then '是' end) IsShowHeadImg,
+		(case bb.IsReport when 0 then '否'
+		when 1 then '是' end) IsReport,
+		(case bb.IsPublish when 0 then '未发布'
+		when 1 then '已发布' end) IsPublish,
+		bb.ShareDesc,
+		bb.ShareDescImgUrl,
+		bb.CreateTime,
+		bb.OnlookersNum,
+		ifnull(bb.OnlookersNum,0)+bb.InventedOnlookersNum as InventedOnlookersNum,
+		DATE_FORMAT( bb.StartTime, '%Y-%m-%d %H:%i:%s' ) StartTime,
+		DATE_FORMAT( bb.EndTime, '%Y-%m-%d %H:%i:%s' ) EndTime,
+		tt.peripheryCity,
+		(case bb.salestatus
+		when 5002 then '待售'
+		when 5001 then '在售'
+		when 5003 then '热销'
+		when 5004 then '售罄'
+		end) saleStatus
+		FROM
+		a_build_book bb
+		LEFT JOIN ( SELECT GROUP_CONCAT( bbc.city_name ) AS peripheryCity, build_book_id FROM a_build_book_city bbc where city_type = 2 and status = 1 and is_del = 0 GROUP BY build_book_id ) tt ON bb.id = tt.build_book_id
+		<where>
+			<if test="ProjectIDs!=null and ProjectIDs!=''">
+				and ProjectID in (${ProjectIDs})
+			</if>
+			<if test="BelongAreas!=null and BelongAreas!=''">
+				and BelongArea in (${BelongAreas})
+			</if>
+			<if test="SaleStatus != null and SaleStatus.size() > 0">
+				and bb.saleStatus in
+				<foreach collection="SaleStatus" item="item" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+			</if>
+<!--			<if test="CityID!=null and CityID!=''">-->
+<!--				and EXISTS (select bbc.build_book_id from a_build_book_city  bbc where bbc.city_id = #{CityID} and bbc.status = 1 and bbc.is_del = 0  and bbc.build_book_id = bb.id)-->
+<!--			</if>-->
+<!--			<if test="isPeriphery != null and isPeriphery != ''">-->
+<!--				<choose>-->
+<!--					<when test="CityID!=null and CityID!=''">-->
+<!--						<choose>-->
+<!--							<when  test="isPeriphery == '1'.toString()">-->
+<!--								and EXISTS (select bbc.build_book_id from a_build_book_city  bbc where bbc.city_id = #{CityID} and bbc.city_type = 2 and bbc.status = 1 and bbc.is_del = 0  and bbc.build_book_id = bb.id)-->
+<!--							</when>-->
+<!--							<otherwise>-->
+<!--								and  not EXISTS (select bbc.build_book_id from a_build_book_city  bbc where bbc.city_id = #{CityID} and bbc.city_type = 2 and bbc.status = 1 and bbc.is_del = 0  and bbc.build_book_id = bb.id)-->
+<!--							</otherwise>-->
+<!--						</choose>-->
+<!--					</when>-->
+<!--					<otherwise>-->
+<!--						<choose>-->
+<!--							<when  test="isPeriphery == '1'.toString()">-->
+<!--								and EXISTS (select bbc.build_book_id from a_build_book_city  bbc where  bbc.city_type = 2 and bbc.status = 1 and bbc.is_del = 0  and bbc.build_book_id = bb.id)-->
+<!--							</when>-->
+<!--							<otherwise>-->
+<!--								and  not EXISTS (select bbc.build_book_id from a_build_book_city  bbc where  bbc.city_type = 2 and bbc.status = 1 and bbc.is_del = 0  and bbc.build_book_id = bb.id)-->
+<!--							</otherwise>-->
+<!--						</choose>-->
+<!--					</otherwise>-->
+<!--				</choose>-->
+<!--			</if>-->
+			<if test="ProjectShowName!=null and ProjectShowName!=''">
+				and ProjectShowName like '%${ProjectShowName}%'
+			</if>
+			<if test="IsShowHeadImg!=null and IsShowHeadImg!=''">
+				and IsShowHeadImg = #{IsShowHeadImg}
+			</if>
+			<if test="IsReport!=null and IsReport!=''">
+				and IsReport = #{IsReport}
+			</if>
+			<if test="IsAllPerfect!=null and IsAllPerfect!=''">
+				and IsAllPerfect = #{IsAllPerfect}
+			</if>
+			<if test="IsPublish!=null and IsPublish!=''">
+				and IsPublish = #{IsPublish}
+			</if>
+			<if test="reportTime==1 and beginTime!=null and beginTime!='' and beginTime!=undefined and endTime!=null and endTime!='' and endTime!=undefined  ">
+				and StartTime between #{beginTime} and #{endTime}
+			</if>
+			<if test="reportTime==2  and beginTime!=null and beginTime!='' and beginTime!=undefined and endTime!=null and endTime!='' and endTime!=undefined ">
+				and EndTime between #{beginTime} and #{endTime}
+			</if>
+			<if test="CityID!=null and CityID!=''">
+				and bb.CityID = #{CityID}
+			</if>
+		</where>
+		) n order by ${order} ${desc}
+	</select>
+
+	<!--获取楼盘列表（排序用）-->
+	<select id="getBuildingOrder" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingBook">
+		SELECT
+			bb.ID,
+			bb.ProjectName,
+			bb.ProjectShowName,
+			bb.HeadImgUrl,
+			bbc.list_index as ListIndex,
+			bbc.city_id as CityID,
+			bbc.city_name as CityName,
+			bbc.city_type as cityType
+		FROM
+			a_build_book bb
+				LEFT JOIN a_build_book_city bbc ON bb.id = bbc.build_book_id
+		WHERE
+			bbc.city_id = #{CityID} and bb.IsShowHeadImg = 1 and bb.IsPublish = 1 and bb.`Status` = 1
+		order by bbc.list_index
+	</select>
+
+	<!--更新楼盘列表（排序）-->
+	<update id="updateBuildingOrder" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingBook">
+		update
+			a_build_book
+		set
+			ListIndex = #{ListIndex}
+		where ID = #{ID}
+	</update>
+
+	<!--更新楼盘列表（排序）-->
+	<update id="updateBuildCityOrder" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingBook">
+		update
+			a_build_book_city
+		set
+			list_index = #{ListIndex}
+		where build_book_id = #{ID}
+		  and city_id = #{CityID}
+	</update>
+	<!--获取楼盘信息-->
+	<select id="getBuildingBook" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingBook">
+		select ID,
+			   ProjectID,
+			   ProjectName,
+			   ProjectShowName,
+			   CityID,
+			   CityName,
+			   District,
+			   Street,
+			   BelongArea,
+			   BuildLabel,
+			   UnitPrice,
+			   Address,
+			   Longitude,
+			   Latitude,
+			   ProjectDesc,
+			   BuildMobile,
+			   BasicConfig,
+			   RoundMating,
+			   PeriodInt,
+			   FloorSpace,
+			   BuildSapce,
+			   DecorationLevel,
+			   PropertyCom,
+			   PropertyFee,
+			   GreenRate,
+			   PlotRatio,
+			   Developers,
+			   IsHaveVideo,
+			   HeadImgUrl,
+			   IsHaveVR,
+			   IsShowHeadImg,
+			   ShareDesc,
+			   ShareDescImgUrl,
+			   TrafficMating,
+			   Education,
+			   Hospital,
+			   Bank,
+			   Business,
+			   ElseRound,
+			   DeliveryDesc,
+			   InventedOnlookersNum,
+			   OnlookersNum,
+			   DATE_FORMAT( OpenTime, '%Y-%m-%d %H:%i:%s' ) OpenTime,
+			   DATE_FORMAT( Delivery, '%Y-%m-%d %H:%i:%s' ) Delivery,
+			   ListIndex,
+			   saleStatus,
+			   isHot
+		from a_build_book where ID = #{BuildBookID}
+	</select>
+	<!--保存楼盘信息-->
+	<insert id="addBuildingBook" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingBook">
+		insert into a_build_book(ID,ProjectID,ProjectName,ProjectShowName,BuildBookName,CityID,CityName,BelongArea,BuildLabel,UnitPrice,CommissionRate,Address,
+								 Longitude,Latitude,ProjectDesc,BuildMobile,BasicConfig,RoundMating,PeriodInt,FloorSpace,BuildSapce,DecorationLevel,
+								 OpenTime,Delivery,PropertyCom,PropertyFee,GreenRate,PlotRatio,IsHaveVideo,HeadImgUrl,IsHaveVR,IsShowHeadImg,Status,
+								 TrafficMating,IsReport,StartTime,EndTime,ShareDesc,ShareDescImgUrl,
+								 Education,
+								 Hospital,
+								 Bank,
+								 Business,
+								 ElseRound,
+								 Creator,CreateTime,IsDel,IsPublish,IsAllPerfect,DeliveryDesc,InventedOnlookersNum,Developers,ListIndex,saleStatus,District,Street,isHot)
+		values(#{ID},#{ProjectID},#{ProjectName},#{ProjectShowName},#{BuildBookName},#{CityID},#{CityName},#{BelongArea},#{BuildLabel},#{UnitPrice},#{CommissionRate},#{Address},
+			   #{Longitude},#{Latitude},#{ProjectDesc},#{BuildMobile},#{BasicConfig},#{RoundMating},#{PeriodInt},#{FloorSpace},#{BuildSapce},#{DecorationLevel},
+			   #{OpenTime},#{Delivery},#{PropertyCom},#{PropertyFee},#{GreenRate},#{PlotRatio},#{IsHaveVideo},#{HeadImgUrl},#{IsHaveVR},#{IsShowHeadImg},#{Status},
+			   #{TrafficMating},#{IsReport},#{StartTime},#{EndTime},#{ShareDesc},#{ShareDescImgUrl},#{Education},#{Hospital},#{Bank},#{Business},#{ElseRound},
+			   #{Creator},now(),0,#{IsPublish},#{IsAllPerfect},#{DeliveryDesc},#{InventedOnlookersNum},#{Developers},#{ListIndex},#{saleStatus},#{District},#{Street},#{isHot})
+	</insert>
+	<!--更新楼盘信息-->
+	<update id="updateBuildingBook" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingBook">
+		update a_build_book
+		<set>
+			<if test="ProjectID!=null and ProjectID!=''">
+				ProjectID = #{ProjectID},
+			</if>
+			<if test="ProjectName!=null and ProjectName!=''">
+				ProjectName = #{ProjectName},
+			</if>
+			<if test="ProjectShowName!=null and ProjectShowName!=''">
+				ProjectShowName = #{ProjectShowName},
+			</if>
+			<if test="ProjectShowName!=null and ProjectShowName!=''">
+				BuildBookName = #{ProjectShowName},
+			</if>
+			<if test="CityID!=null and CityID!=''">
+				CityID = #{CityID},
+			</if>
+			<if test="CityName!=null and CityName!=''">
+				CityName = #{CityName},
+			</if>
+			<if test="District!=null and District!=''">
+				District = #{District},
+			</if>
+			<if test="Street!=null and Street!=''">
+				Street = #{Street},
+			</if>
+			<if test="BelongArea!=null and BelongArea!=''">
+				BelongArea = #{BelongArea},
+			</if>
+			<if test="BuildLabel!=null and BuildLabel!=''">
+				BuildLabel = #{BuildLabel},
+			</if>
+			<if test="Developers!=null and Developers!=''">
+				Developers = #{Developers},
+			</if>
+			<if test="UnitPrice!=null and UnitPrice!=''">
+				UnitPrice = #{UnitPrice},
+			</if>
+			<if test="Address!=null and Address!=''">
+				Address = #{Address},
+			</if>
+			<if test="Longitude!=null and Longitude!=''">
+				Longitude = #{Longitude},
+			</if>
+			<if test="Latitude!=null and Latitude!=''">
+				Latitude = #{Latitude},
+			</if>
+			<if test="ProjectDesc!=null">
+				ProjectDesc = #{ProjectDesc},
+			</if>
+			<if test="BuildMobile!=null">
+				BuildMobile = #{BuildMobile},
+			</if>
+			<if test="BasicConfig!=null">
+				BasicConfig = #{BasicConfig},
+			</if>
+			<if test="RoundMating!=null">
+				RoundMating = #{RoundMating},
+			</if>
+			<if test="PeriodInt!=null">
+				PeriodInt = #{PeriodInt},
+			</if>
+			<if test="FloorSpace!=null">
+				FloorSpace = #{FloorSpace},
+			</if>
+			<if test="BuildSapce!=null">
+				BuildSapce = #{BuildSapce},
+			</if>
+			<if test="DecorationLevel!=null">
+				DecorationLevel = #{DecorationLevel},
+			</if>
+			OpenTime = #{OpenTime},
+			Delivery = #{Delivery},
+			<if test="PropertyCom!=null">
+				PropertyCom = #{PropertyCom},
+			</if>
+			<if test="PropertyFee!=null">
+				PropertyFee = #{PropertyFee},
+			</if>
+			<if test="GreenRate!=null">
+				GreenRate = #{GreenRate},
+			</if>
+			<if test="PlotRatio!=null">
+				PlotRatio = #{PlotRatio},
+			</if>
+			<if test="IsHaveVideo!=null">
+				IsHaveVideo = #{IsHaveVideo},
+			</if>
+			<if test="HeadImgUrl!=null">
+				HeadImgUrl = #{HeadImgUrl},
+			</if>
+			<if test="IsHaveVR!=null">
+				IsHaveVR = #{IsHaveVR},
+			</if>
+			<if test="IsShowHeadImg!=null and IsShowHeadImg!=''">
+				IsShowHeadImg = #{IsShowHeadImg},Status = #{IsShowHeadImg},
+			</if>
+			<if test="ShareDesc!=null">
+				ShareDesc = #{ShareDesc},
+			</if>
+			<if test="ShareDescImgUrl!=null">
+				ShareDescImgUrl = #{ShareDescImgUrl},
+			</if>
+			<if test="TrafficMating!=null">
+				TrafficMating = #{TrafficMating},
+			</if>
+			<if test="Education!=null">
+				Education = #{Education},
+			</if>
+			<if test="Hospital!=null">
+				Hospital = #{Hospital},
+			</if>
+			<if test="Bank!=null">
+				Bank = #{Bank},
+			</if>
+			<if test="Business!=null">
+				Business = #{Business},
+			</if>
+			<if test="ElseRound!=null">
+				ElseRound = #{ElseRound},
+			</if>
+			<if test="IsPublish!=null and IsPublish!=''">
+				IsPublish = #{IsPublish},
+			</if>
+			<if test="IsAllPerfect!=null and IsAllPerfect!=''">
+				IsAllPerfect = #{IsAllPerfect},
+			</if>
+			<if test="IsDel!=null and IsDel!=''">
+				IsDel = #{IsDel},
+			</if>
+			<if test="saleStatus!=null and saleStatus!=''">
+				saleStatus = #{saleStatus},
+			</if>
+			<if test="deliveryDesc!=null">
+				DeliveryDesc = #{deliveryDesc},
+			</if>
+			<if test="inventedOnlookersNum!=null and inventedOnlookersNum!=''">
+				InventedOnlookersNum = #{inventedOnlookersNum},
+			</if>
+			<if test="isHot!=null and isHot!=''">
+				isHot = #{isHot},
+			</if>
+			Editor = #{Creator},
+			EditTime = now(),
+		</set>
+		where ID = #{ID}
+	</update>
+	<!--获取楼盘视频-->
+	<select id="getBuildingPhotoVo" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		select ID,OldVideoName,ImgName,ImgUrl,ListIndex from a_build_book_photo where BuildBookID = #{BuildBookID} and IsDel = 0 and TypeName = 3 order by ListIndex
+	</select>
+	<!--保存楼盘轮播图片/视频-->
+	<insert id="addBuildingPhAndVi" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		insert into a_build_book_photo(ID,CityID,BuildBookID,ImgUrl,OldVideoName,ImgName,ImgDesc,ListIndex,Creator,Status,CreateTime,IsDel,TypeName,IsShow,VRUrl,MaterialType,MaterialTypeDesc)
+		values(uuid(),#{CityID},#{BuildBookID},#{ImgUrl},#{OldVideoName},#{ImgName},#{ImgDesc},#{ListIndex},#{Creator},1,now(),0,#{TypeName},1,#{VRUrl},#{MaterialType},#{MaterialTypeDesc})
+	</insert>
+	<!--删除楼盘视频/轮播图数据-->
+	<delete id="delBuildingPhAndVi" parameterType="java.lang.String">
+		delete from a_build_book_photo where ID in (${IDs})
+	</delete>
+	<!--更新楼盘轮播图片/视频-->
+	<update id="updateBuildingPhAndVi" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		update a_build_book_photo
+		<set>
+			<if test="ImgUrl!=null and ImgUrl!=''">
+				ImgUrl = #{ImgUrl},
+			</if>
+			<if test="OldVideoName!=null and OldVideoName!=''">
+				OldVideoName = #{OldVideoName},
+			</if>
+			<if test="ImgName!=null and ImgName!=''">
+				ImgName = #{ImgName},
+			</if>
+			<if test="ImgDesc!=null and ImgDesc!=''">
+				ImgDesc = #{ImgDesc},
+			</if>
+			<if test="ListIndex!=null and ListIndex!=''">
+				ListIndex = #{ListIndex},
+			</if>
+			<if test="IsDel!=null and IsDel!=''">
+				IsDel = #{IsDel},
+			</if>
+			<if test="VRUrl!=null and VRUrl!=''">
+				VRUrl = #{VRUrl},
+			</if>
+			Editor = #{Creator},
+			EditTime = now(),
+		</set>
+		where ID = #{ID}
+	</update>
+	<!--获取楼盘户型-->
+	<select id="getBuildingApartmentList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.Apartment">
+		select bb.ID id,bb.HouseImg houseImg,
+			   bb.HouseArea houseArea,bb.Status status,bb.FirstFloorHeight firstFloorHeight,
+		ba.EmployeeName creator
+		from a_build_book_warehouse bb
+		INNER JOIN b_account ba on ba.id =  bb.Creator
+		where bb.BuildBookID = #{BuildBookID} and bb.ProductId = #{productId} and bb.IsDel = 0
+	</select>
+	<!--启用禁用户型-->
+	<update id="updateBuildingApartmentStatus" parameterType="java.util.Map">
+		update a_build_book_warehouse
+		set Status = #{Status}
+		where ID = #{ID}
+	</update>
+	<!--获取楼盘户型基本信息-->
+	<select id="getBuildingApartmentAll" parameterType="java.lang.String" resultType="java.util.Map">
+		select bb.ID,bb.BuildBookID,bb.ProjectID,bb.HouseBigType,bb.HouseImg,concat(bb.IsHaveVR,'') IsHaveVR,bb.VRLookRoom,bb.ListIndex,
+		bb.IsDel,bb.VRImgUrl,bb.Status,bb.PropertyTypeCode,bb.PropertyTypeName,bb.FloorAreaMin,bb.FloorAreaMax,bb.ReferencePriceMin,
+		bb.ReferencePriceMax,bb.OnlookersNum,bb.InventedOnlookersNum,bb.Rooms,bb.Hall,bb.Toilet,bb.OrientationCode,bb.OrientationName,
+		concat(bb.PriceDisplayMode,'') PriceDisplayMode,concat(bb.PriceUnit,'') PriceUnit,bb.HouseDetailImgUrl,DATE_FORMAT( bb.CreateTime, '%Y-%m-%d %H:%i:%s' ) CreateTime,ba.EmployeeName Creator
+		from a_build_book_warehouse bb
+		INNER JOIN b_account ba on ba.id =  bb.Creator
+		where bb.BuildBookID = #{BuildBookID} and bb.IsDel = 0
+	</select>
+
+	<!--获取户型详情-->
+	<select id="getBuildingApartmentDetail" parameterType="java.lang.String" resultType="java.util.Map">
+		select ID,BuildBookID,ProjectID,HouseBigType,HouseImg,IsHaveVR,VRLookRoom,ListIndex,Creator,
+			   IsDel,VRImgUrl,Status,PropertyTypeCode,PropertyTypeName,FloorAreaMin,FloorAreaMax,ReferencePriceMin,
+			   ReferencePriceMax,OnlookersNum,InventedOnlookersNum,Rooms,Hall,Toilet,OrientationCode,OrientationName,
+			   PriceDisplayMode,PriceUnit,HouseDetailImgUrl
+		from a_build_book_warehouse
+		where ID = #{ID}
+	</select>
+	<!--保存楼盘户型-->
+	<insert id="addBuildingApartment" parameterType="cn.visolink.system.allpeople.contentManagement.model.Apartment">
+		insert into a_build_book_warehouse(ID,BuildBookID,ProjectID,HouseImg,HouseArea,Creator,CreateTime,
+										   IsDel,Status,ProductId,FirstFloorHeight)
+		values(#{id},#{buildBookID},#{projectID},#{houseImg},#{houseArea},#{creator},now(),0,
+			   1,#{productId},#{firstFloorHeight})
+	</insert>
+	<!--删除楼盘户型-->
+	<delete id="delBuildingApartment" parameterType="java.lang.String">
+		delete from a_build_book_warehouse where ID in (${ids})
+	</delete>
+	<!--更新楼盘户型-->
+	<update id="updateBuildingApartment" parameterType="cn.visolink.system.allpeople.contentManagement.model.Apartment">
+		update a_build_book_warehouse
+		<set>
+			<!--<if test="HouseType!=null and HouseType!=''">-->
+				<!--HouseType = #{HouseType},-->
+			<!--</if>-->
+			<!--<if test="HouseBigType!=null and HouseBigType!=''">-->
+				<!--HouseBigType = #{HouseBigType},-->
+			<!--</if>-->
+			<if test="houseArea!=null and houseArea!=''">
+				HouseArea = #{houseArea},
+			</if>
+			<if test="houseImg!=null and houseImg!=''">
+				HouseImg = #{houseImg},
+			</if>
+			<!--<if test="houseDetail!=null and houseDetail!=''">-->
+				<!--HouseDetail = #{houseDetail},-->
+			<!--</if>-->
+			<!--<if test="IsHaveVR!=null and IsHaveVR!=''">-->
+				<!--IsHaveVR = #{IsHaveVR},-->
+			<!--</if>-->
+			<!--<if test="VRLookRoom!=null and VRLookRoom!=''">-->
+				<!--VRLookRoom = #{VRLookRoom},-->
+			<!--</if>-->
+			<!--<if test="VRImgUrl!=null and VRImgUrl!=''">-->
+				<!--VRImgUrl = #{VRImgUrl},-->
+			<!--</if>-->
+			<!--<if test="IsDel!=null">-->
+				<!--IsDel = #{IsDel},-->
+			<!--</if>-->
+			<!--<if test="Status!=null">-->
+				<!--Status = #{Status},-->
+			<!--</if>-->
+			<!--<if test="PropertyTypeCode!=null and PropertyTypeCode!=''">-->
+				<!--PropertyTypeCode = #{PropertyTypeCode},-->
+			<!--</if>-->
+			<!--<if test="PropertyTypeName!=null and PropertyTypeName!=''">-->
+				<!--PropertyTypeName = #{PropertyTypeName},-->
+			<!--</if>-->
+			<!--<if test="FloorAreaMin!=null and FloorAreaMin!=''">-->
+				<!--FloorAreaMin = #{FloorAreaMin},-->
+			<!--</if>-->
+			<!--<if test="FloorAreaMax!=null and FloorAreaMax!=''">-->
+				<!--FloorAreaMax = #{FloorAreaMax},-->
+			<!--</if>-->
+			<!--<if test="ReferencePriceMin!=null and ReferencePriceMin!=''">-->
+				<!--ReferencePriceMin = #{ReferencePriceMin},-->
+			<!--</if>-->
+			<!--<if test="ReferencePriceMax!=null and ReferencePriceMax!=''">-->
+				<!--ReferencePriceMax = #{ReferencePriceMax},-->
+			<!--</if>-->
+			<!--<if test="OnlookersNum!=null and OnlookersNum!=''">-->
+				<!--OnlookersNum = #{OnlookersNum},-->
+			<!--</if>-->
+			<!--<if test="InventedOnlookersNum!=null and InventedOnlookersNum!=''">-->
+				<!--InventedOnlookersNum = #{InventedOnlookersNum},-->
+			<!--</if>-->
+			<!--<if test="Rooms!=null and Rooms!=''">-->
+				<!--Rooms = #{Rooms},-->
+			<!--</if>-->
+			<!--<if test="Hall!=null and Hall!=''">-->
+				<!--Hall = #{Hall},-->
+			<!--</if>-->
+			<!--<if test="Toilet!=null and Toilet!=''">-->
+				<!--Toilet = #{Toilet},-->
+			<!--</if>-->
+			<!--<if test="OrientationCode!=null and OrientationCode!=''">-->
+				<!--OrientationCode = #{OrientationCode},-->
+			<!--</if>-->
+			<!--<if test="OrientationName!=null and OrientationName!=''">-->
+				<!--OrientationName = #{OrientationName},-->
+			<!--</if>-->
+			<!--<if test="PriceDisplayMode!=null and PriceDisplayMode!=''">-->
+				<!--PriceDisplayMode = #{PriceDisplayMode},-->
+			<!--</if>-->
+			<!--<if test="PriceUnit!=null and PriceUnit!=''">-->
+				<!--PriceUnit = #{PriceUnit},-->
+			<!--</if>-->
+			<!--<if test="HouseDetailImgUrl!=null and HouseDetailImgUrl!=''">-->
+				<!--HouseDetailImgUrl = #{HouseDetailImgUrl},-->
+			<!--</if>-->
+			<if test="firstFloorHeight!=null and firstFloorHeight!=''">
+				FirstFloorHeight = #{firstFloorHeight},
+			</if>
+			Editor = #{creator},
+			EditTime = now(),
+		</set>
+		where ID = #{id}
+	</update>
+	<!--获取楼盘VR-->
+	<select id="getBuildingVR" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		SELECT
+			ID,
+			BuildBookID,
+			ImgUrl,
+			ImgName,
+			ImgDesc,
+			`Status`,
+			ListIndex,
+			VRUrl
+		FROM
+			a_build_book_photo
+		WHERE
+			BuildBookID = #{BuildBookID}
+		  AND IsDel = 0
+		  AND TypeName = '1'
+		order by ListIndex
+	</select>
+	<!--获取楼盘轮播图片-->
+	<select id="getBuildingPhotoList" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		SELECT
+			ID,
+			BuildBookID,
+			ImgUrl,
+			ImgName,
+			ListIndex,
+			`Status`,
+			ImgJumpUrl,
+			IsShow,
+			MaterialType,
+			MaterialTypeDesc
+		FROM
+			a_build_book_photo
+		WHERE
+			BuildBookID = #{BuildBookID}
+		  AND IsDel = 0
+		  AND TypeName = '2'
+		order by ListIndex
+	</select>
+
+	<!--获取楼盘轮播图片类别-->
+	<select id="getBuildingPhotoTypes" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			DISTINCT MaterialType,MaterialTypeDesc
+		FROM
+			a_build_book_photo
+		WHERE
+			BuildBookID = #{BuildBookID}
+		  AND IsDel = 0
+		  AND TypeName = '2'
+	</select>
+	<!--获取户型大类-->
+	<select id="getBuildingHXD" parameterType="java.util.Map" resultType="cn.visolink.system.parameter.model.Dictionary">
+		SELECT
+			ID,
+			ListIndex,
+			DictCode,
+			DictName
+		FROM
+			s_dictionary
+		WHERE
+				PID = ( SELECT ID FROM s_dictionary WHERE pid = '-1' AND DictCode = 's_apartment' )
+		  AND IsDel = 0
+	</select>
+	<!--获取户型子类-->
+	<select id="getBuildingHXZ" parameterType="java.util.Map" resultType="cn.visolink.system.parameter.model.Dictionary">
+		SELECT
+			ID,
+			ListIndex,
+			DictCode,
+			DictName
+		FROM
+			s_dictionary
+		WHERE
+			PID = #{ID}
+		  AND IsDel = 0
+	</select>
+	<!--获取项目-->
+	<select id="getUserProjects" parameterType="java.util.Map" resultType="java.util.Map">
+		<choose>
+			<when test="jobCode!='10001' and jobCode!='1999'">
+				SELECT
+				so.ProjectID projectId,
+				p.projectName
+				FROM
+				b_account ac
+				inner join s_jobsuserrel jur on jur.AccountID = ac.ID
+				inner join s_jobs job on job.ID = jur.JobID and job.Status = 1 and job.IsDel = 0
+				inner join s_commonjobs scj on job.CommonJobID=scj.ID and scj.IsDel = 0 and scj.Status = 1
+				inner JOIN s_organization so ON job.JobOrgID = so.ID and so.Status = 1 and so.IsDel = 0
+				inner JOIN b_project p ON so.ProjectID = p.ID  and p.Status = 1 and p.IsDel = 0
+				inner join (select pid from b_project where pid is not null GROUP BY pid ) p1 on p1.pid = p.id
+				WHERE
+				ac.UserName = #{userName}
+				and p.IsStages =0 and scj.JobCode not in ('zygw','khds','nqgw')
+				and p.pid is null
+				AND job.isIdm = 0
+				and p.orgId is not null
+				and p.Status = 1
+				and p.IsDel = 0
+				and p.orgId != ''
+				group by so.ProjectID
+			</when>
+			<otherwise>
+				SELECT
+				p.id projectId,
+				p.projectName
+				FROM
+				b_project p
+				inner join (select pid from b_project where pid is not null GROUP BY pid ) p1 on p1.pid = p.id
+				where  p.Status = 1 and p.IsDel = 0
+				and p.IsStages =0
+				and p.pid is null
+				and p.orgId is not null
+				and p.orgId != ''
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="getOrgNameByOrgId" parameterType="java.lang.String" resultType="java.lang.String">
+		select OrgName from s_organization where id = #{id};
+	</select>
+	<!--根据项目获取区域，城市-->
+	<select id="getCityAndBelongArea" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			p.AreaName,
+			c.CityID,
+			t.CityName
+		FROM
+			b_project p
+				LEFT JOIN a_city_project c ON p.ID = c.ProjectID
+				LEFT JOIN a_city t ON c.CityID = t.ID
+		WHERE
+			p.ID = #{projectId}
+	</select>
+	<!--获取推广活动-->
+	<select id="getExtensionList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.Extension">
+		SELECT
+		e.ID,
+		e.ProjectID,
+		p.ProjectName,
+		e.ExtenActivityName,
+		e.IconName,
+		e.IconUrl,
+		(case when e.ToUrl = 1 then '旭客家首页'
+		when e.ToUrl = 2 then '项目微楼书' else '' end) ToUrl,
+		e.Creator,
+		ba.EmployeeName as `Name`,
+		DATE_FORMAT( e.CreateTime, '%Y-%m-%d %H:%i:%s' ) CreateTime,
+		(select count(1) from a_broker_user where RegistRefcommend = e.ID ) as RegisterCnt,
+		e.MainMediaGUID as mainMediaGuId,
+		e.MainMediaName as mainMediaName,
+		e.SubMediaGUID as subMediaGuId,
+		e.SubMediaName as subMediaName,
+		e.Type as type,
+		e.Days as days,
+		e.BuildBookID as BuildBookID,
+		e.CityId as CityId,
+		e.PhotoWidth as PhotoWidth,
+		e.PhotoName as PhotoName
+		FROM
+		a_extension e
+		LEFT JOIN b_project p ON e.ProjectID = p.ID
+		LEFT JOIN b_account ba  on ba.id = e.Creator
+		where e.ProjectID = #{projectId}
+		and e.IsDel = 0 and e.IsNewAdd = 0
+		<if test="ExtenActivityName!=null">
+			and e.ExtenActivityName like '%${ExtenActivityName}%'
+		</if>
+		order by e.CreateTime desc
+	</select>
+
+	<!--获取项目编码和活动ID-->
+	<select id="getProNumId" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			p.ProjectNum
+		FROM
+			b_project p
+		WHERE
+			p.id = #{ProjectID} and p.IsDel = 0 limit 1
+	</select>
+	<!--保存推广活动-->
+	<insert id="addExtension" parameterType="cn.visolink.system.allpeople.contentManagement.model.Extension" useGeneratedKeys="true" keyProperty="ID">
+		insert into a_extension(ProjectID,ExtenActivityName,IconName,IconUrl,ToUrl,Creator,CreateTime,IsDel,MainMediaGUID,
+								MainMediaName,SubMediaGUID,SubMediaName,Type,Days,ExtenType,ExtenOrgId,BuildBookID,
+								NewsId,ActivityId,CityId,WareHouseId,HouseBuildBookId,JumpToName,IsNewAdd,PhotoWidth,PhotoName)
+		values(#{ProjectID},#{ExtenActivityName},#{IconName},#{IconUrl},#{ToUrl},#{Creator},now(),0,
+			   #{mainMediaGuId},#{mainMediaName},#{subMediaGuId},#{subMediaName},#{type},#{days}
+				  ,#{ExtenType},#{ExtenOrgId},#{BuildBookID},#{NewsId},#{ActivityId},#{CityId},
+			   #{WareHouseId},#{HouseBuildBookId},#{JumpToName},#{IsNewAdd},#{PhotoWidth},#{PhotoName})
+	</insert>
+	<!--更新推广活动-->
+	<update id="updateExtension" parameterType="cn.visolink.system.allpeople.contentManagement.model.Extension">
+		update a_extension
+		<set>
+			<if test="ExtenActivityName!=null and ExtenActivityName!=''">
+				ExtenActivityName = #{ExtenActivityName},
+			</if>
+			<if test="IconName!=null and IconName!=''">
+				IconName = #{IconName},
+			</if>
+			<if test="IsDel!=null and IsDel!=''">
+				IsDel = #{IsDel},
+			</if>
+			<if test="IconUrl!=null and IconUrl!=''">
+				IconUrl = #{IconUrl},
+			</if>
+			<if test="ToUrl!=null and ToUrl!=''">
+				ToUrl = #{ToUrl},
+			</if>
+			MainMediaGUID = #{mainMediaGuId},
+			MainMediaName = #{mainMediaName},
+			SubMediaGUID = #{subMediaGuId},
+			SubMediaName = #{subMediaName},
+			ProjectID = #{ProjectID},
+			<if test="ExtenType!=null and ExtenType!=''">
+				ExtenType = #{ExtenType},
+			</if>
+			ExtenOrgId = #{ExtenOrgId},
+			BuildBookID = #{BuildBookID},
+			NewsId = #{NewsId},
+			ActivityId = #{ActivityId},
+			CityId = #{CityId},
+			WareHouseId = #{WareHouseId},
+			HouseBuildBookId = #{HouseBuildBookId},
+			JumpToName = #{JumpToName},
+			PhotoWidth = #{PhotoWidth},
+			PhotoName = #{PhotoName},
+			Type = #{type},
+			Days = #{days},
+			Editor = #{Creator},
+			EditTime = now(),
+		</set>
+		where ID = #{ID}
+	</update>
+	<!--根据项目ID查询项目名称-->
+	<select id="getProNameByID" parameterType="java.lang.String" resultType="java.lang.String">
+		select ProjectName from b_project where ID = #{ID}
+	</select>
+	<!--根据岗位查询城市-->
+	<select id="getCityByJobId" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			DISTINCT
+			cj.CityID,
+			ac.CityName
+		FROM
+			`a_city_job` cj
+				LEFT JOIN a_city ac ON cj.CityID = ac.ID and ac.IsDel = 0
+		WHERE
+			cj.JobID in (${JobIDs})
+	</select>
+
+	<!--获取所有城市-->
+	<select id="getAllCitys" resultType="java.util.Map">
+		select ID as CityID,CityName from a_city where IsDel = 0
+	</select>
+	<!--查询所有岗位-->
+	<select id="getAllJobs" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			ba.EmployeeName,
+			job.id,
+			job.JobCode
+		FROM
+			s_jobsuserrel rel
+				INNER JOIN b_account ba ON rel.AccountID = ba.ID
+				INNER JOIN s_jobs job ON rel.JobID = job.id and job.IsDel = 0 and job.isIdm = 0
+		WHERE
+			ba.id = #{userId};
+	</select>
+	<!--查询岗位是否是系统管理员-->
+	<select id="isAdmin" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			JobCode
+		FROM
+			s_jobs
+		WHERE
+			id = #{JobID}
+	</select>
+
+	<!--获取装修标准-->
+	<select id="getZXBZ" resultType="java.util.Map">
+		SELECT
+			ID,
+			ListIndex,
+			DictCode,
+			DictName
+		FROM
+			s_dictionary
+		WHERE
+			PID = ( SELECT ID FROM s_dictionary WHERE pid = '-1' AND DictCode = 's_zxbz' )
+		  AND IsDel = 0
+		order by ( ListIndex + 0 )
+	</select>
+
+	<!--根据主项目ID查询所有分期-->
+	<select id="getProjects" parameterType="java.lang.String" resultType="java.lang.String">
+		select ID
+		from b_project
+		where PID = #{projectId} and IsDel = 0
+	</select>
+	<!--获取楼栋业态字典值-->
+	<select id="getBuildingMainDict" resultType="cn.visolink.system.allpeople.contentManagement.model.DictDesc">
+		select ID,DictCode,DictName from s_dictionary
+		where pid = (select id from s_dictionary where pid = -1 and DictCode = 's_ldyt') and IsDel = 0 ORDER BY DictCode;
+	</select>
+	<select id="getBuildingSubDict" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.DictDesc">
+		select  ID,DictCode,Remark DictName from s_dictionary
+		where pid = #{pid} and IsDel = 0 ORDER BY DictCode;
+	</select>
+
+	<!--获取项目佣金比例-->
+	<select id="getCommissionRate" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			ro.ID,
+			ro.BrokerageRule,
+			DATE_FORMAT( ro.EnableDate, '%Y-%m-%d %H:%i:%s' ) EnableDate,
+			DATE_FORMAT( ro.EndDate, '%Y-%m-%d %H:%i:%s' ) EndDate
+		FROM
+			b_project_protect_rule ru
+				LEFT JOIN b_broker_rule ro ON ru.ID = ro.RuleID
+		WHERE
+			ru.ProjectID = #{projectID}
+		  AND ro.IsEnable = 1
+			LIMIT 1
+	</select>
+	<!--获取项目楼盘-->
+	<select id="getBuildingByProId" parameterType="java.util.Map" resultType="java.lang.String">
+		SELECT
+			ProjectShowName
+		FROM
+			a_build_book
+		WHERE
+			ProjectID = #{ProjectID}
+			LIMIT 1
+	</select>
+	<!--查询海报列表-->
+	<select id="getBuildingPosterList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingPoster">
+		SELECT
+		bp.ID,
+		bp.PosterTitle,
+		bp.PosterPhotoUrl,
+		(select count(1) count from a_broker_user where RegistFrom = '海报分享' and RegistRefcommend in (
+		select DISTINCT OpenId from a_book_poster where PosterId = bp.ID and OpenId is not null)) RegisterCnt,
+		(case when bp.Status=1 then '启用' else '未启用' end) Status,
+		DATE_FORMAT(bp.CreateTime,'%Y-%m-%d %H:%i:%s') CreateTime,
+		ba.EmployeeName as Creator
+		FROM
+		b_build_poster bp INNER JOIN b_account ba on bp.Creator = ba.id
+		where bp.ProjectId = #{ProjectId} AND bp.BuildBookID = #{BuildBookID}
+		<if test="PosterTitle!=null and PosterTitle!=''">
+			and bp.PosterTitle like '%${PosterTitle}%'
+		</if>
+		<if test="Status!=null and Status!=''">
+			and bp.Status = #{Status}
+		</if>
+		order by bp.CreateTime desc
+	</select>
+	<!--添加海报图片-->
+	<insert id="addBuildingPoster" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingPoster">
+		insert into b_build_poster(PosterTitle,PosterPhotoUrl,ProjectId,BuildBookID,Status,Creator,CreateTime,IsDel)
+		values(#{PosterTitle},#{PosterPhotoUrl},#{ProjectId},#{BuildBookID},#{Status},#{Creator},now(),0)
+	</insert>
+	<!--更新海报-->
+	<update id="updateBuildingPoster" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingPoster">
+		update b_build_poster
+		<set>
+			<if test="PosterTitle!=null and PosterTitle!=''">
+				PosterTitle = #{PosterTitle},
+			</if>
+			<if test="PosterPhotoUrl!=null and PosterPhotoUrl!=''">
+				PosterPhotoUrl = #{PosterPhotoUrl},
+			</if>
+			<if test="Status!=null and Status!=''">
+				Status = #{Status},
+			</if>
+			Editor = #{Creator},
+			EditTime = now()
+		</set>
+		where ID = #{ID}
+	</update>
+	<!--删除海报-->
+	<delete id="delBuildingPoster" parameterType="java.lang.String">
+		delete from b_build_poster where ID = #{ID}
+	</delete>
+	<!--保存二维码数据-->
+	<insert id="addBookPoster" parameterType="java.util.Map">
+		insert into a_book_poster(ID,BookId,PosterId,BookPosterNum,CreateTime)
+		values(uuid(),#{BookId},#{PosterId},#{BookPosterNum},now())
+	</insert>
+	<!--根据城市ID查询楼盘-->
+	<select id="getBuildingByCityId" parameterType="java.lang.String" resultType="java.util.Map">
+		select ID id,ProjectShowName name from a_build_book
+		where IsDel = 0 and Status = 1 and IsShowHeadImg = 1
+		<if test="CityId!=null and CityId!='00000000-0000-0000-0000-000000000000'">
+			and CityId = #{CityId}
+		</if>
+	</select>
+	<!--根据城市ID查询新闻-->
+	<select id="getNewsByCityId" parameterType="java.lang.String" resultType="java.util.Map">
+		select ID id,(case when length(Title)>45 then CONCAT(LEFT(Title,15),'...') else Title end) name from a_news where CityId = #{CityId} and IsDel = 0 and Status = 1 and IsPublish = 1
+	</select>
+	<!--根据城市ID查询活动-->
+	<select id="getActivityByCityId" parameterType="java.lang.String" resultType="java.util.Map">
+		select DISTINCT info.id id,info.activity_name as `name` from a_activity_projects ap
+																		 INNER JOIN a_activity_info info on ap.actity_id = info.id
+		where ap.city_id = #{cityId} and ap.isdel = 0
+		  and info.status = 1 and info.act_status = 2
+		  and info.is_del = 0 and info.release_time &lt; now() and info.activity_endtime &gt; now()
+	</select>
+
+	<!--根据有权限的项目ID查询楼盘-->
+	<select id="getBuildingByProIds" parameterType="java.lang.String" resultType="java.util.Map">
+		select ID id,ProjectShowName name,ProjectID,ProjectName from a_build_book
+		where IsDel = 0 and Status = 1 and IsShowHeadImg = 1
+		<if test="proIds!=null and proIds.size() >0">
+			and ProjectID in
+			<foreach collection="proIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+	<!--根据城市IDs查询新闻-->
+	<select id="getNewsByCityIds" parameterType="java.lang.String" resultType="java.util.Map">
+		select ID id,(case when length(Title)>45 then CONCAT(LEFT(Title,15),'...') else Title end) name from a_news
+		where IsDel = 0
+		<if test="cityIds!=null and cityIds.size() >0">
+			and CityId in
+			<foreach collection="cityIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and Status = 1 and IsPublish = 1
+	</select>
+	<!--根据有权限的项目ID查询活动-->
+	<select id="getActivityByProIds" parameterType="java.lang.String" resultType="java.util.Map">
+		select DISTINCT info.id id,info.activity_name as `name`
+		from a_activity_projects ap
+		INNER JOIN a_activity_info info on ap.actity_id = info.id
+		where  ap.isdel = 0
+		<if test="proIds!=null and proIds.size() >0">
+			and ap.project_id in
+			<foreach collection="proIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and info.status = 1 and info.act_status = 2
+		and info.is_del = 0 and info.release_time &lt; now() and info.activity_endtime &gt; now()
+	</select>
+
+	<!--保存预售证号-->
+	<insert id="addPreSalePermit" parameterType="cn.visolink.system.allpeople.contentManagement.model.PreSalePermit">
+		insert into a_build_book_presalepermit(id,BuildBookID,PreSalePermit,CertificationTime,BindingBuild,Creator,CreateTime,IsDel)
+		values (uuid(),#{BuildBookID},#{PreSalePermit},#{CertificationTime},#{BindingBuild},#{Creator},now(),0)
+	</insert>
+	<!--查询预售证号-->
+	<select id="getPreSalePermits" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.PreSalePermit">
+		select * from a_build_book_presalepermit where BuildBookID = #{BuildBookID} order by CreateTime
+	</select>
+	<!--更新预售证号-->
+	<update id="updatePreSalePermit" parameterType="cn.visolink.system.allpeople.contentManagement.model.PreSalePermit">
+		update a_build_book_presalepermit
+		set PreSalePermit = #{PreSalePermit},
+			CertificationTime = #{CertificationTime},
+			BindingBuild = #{BindingBuild},
+			Editor = #{Creator},
+			EditTime = now()
+		where id = #{id}
+	</update>
+	<!--删除预售证号-->
+	<delete id="delPreSalePermits" parameterType="java.lang.String">
+		delete from a_build_book_presalepermit where id in (${ids})
+	</delete>
+	<!--查询当前城市最后排序号-->
+	<select id="getBuildListIndexByCityId" resultType="java.lang.String" parameterType="java.lang.String">
+		SELECT
+			max( bbc.list_index )
+		FROM
+			a_build_book bb
+				left join a_build_book_city bbc on bb.id = bbc.build_book_id
+		WHERE
+			bbc.city_id = #{CityID}
+	</select>
+
+	<!--查询楼盘问题列表-->
+	<select id="getBuildBookProblemList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildBookProblem">
+		SELECT
+		ab.ID,
+		ab.BuildBookID,
+		ab.BuildBookName,
+		ab.ProjectId,
+		bp.ProjectName,
+		bp.ProjectNum,
+		ab.ProblemDescribe,
+		ab.ProblemAnswer,
+		ab.CreateUserId,
+		ab.CreateUserName,
+		ab.CreateTime,
+		ab.ClickNumber,
+		ab.`Status`,
+		(
+		case
+		when ab.`Status` = 1 then
+		'是'
+		else
+		'否'
+		end
+		) as StatusName,
+		ab.ListIndex,
+		ab.IsDel
+		FROM
+		a_build_book_problem ab
+		left join b_project bp on ab.ProjectId = bp.id
+		where
+		ab.IsDel = 0
+		<if test="projectList != null and projectList.size() > 0">
+			and ab.ProjectId in
+			<foreach collection="projectList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="statusList != null and statusList.size() > 0">
+			and ab.Status in
+			<foreach collection="statusList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="buildBookId != null and buildBookId != ''">
+			and ab.BuildBookID = #{buildBookId}
+		</if>
+		<if test="createUserName != null and createUserName != ''">
+			and ab.CreateUserName like CONCAT('%',#{createUserName},'%')
+		</if>
+		<if test="problemDescribe != null and problemDescribe != ''">
+			and ab.ProblemDescribe like CONCAT('%',#{problemDescribe},'%')
+		</if>
+		order by ab.ListIndex
+	</select>
+
+	<!--查询楼盘问题列表-->
+	<select id="getBuildBookProblemList_COUNT" parameterType="java.util.Map" resultType="Long">
+		SELECT
+		count(1)
+		FROM
+		a_build_book_problem
+		where
+		IsDel = 0
+		<if test="projectList != null and projectList.size() > 0">
+			and ProjectId in
+			<foreach collection="projectList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="statusList != null and statusList.size() > 0">
+			and Status in
+			<foreach collection="statusList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="buildBookId != null and buildBookId != ''">
+			and BuildBookID = #{buildBookId}
+		</if>
+		<if test="createUserName != null and createUserName != ''">
+			and CreateUserName like CONCAT('%',#{createUserName},'%')
+		</if>
+		<if test="problemDescribe != null and problemDescribe != ''">
+			and ProblemDescribe like CONCAT('%',#{problemDescribe},'%')
+		</if>
+	</select>
+	<!--保存问题-->
+	<insert id="saveBuildBookProblem" parameterType="java.util.Map">
+		insert into a_build_book_problem
+		(ID,BuildBookID,BuildBookName,ProjectId,ProjectName,ProblemDescribe,ProblemAnswer,
+		 CreateUserId,CreateUserName,CreateTime,ClickNumber,`Status`,ListIndex )
+		values
+		(uuid(),#{buildBookID},#{buildBookName},#{projectId},#{projectName},#{problemDescribe},#{problemAnswer},
+		 #{createUserId},#{createUserName},now(),#{clickNumber},1,#{listIndex})
+	</insert>
+	<!--查询排序数-->
+	<select id="getBuildBookProblemListIndex" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select max(ListIndex) from a_build_book_problem where BuildBookID = #{buildBookID}
+	</select>
+	<!--更新问题-->
+	<update id="updateBuildBookProblem" parameterType="java.util.Map">
+		update a_build_book_problem
+		<set>
+			<if test="buildBookID != null and buildBookID != ''">
+				BuildBookID = #{buildBookID},
+			</if>
+			<if test="buildBookName != null and buildBookName != ''">
+				BuildBookName = #{buildBookName},
+			</if>
+			<if test="projectId != null and projectId != ''">
+				ProjectId	= #{projectId},
+			</if>
+			<if test="projectName != null and projectName != ''">
+				ProjectName = #{projectName},
+			</if>
+			<if test="problemDescribe != null and problemDescribe != ''">
+				ProblemDescribe = #{problemDescribe},
+			</if>
+			<if test="problemAnswer != null and problemAnswer != ''">
+				ProblemAnswer = #{problemAnswer},
+			</if>
+			<if test="editUserId != null and editUserId != ''">
+				EditUserId = #{editUserId},
+			</if>
+			<if test="status != null and status != ''">
+				Status = #{status},
+			</if>
+			<if test="isDel != null and isDel != ''">
+				IsDel = #{isDel},
+			</if>
+			EditTime = now()
+		</set>
+		where
+		ID = #{id}
+	</update>
+	<!--更新排序-->
+	<update id="updateBuildBookProblemListIndex" parameterType="java.util.Map">
+		<foreach collection="mapList" item="list" separator=";">
+			update a_build_book_problem
+			set ListIndex = #{list.listIndex},
+			EditUserId = #{list.editUserId},
+			EditTime = now()
+			where
+			ID = #{list.id}
+		</foreach>
+	</update>
+	<!--查询楼盘-->
+	<select id="getBuildBookList" parameterType="java.util.Map" resultType="java.util.Map">
+		select
+		ID,
+		ProjectID,
+		ProjectName,
+		ProjectShowName,
+		BuildBookName
+		from
+		a_build_book
+		where
+		Status = 1
+		<if test="projectList != null and projectList.size() > 0">
+			and ProjectID in
+			<foreach collection="projectList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and IsDel = 0
+		ORDER BY ListIndex
+	</select>
+
+	<!--查询楼盘问题列表-->
+	<select id="getBuildBookProblemListByProjectId" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildBookProblem">
+		SELECT
+			ID,
+			BuildBookID,
+			BuildBookName,
+			ProjectId,
+			ProjectName,
+			ProblemDescribe,
+			ProblemAnswer,
+			CreateUserId,
+			CreateUserName,
+			CreateTime,
+			ClickNumber,
+			`Status`,
+			ListIndex
+		FROM
+			a_build_book_problem
+		where
+			BuildBookID = #{buildBookId}
+		  and Status = 1
+		  and IsDel = 0
+		order by ListIndex
+	</select>
+	<!--查询当前城市是否可配置弹窗-->
+	<select id="getIsOkCity" parameterType="java.util.Map" resultType="java.lang.String">
+		select id from a_build_book_photo
+		where CityID = #{CityID} and IsDel = 0 and TypeName = 5 and Status = 1
+		<if test="beginTime!=null and beginTime!=''">
+			and ((ShowBeginTime is null and ShowEndTime is null) or #{beginTime} &lt; ShowEndTime)
+		</if>
+		<if test="beginTime==null">
+			and ((ShowBeginTime is null and ShowEndTime is null) or now() &lt; ShowEndTime)
+		</if>
+	</select>
+
+	<!--查询问题数量-->
+	<select id="getBookProblemNum" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(1) from a_build_book_problem where BuildBookID = #{buildBookID} and Status = 1 and IsDel = 0
+	</select>
+
+	<!--更新轮播图、弹窗状态-->
+	<update id="updateBuildingPhotoStatus" parameterType="java.util.Map">
+		update a_build_book_photo set Status = #{Status}
+		where id = #{id}
+	</update>
+
+	<!--保存楼盘城市数据-->
+	<insert id="saveBuildBookCity" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildBookCity">
+		INSERT INTO `a_build_book_city`
+		(`ID`, `city_id`, `city_name`, `city_type`, `build_book_id`, `build_book_name`, `status`,
+		`is_del`, `list_index`, `createtime`, `creator`)
+		VALUES
+		<foreach collection="buildBookCityList" item="list" separator=",">
+			(uuid(), #{list.cityId}, #{list.cityName}, #{list.cityType}, #{list.buildBookId}, #{list.buildBookName}, 1, 0, #{list.listIndex}, now(), #{list.creator})
+		</foreach>
+	</insert>
+
+	<!--删除楼盘城市数据-->
+	<delete id="deleteBuildBookCity" parameterType="java.lang.String">
+		delete from a_build_book_city where build_book_id = #{buildBookId}  and city_type = 2
+	</delete>
+
+	<!--查询周边城市-->
+	<select id="getBuildBookCity" parameterType="java.lang.String" resultType="java.lang.String">
+		select city_id from a_build_book_city where build_book_id = #{buildBookId}  and city_type = 2
+	</select>
+
+	<!--查询城市信息-->
+	<select id="getCityListById" parameterType="java.lang.String" resultType="java.util.Map">
+		select ID as CityID,CityName from a_city where IsDel = 0
+		and id in
+		<foreach collection="cityIdList" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<!--查询最大排序-->
+	<select id="getBuildBookCityListIndex" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select ifnull(max(list_index),0) from a_build_book_city where city_id = #{cityId}
+	</select>
+
+	<select id="getAllProject" resultType="java.util.Map">
+		select ID,ProjectName from b_project where Status = 1 and IsDel = 0 and (PID is null or PID = '')
+	</select>
+
+	<select id="getFeedBackImgList" parameterType="java.lang.String" resultType="java.lang.String">
+		select img_url from a_user_feedback_img where feedback_id = #{feedbackId}
+	</select>
+	<!--获取周边配套-->
+	<select id="getPeriphery" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildBookPeriphery" parameterType="java.lang.String">
+		select build_book_id buildBookId,title,address,tel,lat,lng,distance,adType,creator,project_id projectId from a_build_book_periphery
+		where build_book_id = #{buildBookId} and adType = #{adType} order by distance
+	</select>
+	<!--保存周边配套-->
+	<insert id="addPeriphery" parameterType="java.util.List">
+		insert into a_build_book_periphery(id,project_id,build_book_id,title,address,tel,
+		lat,lng,distance,adType,is_del,creator,create_time)
+		values
+		<foreach collection="list" separator="," item="item">
+			(uuid(),#{item.projectId},#{item.buildBookId},#{item.title},#{item.address},
+			#{item.tel},#{item.lat},#{item.lng},#{item.distance},#{item.adType},0,#{item.creator},now())
+		</foreach>
+	</insert>
+
+	<!--获取未维护周边的楼盘数据-->
+	<select id="getBuildBookNotPeriphery" resultType="java.util.Map">
+		select id buildBookId,ProjectID projectId,Latitude lat,Longitude lng from a_build_book
+		where id not in (
+			select DISTINCT build_book_id from a_build_book_periphery
+		)
+	</select>
+	<!--删除周边配套-->
+	<delete id="delPeriphery" parameterType="java.lang.String">
+		delete from a_build_book_periphery
+		where build_book_id = #{buildBookId}
+		<if test="adType!=null and adType!=''">
+			and adType = #{adType}
+		</if>
+	</delete>
+
+	<!--获取楼栋业态信息-->
+	<select id="getBuildingProperty" parameterType="java.lang.String" resultType="java.util.Map">
+		select id, build_book_id buildBookId,property_type_code propertyTypeCode,
+			   property_type_name propertyTypeName,renovation_code renovationCode,
+			   renovation_name renovationName,build_book_years buildBookYears,
+			   floor_area_min floorAreaMin,floor_area_max floorAreaMax,
+			   reference_price_min referencePriceMin,reference_price_max referencePriceMax,
+			   list_index listIndex,creator,concat(price_display_mode,'') priceDisplayMode
+		from a_build_book_property_type
+		where build_book_id =#{buildBookId} and is_del = 0
+		order by list_index
+	</select>
+
+	<!--保存楼栋业态信息-->
+	<insert id="addBuildingProperty" parameterType="java.util.List">
+		insert into a_build_book_property_type(id,build_book_id,property_type_code,
+		property_type_name,renovation_code,renovation_name,build_book_years,
+		floor_area_min,floor_area_max,reference_price_min,reference_price_max,
+		list_index,creator,is_del,create_time,price_display_mode)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(uuid(),#{item.buildBookId},#{item.propertyTypeCode},#{item.propertyTypeName},#{item.renovationCode},
+			#{item.renovationName},#{item.buildBookYears},#{item.floorAreaMin},#{item.floorAreaMax},
+			#{item.referencePriceMin},#{item.referencePriceMax},#{item.listIndex},#{item.creator},0,now(),#{item.priceDisplayMode})
+		</foreach>
+	</insert>
+
+	<!--更新楼栋业态信息-->
+	<update id="updateBuildingProperty" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingProperty">
+		update a_build_book_property_type
+		<set>
+			<if test="propertyTypeCode!=null and propertyTypeCode!=''">
+				property_type_code = #{propertyTypeCode},
+			</if>
+			<if test="propertyTypeName!=null and propertyTypeName!=''">
+				property_type_name = #{propertyTypeName},
+			</if>
+			<if test="renovationCode!=null and renovationCode!=''">
+				renovation_code = #{renovationCode},
+			</if>
+			<if test="renovationName!=null and renovationName!=''">
+				renovation_name = #{renovationName},
+			</if>
+			<if test="buildBookYears!=null and buildBookYears!=''">
+				build_book_years = #{buildBookYears},
+			</if>
+			<if test="floorAreaMin!=null and floorAreaMin!=''">
+				floor_area_min = #{floorAreaMin},
+			</if>
+			<if test="floorAreaMax!=null and floorAreaMax!=''">
+				floor_area_max = #{floorAreaMax},
+			</if>
+			reference_price_min = #{referencePriceMin},
+			reference_price_max = #{referencePriceMax},
+			price_display_mode = #{priceDisplayMode},
+			list_index = #{listIndex},
+			<if test="isDel!=null and isDel!=''">
+				is_del = #{isDel},
+			</if>
+			editor = #{creator},
+			edit_time = now()
+		</set>
+		where id = #{id}
+	</update>
+
+	<!--删除楼栋业态信息-->
+	<delete id="delBuildingProperty" parameterType="java.lang.String">
+		delete from a_build_book_property_type where id in (${ids})
+	</delete>
+
+	<!--获取户型轮播/视频-->
+	<select id="getHouseImg" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT ID,BuildBookID,ProjectID,HouseTypeID,ImgUrl,ListIndex
+		FROM `a_build_book_house_img`
+		where TypeName = #{TypeName} and HouseTypeID = #{HouseTypeID} and IsDel = 0
+		ORDER BY ListIndex;
+	</select>
+	<!--保存户型轮播/视频-->
+	<insert id="addHouseImg" parameterType="java.util.List">
+		insert into a_build_book_house_img(ID,BuildBookID,ProjectID,HouseTypeID,
+		ImgUrl,TypeName,ListIndex,Creator,CreateTime,IsDel)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(uuid(),#{item.BuildBookID},#{item.ProjectID},#{item.HouseTypeID},#{item.ImgUrl},
+			#{item.TypeName},#{item.ListIndex},#{item.Creator},now(),0)
+		</foreach>
+	</insert>
+	<!--删除户型轮播/视频-->
+	<delete id="delHouseImg" parameterType="java.lang.String">
+		delete from a_build_book_house_img where ID in (${ids})
+	</delete>
+
+	<!--根据户型ID删除户型轮播图/视频-->
+	<delete id="delHouseImgByHouseId" parameterType="java.lang.String">
+		delete from a_build_book_house_img where HouseTypeID = #{id}
+	</delete>
+	<!--获取户型标签-->
+	<select id="getHouseTag" parameterType="java.util.Map" resultType="java.util.Map">
+		select id,tag_name tagName,tag_parent_code tagParentCode,
+		tag_parent_name tagParentName,tag_type tagType,
+		is_show isShow,build_book_id buildBookId,
+		house_type_id houseTypeId,list_index listIndex,
+		creator
+		from a_build_book_house_tag
+		where is_del = 0
+		<if test="houseTypeId!=null">
+			and house_type_id = #{houseTypeId}
+		</if>
+		<if test="buildBookId!=null">
+			and build_book_id = #{buildBookId}
+		</if>
+		and tag_type = #{tagType}
+		ORDER BY list_index
+	</select>
+	<!--保存户型标签-->
+	<insert id="addHouseTag" parameterType="java.util.List">
+		insert into a_build_book_house_tag(id,tag_name,tag_parent_code,tag_parent_name,
+		tag_type,is_show,build_book_id,house_type_id,list_index,creator,create_time,is_del)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(uuid(),#{item.tagName},#{item.tagParentCode},#{item.tagParentName},#{item.tagType},
+			#{item.isShow},#{item.buildBookId},#{item.houseTypeId},#{item.listIndex},#{item.creator},now(),0)
+		</foreach>
+	</insert>
+	<!--更新户型标签-->
+	<update id="updateHouseTag" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update a_build_book_house_tag
+			set tag_name = #{item.tagName},
+			tag_parent_code = #{item.tagParentCode},
+			tag_parent_name = #{item.tagParentName},
+			list_index = #{item.listIndex},
+			is_show = #{item.isShow},
+			editor = #{item.creator}
+			where
+			id = #{item.id}
+		</foreach>
+	</update>
+	<!--删除户型标签-->
+	<delete id="delHouseTag" parameterType="java.lang.String">
+		delete from a_build_book_house_tag where id in (${ids})
+	</delete>
+	<!--根据户型ID删除户型标签-->
+	<delete id="delHouseTagByHouseId" parameterType="java.lang.String">
+		delete from a_build_book_house_tag where house_type_id = #{id} and tag_type = 2
+	</delete>
+	<!--根据楼盘ID删除楼盘标签-->
+	<delete id="delBuildTag" parameterType="java.lang.String">
+		delete from a_build_book_house_tag where build_book_id = #{id} and tag_type = 1
+	</delete>
+	<!--获取户型标签分析-->
+	<select id="getHouseAnalysis" parameterType="java.util.Map" resultType="java.util.Map">
+		select ID,BuildBookID,ProjectID,HouseTypeID,
+			   ListIndex,TagParentCode,TagParentName,
+			   TagDesc,Creator
+		from a_build_book_house_type
+		where HouseTypeID = #{HouseTypeID} and IsDel = 0
+		ORDER BY ListIndex
+	</select>
+	<!--保存户型标签分析-->
+	<insert id="addHouseAnalysis" parameterType="java.util.List">
+		insert into a_build_book_house_type(ID,BuildBookID,ProjectID,HouseTypeID,
+		ListIndex,TagParentCode,TagParentName,TagDesc,Creator,CreateTime,IsDel)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(uuid(),#{item.BuildBookID},#{item.ProjectID},#{item.HouseTypeID},#{item.ListIndex},
+			#{item.TagParentCode},#{item.TagParentName},#{item.TagDesc},#{item.Creator},now(),0)
+		</foreach>
+	</insert>
+	<!--更新户型标签分析-->
+	<update id="updateHouseAnalysis" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update a_build_book_house_type
+			set TagDesc = #{item.TagDesc},
+			ListIndex = #{item.ListIndex},
+			Editor = #{item.Creator}
+			where
+			ID = #{item.ID}
+		</foreach>
+	</update>
+	<!--删除户型标签分析-->
+	<delete id="delHouseAnalysis" parameterType="java.lang.String">
+		delete from a_build_book_house_type where ID in (${ids})
+	</delete>
+	<delete id="delHouseAnalysisByHouseId">
+		delete from a_build_book_house_type where HouseTypeID = #{id}
+	</delete>
+	<!--获取户型标签-->
+	<select id="getHxTag" resultType="java.util.Map">
+		select ID,DictCode,DictName from s_dictionary where pid = (
+			select id from s_dictionary where pid = -1 and DictCode = 's_hx_tag')
+		ORDER BY ListIndex;
+	</select>
+	<!--获取户型朝向-->
+	<select id="getHXCX" resultType="java.util.Map">
+		select ID,DictCode,DictName from s_dictionary where pid = (
+			select id from s_dictionary where pid = -1 and DictCode = 's_hxcx')
+		ORDER BY ListIndex;
+	</select>
+	<!--获取楼盘标签-->
+	<select id="getLpTag" resultType="java.util.Map">
+		select ID,DictCode,DictName from s_dictionary where pid = (
+			select id from s_dictionary where pid = -1 and DictCode = 's_lp_tag')
+		ORDER BY ListIndex;
+	</select>
+
+	<!--删除户型详情图-->
+	<update id="delHouseDetailPhoto" parameterType="java.lang.String">
+		update a_build_book_warehouse set HouseDetailImgUrl = null
+		where ID = #{id}
+	</update>
+	<!--获取楼盘户型（跳转参数）-->
+	<select id="getBuildHouse" parameterType="java.lang.String" resultType="java.util.Map">
+		select ID id,HouseBigType name from a_build_book_warehouse
+		where BuildBookID = #{buildBookId} and Status = 1 and IsDel = 0
+	</select>
+	<!--判断是否可以删除户型-->
+	<select id="isOkDelHX" parameterType="java.lang.String" resultType="java.lang.String">
+		select aw.ID from a_build_book_warehouse aw
+		where aw.ID = #{id}
+		  and (select count(0) count from b_clue_opportunity_extend where ReportRefcommend = #{id})=0 and aw.OnlookersNum = 0;
+	</select>
+	<select id="getHXDetail" parameterType="java.lang.String" resultType="java.util.Map">
+		select HouseImg,VRImgUrl,HouseDetailImgUrl from a_build_book_warehouse
+		where ID = #{id}
+	</select>
+	<!--获取推广码信息-->
+	<select id="getExtenListNew" parameterType="java.util.Map" resultType="java.util.Map">
+		select
+		(case when ae.ExtenType = 1 then bp.AreaName
+		when ae.ExtenType = 2 then org.OrgName
+		else '' end) OrgName,
+		bp.ProjectName,
+		ae.ExtenOrgId,
+		ae.ProjectID,
+		ae.ID,
+		ae.ExtenActivityName,
+		(case when ae.ToUrl = 1 then '旭客家首页'
+		when ae.ToUrl = 2 then '项目微楼书'
+		when ae.ToUrl = 3 then '户型详情'
+		when ae.ToUrl = 4 then '活动'
+		when ae.ToUrl = 5 then '新闻' else '' end) ToUrlDesc,
+		ae.ToUrl,
+		ae.JumpToName,
+		ae.IconUrl,
+		ae.IconName,
+		(case when ae.ExtenType = 1 then '项目级'
+		when ae.ExtenType = 2 then '区域级'
+		when ae.ExtenType = 3 then '集团级'
+		else '' end) ExtenTypeDesc,
+		ae.ExtenType,
+		ifnull(abu.count,0) RegisterCnt,
+		ae.LookNum,
+		ae.MainMediaGUID as mainMediaGuId,
+		ae.MainMediaName as mainMediaName,
+		ae.SubMediaGUID as subMediaGuId,
+		ae.SubMediaName as subMediaName,
+		ae.Type as type,
+		ae.Days as days,
+		ae.BuildBookID,
+		ae.NewsId,
+		ae.ActivityId,
+		ae.CityId,
+		ae.WareHouseId,
+		ae.HouseBuildBookId,
+		DATE_FORMAT( ae.CreateTime, '%Y-%m-%d %H:%i:%s' ) CreateTime,
+		ba.EmployeeName Creator,
+		ae.PhotoWidth as PhotoWidth,
+		ae.PhotoName as PhotoName
+		from a_extension ae
+		LEFT JOIN b_project bp on ae.ProjectID = bp.id
+		LEFT JOIN s_organization org on org.id = ae.ExtenOrgId
+		LEFT JOIN (select a.RegistRefcommend,count(0) count from a_broker_user a where (a.RegistFrom = '策划推广' or a.RegistFrom = '旭客家首页推广码' or a.RegistFrom = '旭客家新闻推广码'
+		or a.RegistFrom = '旭客家楼盘推广码' or a.RegistFrom = '旭客家活动推广码' or a.RegistFrom = '旭客家户型推广码') group by a.RegistRefcommend ) abu on RegistRefcommend = ae.id
+		left join b_account ba on ba.id = ae.Creator
+		where ae.IsDel = 0
+		<if test="proIds!=null and proIds.size() >0 and orgIds!=null and orgIds.size() >0">
+			and (ae.ProjectID in
+			<foreach collection="proIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach> or ae.ExtenOrgId in
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>)
+		</if>
+		<if test="proIds!=null and proIds.size() >0 and (orgIds==null or orgIds.size()==0)">
+			and ae.ProjectID in
+			<foreach collection="proIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="toUrls!=null and toUrls.size() >0">
+			and ae.ToUrl in
+			<foreach collection="toUrls" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="extenTypes!=null and extenTypes.size() >0">
+			and ae.ExtenType in
+			<foreach collection="extenTypes" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="extenActivityName!=null and extenActivityName!=''">
+			and ae.ExtenActivityName like '%${extenActivityName}%'
+		</if>
+		<if test="jumpToName!=null and jumpToName!=''">
+			and ae.JumpToName like '%${jumpToName}%'
+		</if>
+		<if test="creator!=null and creator!=''">
+			and ba.EmployeeName like '%${creator}%'
+		</if>
+		order by ae.CreateTime desc
+	</select>
+
+	<!--获取推广码信息导出-->
+	<select id="getExtenListNewExprot" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.Extension">
+		select
+		(case when ae.ExtenType = 1 then bp.AreaName
+		when ae.ExtenType = 2 then org.OrgName
+		else '' end) OrgName,
+		bp.ProjectName,
+		ae.ExtenOrgId,
+		ae.ProjectID,
+		ae.ID,
+		ae.ExtenActivityName,
+		(case when ae.ToUrl = 1 then '旭客家首页'
+		when ae.ToUrl = 2 then '项目微楼书'
+		when ae.ToUrl = 3 then '户型详情'
+		when ae.ToUrl = 4 then '活动'
+		when ae.ToUrl = 5 then '新闻' else '' end) ToUrlDesc,
+		ae.ToUrl,
+		ae.JumpToName,
+		ae.IconUrl,
+		ae.IconName,
+		(case when ae.ExtenType = 1 then '项目级'
+		when ae.ExtenType = 2 then '区域级'
+		when ae.ExtenType = 3 then '集团级'
+		else '' end) ExtenTypeDesc,
+		ae.ExtenType,
+		ifnull(abu.count,0) RegisterCnt,
+		ae.LookNum,
+		ae.MainMediaGUID as mainMediaGuId,
+		ae.MainMediaName as mainMediaName,
+		ae.SubMediaGUID as subMediaGuId,
+		ae.SubMediaName as subMediaName,
+		ae.Type as type,
+		ae.Days as days,
+		ae.BuildBookID,
+		ae.NewsId,
+		ae.ActivityId,
+		ae.CityId,
+		ae.WareHouseId,
+		ae.HouseBuildBookId,
+		DATE_FORMAT( ae.CreateTime, '%Y-%m-%d %H:%i:%s' ) CreateTime,
+		ba.EmployeeName Creator
+		from a_extension ae
+		LEFT JOIN b_project bp on ae.ProjectID = bp.id
+		LEFT JOIN s_organization org on org.id = ae.ExtenOrgId
+		LEFT JOIN (select a.RegistRefcommend,count(0) count from a_broker_user a where (a.RegistFrom = '策划推广' or a.RegistFrom = '旭客家首页推广码' or a.RegistFrom = '旭客家新闻推广码'
+		or a.RegistFrom = '旭客家楼盘推广码' or a.RegistFrom = '旭客家活动推广码' or a.RegistFrom = '旭客家户型推广码') group by a.RegistRefcommend ) abu on RegistRefcommend = ae.id
+		left join b_account ba on ba.id = ae.Creator
+		where ae.IsDel = 0
+		<if test="proIds!=null and proIds.size() >0 and orgIds!=null and orgIds.size() >0">
+			and (ae.ProjectID in
+			<foreach collection="proIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach> or ae.ExtenOrgId in
+			<foreach collection="orgIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>)
+		</if>
+		<if test="proIds!=null and proIds.size() >0 and (orgIds==null or orgIds.size()==0)">
+			and ae.ProjectID in
+			<foreach collection="proIds" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="toUrls!=null and toUrls.size() >0">
+			and ae.ToUrl in
+			<foreach collection="toUrls" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="extenTypes!=null and extenTypes.size() >0">
+			and ae.ExtenType in
+			<foreach collection="extenTypes" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="extenActivityName!=null and extenActivityName!=''">
+			and ae.ExtenActivityName like '%${extenActivityName}%'
+		</if>
+		<if test="jumpToName!=null and jumpToName!=''">
+			and ae.JumpToName like '%${jumpToName}%'
+		</if>
+		<if test="creator!=null and creator!=''">
+			and ba.EmployeeName like '%${creator}%'
+		</if>
+	</select>
+
+
+	<!--获取所有项目-->
+	<select id="getAllPro" resultType="java.util.Map">
+		SELECT
+			p.id id,
+			p.ProjectName name
+		FROM
+			b_project p
+		where  p.Status = 1
+		  and p.IsDel = 0
+		  and IsStages =0
+		  and pid is null
+		  and orgId is not null
+		  and orgId != ''
+	</select>
+
+	<!--获取有权限的项目-->
+	<select id="getProByUserName" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			org.ProjectID id,
+			p.ProjectName name
+		FROM
+			s_organization org
+				INNER JOIN b_project p ON org.ProjectID = p.ID
+				AND p.STATUS = 1
+				AND p.IsDel = 0
+		WHERE
+			${where}
+		  AND p.pid IS NULL
+		  AND p.orgId IS NOT NULL
+		  AND p.orgId != ''
+		GROUP BY
+			org.ProjectID
+	</select>
+
+	<!--获取所有区域-->
+	<select id="getAllQy" resultType="java.util.Map">
+		select ID id,OrgName name,FullPath from s_organization
+		where OrgCategory = '2' and `Status` = 1 and pid = '00000001' and ID !='99999999';
+	</select>
+	<!--获取区域下项目-->
+	<select id="getProByQyFullPath" resultType="java.util.Map" parameterType="java.lang.String">
+		select distinct bp.ID id,bp.ProjectName name from s_organization org
+															  INNER JOIN b_project bp on org.ProjectID = bp.ID
+		where org.FullPath like concat(#{FullPath},'%')
+		  and bp.IsDel = 0 and bp.IsStages = 0 and bp.OrgID is not null
+	</select>
+
+	<!--获取有权限的区域-->
+	<select id="getQyByUserName" parameterType="java.lang.String" resultType="java.util.Map">
+		select distinct org.id id,org.OrgName name,org.FullPath from s_organization org
+																		 INNER JOIN s_jobs jobs on org.id = jobs.JobOrgID
+																		 INNER JOIN s_jobsuserrel rel on jobs.id = rel.JobID
+																		 INNER JOIN b_account ba on ba.id = rel.AccountID
+		where jobs.IsDel = 0 and org.`Status` = 1 and jobs.isIdm = 0
+		  and ba.UserName = #{userName} and org.orgLevel is not null and org.orgLevel !=''
+		  and org.OrgCategory = 2;
+	</select>
+
+	<!--获取权限级别-->
+	<select id="getOrgLevel" parameterType="java.lang.String" resultType="java.lang.String">
+		select org.orgLevel from s_organization org
+									 INNER JOIN s_jobs jobs on org.id = jobs.JobOrgID
+									 INNER JOIN s_jobsuserrel rel on jobs.id = rel.JobID
+									 INNER JOIN b_account ba on ba.id = rel.AccountID
+		where jobs.IsDel = 0 and org.`Status` = 1 and jobs.isIdm = 0
+		  and ba.UserName = #{userName} and org.orgLevel is not null and org.orgLevel !=''
+		ORDER BY org.orgLevel limit 1
+	</select>
+
+	<select id="getRegisterCnt" parameterType="java.lang.String" resultType="_int">
+		select ifnull(abu.count,0) count from a_extension ae
+			LEFT JOIN (select a.RegistRefcommend,count(0) count from a_broker_user a where (a.RegistFrom = '策划推广' or a.RegistFrom = '旭客家首页推广码' or a.RegistFrom = '旭客家新闻推广码'
+			or a.RegistFrom = '旭客家楼盘推广码' or a.RegistFrom = '旭客家活动推广码' or a.RegistFrom = '旭客家户型推广码') group by a.RegistRefcommend ) abu on abu.RegistRefcommend = ae.id
+		where ae.id = #{ID};
+	</select>
+
+	<update id="updateExtenDel" parameterType="java.util.Map">
+		update a_extension set IsDel = 1,Editor = #{Editor},EditTime=now()
+		where ID = #{ID};
+	</update>
+
+	<select id="getCityByOrgId" parameterType="java.lang.String" resultType="java.util.Map">
+		select DISTINCT ac.ID CityID,ac.CityName from a_city ac
+														  INNER JOIN a_city_job cj on ac.ID = cj.CityID
+														  INNER JOIN s_jobs jobs on cj.JobId = jobs.ID
+														  INNER JOIN s_jobsuserrel rel on jobs.ID = rel.JobID
+														  INNER JOIN b_account ba on ba.ID = rel.AccountID
+		where ba.UserName = #{userName} and ac.IsDel = 0
+	</select>
+
+	<!--根据活动ID查询相关项目-->
+	<select id="getActivityPros" parameterType="java.lang.String" resultType="java.util.Map">
+		select DISTINCT project_id id,project_name name from a_activity_projects
+		where actity_id = #{activityId} and isdel = 0;
+	</select>
+	<!--获取项目组织ID-->
+	<select id="getProOrgIds" parameterType="java.util.Map" resultType="java.lang.String">
+		select DISTINCT ID from s_organization
+		where ProjectID in (
+		<foreach collection="proIds" separator="," item="item">
+			#{item}
+		</foreach>
+		) and OrgCategory = 4 and `Status` = 1;
+	</select>
+	<!--获取上级组织信息-->
+	<select id="getParentOrg" parameterType="java.lang.String" resultType="java.util.Map">
+		select ID,PID,OrgName,OrgCategory from s_organization where id = (
+			select PID from s_organization where id = #{id}) and `Status` = 1;
+	</select>
+
+	<select id="getWXToken" resultType="java.lang.String">
+		select token from s_param_wx_token where id = 1;
+	</select>
+	<!--楼盘图片类别-->
+	<select id="getLpPhotoType" resultType="java.util.Map">
+		select DictCode code,DictName name from s_dictionary where pid = (
+			select ID from s_dictionary where pid = -1 and DictCode = 's_lp_photo_type')
+		order by ListIndex+0
+	</select>
+
+	<!--查询当前城市是否可配置广告-->
+	<select id="checkDep"  resultType="java.lang.String">
+		select id from a_build_book_photo
+		where CityID = #{cityID} and IsDel = 0 and TypeName = 6 and Status = 1
+		<if test="beginTime!=null and beginTime!=''">
+			and ((ShowBeginTime is null and ShowEndTime is null) or #{beginTime} &lt; ShowEndTime)
+		</if>
+		<if test="beginTime==null">
+			and ((ShowBeginTime is null and ShowEndTime is null) or now() &lt; ShowEndTime)
+		</if>
+	</select>
+
+	<!--查询当前城市配置可启用城市是否冲突 getCondictionCount-->
+	<select id="getCondictionCount"  parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT count(cityPhoto.ID) from
+			(SELECT * FROM a_build_book_photo WHERE CityID = #{cityID} AND IsDel = 0 AND TypeName = 6 AND Status = 1 and ID != #{id}) cityPhoto
+		WHERE #{beginTime} BETWEEN cityPhoto.ShowBeginTime AND cityPhoto.ShowEndTime
+		   OR #{endTime} BETWEEN cityPhoto.ShowBeginTime AND cityPhoto.ShowEndTime
+		   OR (#{beginTime} &lt;= cityPhoto.ShowBeginTime AND #{endTime} &gt;= cityPhoto.ShowEndTime)
+	</select>
+
+
+
+	<insert id="startupPictureDeploy"  parameterType="cn.visolink.system.allpeople.contentManagement.model.StartupPagePicture">
+		INSERT INTO startup_page_picture
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test = "null != id and '' != id">
+				id,
+			</if>
+			<if test = "null != imgUrl and '' != imgUrl">
+				img_url,
+			</if>
+			<if test = "null != status and '' != status">
+				status,
+			</if>
+			<if test = "null != port and '' != port">
+				port,
+			</if>
+			is_del,
+			<if test = "null != userName and '' != userName">
+				create_user,
+			</if>
+			create_time,
+			<if test = "null != userName and '' != userName">
+				editor,
+			</if>
+			edit_time
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test = "null != id and '' != id">
+				#{id},
+			</if>
+			<if test = "null != imgUrl and '' != imgUrl">
+				#{imgUrl},
+			</if>
+			<if test = "null != status and '' != status">
+				#{status},
+			</if>
+			<if test = "null != port and '' != port">
+				#{port},
+			</if>
+			0,
+			<if test = "null != userName and '' != userName">
+				#{userName},
+			</if>
+			now(),
+			<if test = "null != userName and '' != userName">
+				#{userName},
+			</if>
+			now()
+		</trim>
+	</insert>
+
+	<update id="updateStartupPicture" parameterType="cn.visolink.system.allpeople.contentManagement.model.StartupPagePicture">
+		UPDATE startup_page_picture
+		<set>
+			<if test = "null != imgUrl and '' != imgUrl">img_url = #{imgUrl},</if>
+			<if test = "null != port and '' != port">port = #{port},</if>
+			<if test = "null != userName and '' != userName">editor = #{userName},</if>
+			<if test = "null != status">status = #{status},</if>
+			edit_time = now()
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<update id="statusStartupPicture" parameterType="java.util.Map">
+		UPDATE startup_page_picture
+		<set>
+			<if test = "null != status">status = #{status},</if>
+			<if test = "null != userName and '' != userName">editor = #{userName},</if>
+			edit_time = now()
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<update id="delStartupPicture" parameterType="cn.visolink.system.allpeople.contentManagement.model.StartupPagePicture">
+		UPDATE startup_page_picture
+		<set>
+			is_del = 1,
+			<if test = "null != userName and '' != userName">editor = #{userName},</if>
+			edit_time = now()
+		</set>
+		WHERE id = #{id}
+	</update>
+
+
+
+	<select id="startupPictureList" parameterType="cn.visolink.system.allpeople.contentManagement.model.StartupPagePicture" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		SELECT
+		id as ID,
+		img_url as ImgUrl,
+		status as Status,
+		port as port,
+		is_del as IsDel,
+		create_user as Creator,
+		create_time as CreateTime,
+		editor as editor,
+		edit_time as editTime
+		FROM startup_page_picture
+		where
+		is_del = 0
+		<if test="port != null">
+			and port = #{port}
+		</if>
+		order by status desc,edit_time desc
+	</select>
+
+	<select id="startupPictureListByStatus" parameterType="cn.visolink.system.allpeople.contentManagement.model.StartupPagePicture" resultType="java.lang.String">
+		SELECT
+			id as id
+		FROM startup_page_picture
+		where
+			is_del = 0
+		  and status = 1
+		  and port = #{port}
+	</select>
+
+	<select id="startupPictureById" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingPhoto">
+		SELECT
+			id as ID,
+			img_url as ImgUrl,
+			status as Status,
+			port as port,
+			is_del as IsDel,
+			create_user as Creator,
+			create_time as CreateTime,
+			editor as editor,
+			edit_time as editTime
+		FROM startup_page_picture
+		where
+			is_del = 0
+		  and id = #{id}
+	</select>
+
+
+	<!--获取楼盘列表（编辑新闻楼盘）-->
+	<select id="getNewsBuilding" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingBook">
+		SELECT
+		distinct
+		bb.ID,
+		bb.ProjectID,
+		bb.ProjectName,
+		bb.ProjectShowName
+		FROM
+		a_build_book bb
+		LEFT JOIN a_build_book_city bbc ON bb.id = bbc.build_book_id
+		WHERE 1=1
+		<if test="CityID!=null and CityID!='' " >
+			<if test="CityID!='00000000-0000-0000-0000-000000000000' " >
+				and  bbc.city_id = #{CityID}
+			</if>
+			and  bb.IsPublish = 1 and bb.`Status` = 1
+		</if>
+		<if test="NewsID!=null and NewsID!=''" >
+			and  bb.ID  in (select build_book_id from a_news_build_book where news_id = #{NewsID})
+		</if>
+		order by bbc.list_index
+	</select>
+	<!--获取新闻类型 -->
+	<select id="getNewsType" parameterType="java.util.Map" resultType="cn.visolink.system.parameter.model.Dictionary">
+		SELECT
+			ID,
+			ListIndex,
+			DictCode,
+			DictName
+		FROM
+			s_dictionary
+		WHERE
+			PID in (SELECT ID from S_Dictionary  where dictcode ='news_type')
+		  AND IsDel = 0
+	</select>
+	<!--保存新闻楼盘数据-->
+	<insert id="saveNewsBuildBook" parameterType="cn.visolink.system.allpeople.contentManagement.model.NewsBuildBook">
+		INSERT INTO `a_news_build_book`
+		(`ID`, `news_id`, `build_book_id`, `build_book_name`, `status`,
+		`is_del`, `list_index`, `createtime`, `creator`)
+		VALUES
+		<foreach collection="newsBuildBookList" item="list" separator=",">
+			(uuid(), #{list.newsId}, #{list.buildBookId}, #{list.buildBookName}, 1, 0, #{list.listIndex}, now(), #{list.creator})
+		</foreach>
+	</insert>
+
+	<!--删除新闻楼盘数据-->
+	<delete id="deleteNewsBuildBook" parameterType="java.lang.String">
+		delete from a_news_build_book where news_id = #{newsId}
+	</delete>
+
+	<!--根据项目获取区域，城市-->
+	<select id="getDistrict" parameterType="java.lang.String" resultType="java.lang.String">
+		select name from a_sh_area where merger_name like '%${cityName}%' and level =3
+	</select>
+
+	<!--查询楼盘问答列表-->
+	<select id="getBuildingProblemList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildingProblem">
+		SELECT
+		bp.ID,
+		bp.Problem,
+		bp.Answer,
+		bp.ProblemPhotoUrl,
+		(case when bp.Status=1 then '启用' else '未启用' end) Status,
+		DATE_FORMAT(bp.CreateTime,'%Y-%m-%d %H:%i:%s') CreateTime,
+		ba.EmployeeName as Creator
+		FROM
+		b_build_problem bp INNER JOIN b_account ba on bp.Creator = ba.id
+		where bp.ProjectId = #{ProjectId} AND bp.BuildBookID = #{BuildBookID}
+		<if test="Status!=null and Status!=''">
+			and bp.Status = #{Status}
+		</if>
+		order by ifnull(bp.TopTime,bp.CreateTime) desc
+	</select>
+	<!--添加楼盘问答-->
+	<insert id="addBuildingProblem" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingProblem">
+		insert into b_build_problem(Problem,Answer,ProblemPhotoUrl,ProjectId,BuildBookID,Status,Creator,CreateTime,IsDel)
+		values(#{Problem},#{Answer},#{ProblemPhotoUrl},#{ProjectId},#{BuildBookID},#{Status},#{Creator},now(),0)
+	</insert>
+	<!--更新楼盘问答-->
+	<update id="updateBuildingProblem" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildingProblem">
+		update b_build_problem
+		<set>
+			<if test="Problem!=null and Problem!=''">
+				Problem = #{Problem},
+			</if>
+			<if test="Answer!=null and Answer!=''">
+				Answer = #{Answer},
+			</if>
+			<if test="ProblemPhotoUrl!=null and ProblemPhotoUrl!=''">
+				ProblemPhotoUrl = #{ProblemPhotoUrl},
+			</if>
+			<if test="Status!=null and Status!=''">
+				Status = #{Status},
+			</if>
+			<if test="TopTime!=null and TopTime!=''">
+				TopTime = now(),
+			</if>
+			Editor = #{Creator},
+			EditTime = now()
+		</set>
+		where ID = #{ID}
+	</update>
+	<!--删除楼盘问答-->
+	<delete id="delBuildingProblem" parameterType="java.lang.String">
+		delete from b_build_problem where ID = #{ID}
+	</delete>
+	<!--addHotHomePage  添加首页热推图片-->
+	<insert id="addHotHomePage" parameterType="java.util.Map">
+		INSERT INTO `a_activity_material` (
+			`id`,
+			`activity_id`,
+			`city_id`,
+			`city_name`,
+			`hot_image_url`,
+			`material_type`,
+			`hot_begin_time`,
+			`hot_end_time`,
+			`status`,
+			`isdel`,
+			`createtime`,
+			`creator`
+		) VALUES (uuid(),#{activityId},#{hotCityId},#{hotCityName},#{hotImageUrl},10,#{hotStartTime},#{hotEndTime},#{status},0,#{createTime},#{creator})
+	</insert>
+
+	<!--	更新首页热推 updateHotHomePage-->
+	<update id="updateHotHomePage" parameterType="java.util.Map">
+		UPDATE
+		`a_activity_material`
+		SET
+		<if test="activityId != null and activityId != ''">
+			`activity_id` = #{activityId},
+		</if>
+		<if test="hotCityId != null and hotCityId != ''">
+			`city_id` = #{hotCityId},
+		</if>
+		<if test="hotCityName != null and hotCityName != ''">
+			`city_name` = #{hotCityName},
+		</if>
+		<if test="hotImageUrl != null and hotImageUrl != ''">
+			`hot_image_url` = #{hotImageUrl},
+		</if>
+		`hot_begin_time` = #{hotStartTime},
+		`hot_end_time` = #{hotEndTime},
+		<if test="status != null and status != ''">
+			`status` = #{status},
+		</if>
+		`edittime` = #{editTime},
+		<if test="editor != null and editor != ''">
+			`editor` = #{editor}
+		</if>
+		WHERE `id` = #{id}
+	</update>
+
+	<!--	updateHotHomePageStatus 更新首页热推状态-->
+	<update id="updateHotHomePageStatus" parameterType="java.util.Map">
+		UPDATE
+			`a_activity_material`
+		SET
+			`status` = #{status},
+			`edittime` = #{editTime},
+			`editor` = #{editor}
+		WHERE `id` = #{id}
+	</update>
+
+	<!--	获取首页热推列表 -->
+	<select id="getHotImgList" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+		aam.id,
+		aam.activity_id,
+		aai.activity_no,
+		aai.activity_name,
+		aai.activity_projectnames,
+		ba.EmployeeName,
+		aam.status,
+		DATE_FORMAT(aam.createtime,'%Y-%m-%d %H:%i:%S') createtime,
+		concat(DATE_FORMAT(aai.activity_begintime,'%Y-%m-%d %H:%i:%S'),'-',DATE_FORMAT(aai.activity_endtime,'%Y-%m-%d %H:%i:%S')) activityTime,
+		aam.city_id,
+		aam.click_count,
+		aam.hot_image_url,
+		DATE_FORMAT(aam.hot_begin_time,'%Y-%m-%d %H:%i:%S') beginTime,
+		DATE_FORMAT(aam.hot_end_time,'%Y-%m-%d %H:%i:%S') endTime
+		from a_activity_material aam
+		left join a_activity_info aai on aai.ID = aam.activity_id
+		LEFT JOIN b_account ba on ba.ID = aam.creator
+		left join a_city ac on ac.ID = aam.city_id
+		where aam.isDel = 0 and material_type = 10
+		<if test="status != null and status != ''">
+			and aam.status = #{status}
+		</if>
+		<if test="cityId != null and cityId != '' and cityId != '00000000-0000-0000-0000-000000000000'">
+			and F_LableIsExist(aam.city_id,#{cityId})
+		</if>
+		<if test="activityNo != null and activityNo != ''">
+			and aai.activity_no like concat('%',#{activityNo},'%')
+		</if>
+		<if test="activityName != null and activityName != ''">
+			or aai.activity_name like concat('%',#{activityName},'%')
+		</if>
+		order by aam.createtime desc
+	</select>
+
+	<!--删除首页热推图片-->
+	<delete id="delHotHomePageImg" parameterType="java.lang.String">
+		DELETE
+		FROM
+			`a_activity_material`
+		WHERE `id` = #{id} ;
+	</delete>
+
+	<!--	getBuildBookDic 查询楼盘热卖字典值-->
+	<select id="getBuildBookDic" resultType="java.util.Map">
+		SELECT
+			DictCode,
+			DictName
+		FROM S_Dictionary d
+		WHERE IsDel = 0
+		  AND PID = "44C408CD-A1AA-3372-BE91-E0F81E822324"
+	</select>
+
+	<!--	getHotHomePaeById 根据主键查询热播图详情-->
+	<select id="getHotHomePaeById" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			`id` id,
+			`activity_id` activityId,
+			`city_id` cityId,
+			`city_name` cityName
+			`hot_image_url` hotImageUrl,
+				`hot_begin_time` hotBeginTime,
+			`hot_end_time` hotEndTime,
+			`click_count` clickCount,
+			`status`
+		FROM
+			`a_activity_material`
+		where id = #{id}
+	</select>
+
+	<!--	updateActivityHotStatus 更新活动热推状态-->
+	<update id="updateActivityHotStatus" parameterType="java.lang.String">
+		update a_activity_info set is_home_page_hot = #{isHomePageHot} where ID = #{activityId}
+	</update>
+	<update id="updateActivityStatus">
+		update a_activity_info set is_home_page_hot = 1 where ID =
+															  (select activity_id from a_activity_material where id = #{id})
+	</update>
+	<!--	select activity_id from a_activity_material where id = #{id}-->
+	<select id="getHotCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(id) from
+			a_activity_material
+		where activity_id =
+			  (select activity_id from a_activity_material where id = #{id})
+		  and material_type = 10 and id != #{id}
+	</select>
+
+	<!--	getCityByPro 根据项目id 查询到涉及的城市-->
+	<select id="getCityByPro" resultType="java.util.Map" parameterType="java.lang.String">
+		select DISTINCT ac.CityName,ac.id
+		from b_project bp
+				 INNER JOIN a_city_project cp on bp.id = cp.ProjectID
+				 INNER JOIN a_city ac on ac.id = cp.CityID
+		where bp.id in (${ids1})
+	</select>
+	<!--	查询多个城市名称-->
+	<select id="getConcatCityName" parameterType="java.lang.String" resultType="java.lang.String">
+		select group_concat(CityName) city_name from a_city
+		where ID in
+		<foreach collection="cityIds" item="item" separator="," open="(" close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="getActAllCityIds" resultType="java.util.Map">
+		SELECT actity_id actId,
+			   GROUP_CONCAT(DISTINCT(city_id)) cityIds
+		from a_activity_projects
+		WHERE actity_id is not null
+		group by actity_id
+	</select>
+
+	<select id="getActivityByIds" parameterType="java.lang.String" resultType="java.util.Map">
+		select * from(
+		SELECT aai.ID,aai.activity_name,concat(DATE_FORMAT(aai.activity_begintime,'%Y-%m-%d %H:%i:%S'),'-',DATE_FORMAT(aai.activity_endtime,'%Y-%m-%d %H:%i:%S')) activityTime,
+		(select count(1) from a_activity_material aam where aam.activity_id = aai.ID and material_type = 10) hotCount
+		from a_activity_info aai
+		WHERE 1=1
+		<if test="actIdList != null and actIdList.size() > 0">
+			and aai.ID in
+			<foreach collection="actIdList" item="item"  open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		and aai.is_del = 0
+		and aai.act_status = 2
+		and aai.status = 1
+		and aai.is_home_page_hot = 1
+		and aai.third_party_type = 0
+		and aai.activity_endtime &gt; now()) aaa
+		where aaa.hotCount = 0
+	</select>
+
+	<!--	更新活动状态 updateActivityStatusById-->
+	<update id="updateActivityStatusById" parameterType="java.lang.String">
+		update a_activity_info set is_home_page_hot = 0 where ID = #{activityId}
+	</update>
+
+	<!--	updateStartupPictureToDisabled-->
+	<update id="updateStartupPictureToDisabled" parameterType="java.lang.String">
+		update startup_page_picture set status = 0 where id != #{id} and port = #{port}
+	</update>
+	<insert id="addBuildBookProduct" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildBookProduct" useGeneratedKeys="true" keyProperty="id">
+		insert into a_build_book_product(build_book_id,product_type,product_type_desc,product_detail,product_image_url,create_time,creator,product_area)
+		values(#{buildBookId},#{productType},#{productTypeDesc},#{productDetail},#{productImageUrl},now(),#{creator},#{productArea})
+	</insert>
+	<update id="updateBuildBookProduct" parameterType="cn.visolink.system.allpeople.contentManagement.model.BuildBookProduct">
+		update a_build_book_product set product_type = #{productType},
+										product_type_desc = #{productTypeDesc},
+										product_detail = #{productDetail},
+										product_image_url = #{productImageUrl},
+										edit_time = now(),
+										editor = #{creator},
+										product_area = #{productArea}
+        where id = #{id}
+	</update>
+
+	<update id="delBuildProducts" parameterType="java.lang.String">
+		delete from a_build_book_product where build_book_id = #{buildBookID};
+		delete from a_build_book_warehouse where BuildBookID = #{buildBookID};
+	</update>
+
+	<select id="getBuildBookProduct" parameterType="java.lang.String" resultType="cn.visolink.system.allpeople.contentManagement.model.BuildBookProduct">
+		select id,product_type productType,
+			   product_type_desc productTypeDesc,
+			   product_detail productDetail,
+			   product_image_url productImageUrl,
+			   product_area productArea
+			from a_build_book_product
+        where build_book_id = #{buildBookID}
+	</select>
+
+	<select id="getProductsDict" parameterType="java.lang.String" resultType="java.util.Map">
+		select DictCode code,DictName name from s_dictionary where pid = (
+			select id from s_dictionary where pid = -1 and DictCode = 'ProductType')
+															   and ComGUID = (select BUGUID from b_project where id = #{projectId})
+	</select>
+
+	<select id="getHXDetailByProduct" parameterType="java.lang.String" resultType="java.util.Map">
+		select HouseImg,VRImgUrl,HouseDetailImgUrl from a_build_book_warehouse
+		where ProductId in (${id})
+	</select>
+
+	<delete id="delBuildBookProduct" parameterType="java.lang.String">
+		delete from a_build_book_product where id in (${id});
+		delete from a_build_book_warehouse where ProductId in (${id});
+	</delete>
+
+	<select id="getCityByProS" parameterType="java.util.List" resultType="java.util.Map">
+		select DISTINCT ac.CityName,ac.id CityID
+		from b_project bp
+				 INNER JOIN a_city_project cp on bp.id = cp.ProjectID
+				 INNER JOIN a_city ac on ac.id = cp.CityID
+		where bp.id in (
+		  <foreach collection="list" item="item" separator=",">
+			  #{item}
+		  </foreach>
+			)
+	</select>
+
+
+</mapper>

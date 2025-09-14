@@ -1,0 +1,794 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.seniorbroker.mapper.SeniorBrokerMapper">
+
+	<select id="getAccountActiveList" parameterType="java.util.Map" resultType="cn.visolink.system.seniorbroker.vo.AccountActiveExcel">
+		select
+			a.accountId,
+			ag.brokerId,
+			a.ProjectId,
+			bp.AreaName,
+			bp.ProjectName,
+			a.id as ActiveId,
+			a.ActiveName,
+			a.Status,
+			case when a.Status = 0 then '草稿'
+			when a.Status = 1 then '审核中'
+			when a.Status = 2 then '已审核'
+			when a.Status = 3 then '审核驳回'
+			when a.Status = 4 and a.EndTime &gt;= now() then '已发布'
+			when a.Status = 5 then '禁用'
+			when a.Status = 4 and a.EndTime &lt; now() then '已结束'
+			else '' end as StatusName,
+			ifnull(date_format(a.ReleaseTime,'%Y-%m-%d %H:%i:%s'),'') as ReleaseTime,
+			ifnull(date_format(a.BeginTime,'%Y-%m-%d %H:%i:%s'),'') as BeginTime,
+			ifnull(date_format(a.EndTime,'%Y-%m-%d %H:%i:%s'),'') as EndTime,
+			ifnull(date_format(a.DisableTime,'%Y-%m-%d %H:%i:%s'),'') as DisableTime,
+			ba.EmployeeName as AccountName,
+			ba.Mobile as MobileAll,
+			concat(left(ba.Mobile,3),'****',RIGHT(ba.Mobile,4)) as Mobile,
+			count(distinct ag.id) as participants,
+			sum(case when pc.ClueStatus &lt; 9 then 1 else 0 end) as report,
+			sum(case when pc.ClueStatus &lt; 9 and pc.ClueStatus &gt; 1 then 1 else 0 end) as arrive
+		from  a_accountactive  a
+		left join b_account ba on a.AccountID = ba.id and ba.isdel = 0 and ba.status = 1
+		left join b_project bp on a.projectid = bp.id and bp.isdel = 0
+		left join a_accountactive_give ag on a.id = ag.activeid
+		left join a_account_performance ap on a.id = ap.activeid and ag.brokerid = ap.brokerid and ap.isdel = 0
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId
+		where a.isdel = 0
+
+		<if test="projectIdList != null and projectIdList.size() > 0">
+			and a.ProjectID in
+			<foreach collection="projectIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="ActiveName != null and ActiveName !='' ">
+			and a.ActiveName like '%${ActiveName}%'
+		</if>
+		<if test="AccountName != null and AccountName !='' ">
+			and (ba.Mobile like '%${AccountName}%' or ba.EmployeeName like '%${AccountName}%')
+		</if>
+		<if test="Status != null and Status!='' and Status!='6'.toString() and Status!='4'.toString()">
+			and  a.Status = #{Status}
+		</if>
+		<if test="Status != null and Status!='' and Status=='6'.toString()">
+			and  a.Status = '4' and a.EndTime &lt; now()
+		</if>
+		<if test="Status != null and Status!='' and Status=='4'.toString()">
+			and  a.Status = '4' and a.EndTime &gt; now()
+		</if>
+		<choose>
+			<when test="key != null and key !='' and key == 1">
+				<if test="startDate != null and startDate != ''">
+					and a.ReleaseTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and a.ReleaseTime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 2">
+				<if test="startDate != null and startDate != ''">
+					and a.BeginTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and a.BeginTime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 3">
+				<if test="startDate != null and startDate != ''">
+					and a.EndTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and a.EndTime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 4">
+				<if test="startDate != null and startDate != ''">
+					and a.DisableTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and a.DisableTime &lt; #{endDate}
+				</if>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		GROUP BY a.id
+	</select>
+
+	<!-- 获取大客户活动详情 -->
+	<select id="getAccountActiveById"  parameterType="java.lang.String" resultType="java.util.Map">
+		select
+			a.AccountID,
+			a.ProjectId,
+			bp.AreaName,
+			bp.ProjectName,
+			a.id as ActiveId,
+			a.ActiveName,
+			a.Status,
+			ifnull(date_format(a.ReleaseTime,'%Y-%m-%d %H:%i:%s'),'') as ReleaseTime,
+			ifnull(date_format(a.BeginTime,'%Y-%m-%d %H:%i:%s'),'') as BeginTime,
+			ifnull(date_format(a.EndTime,'%Y-%m-%d %H:%i:%s'),'') as EndTime,
+			ifnull(date_format(a.DisableTime,'%Y-%m-%d %H:%i:%s'),'') as DisableTime,
+			ba.EmployeeName as AccountName,
+			ba.Mobile as MobileAll,
+			concat(left(ba.Mobile,3),'****',RIGHT(ba.Mobile,4)) as Mobile, -- 手机
+			a.ActiveDesc,
+			(select count(1) from a_accountactive_give where a.id = activeid) as participants,
+			(select sum(case when ag.id is null then 1 else 0 end) from a_broker_account aba
+			left join a_accountactive_give ag on aba.brokerid = ag.brokerid
+			where a.AccountID = aba.AccountID and a.projectid = aba.projectid and ag.activeid = a.id and aba.isdel = 0 )as noparticipants,
+			sum(case when pc.ClueStatus &lt; 9 then 1 else 0 end) as report,
+			sum(case when pc.ClueStatus &lt; 9 and pc.ClueStatus &gt; 1 then 1 else 0 end) as arrive
+		from  a_accountactive  a
+		left join b_account ba on a.AccountID = ba.id and ba.isdel = 0 and ba.status = 1
+		left join b_project bp on a.projectid = bp.id and bp.isdel = 0
+		left join a_accountactive_give aag on a.id = aag.activeid
+		left join a_account_performance ap on a.id = ap.activeid and aag.brokerid = ap.brokerid and ap.isdel = 0
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId
+		where a.isdel = 0
+		and a.id = #{ActiveId}
+		GROUP BY a.id
+	</select>
+
+	<select id="getBrokerByActiveId"  parameterType="java.lang.String" resultType="java.util.Map">
+		select
+			ba.id as BrokerId,
+			ap.AccountID,
+			ap.ProjectId,
+			ba.name as BrokerName,
+			ba.Mobile,
+			ifnull(date_format(ag.CreateTime,'%Y-%m-%d %H:%i:%s'),'') as CreateTime,
+			sum(case when pc.ClueStatus &lt; 9 then 1 else 0 end) as Report,
+			sum(case when pc.ClueStatus &lt; 9 and pc.ClueStatus &gt; 1 then 1 else 0 end) as Arrive
+		from a_accountactive_give ag
+		left join a_account_performance ap on ag.ActiveId = ap.ActiveId and ag.brokerid = ap.brokerid and ap.isdel  = 0
+		left join a_broker_user ba on ag.brokerid = ba.id
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId and pc.isdel = 0
+		where ag.ActiveId = #{ActiveId}
+		<if test="BrokerName != null and BrokerName !='' ">
+			and (ba.name like '%${BrokerName}%' or ba.Mobile like '%${BrokerName}%')
+		</if>
+		and ba.id is not null
+		GROUP BY ag.id
+	</select>
+
+	<select id="getBrokerByActiveIdExcel"  parameterType="java.lang.String" resultType="cn.visolink.system.seniorbroker.vo.BrokerActiveExcel">
+		SELECT
+		ba.id as brokerId,
+		ba.name as brokerName,
+		ba.Mobile as mobileAll,
+		concat(left(ba.Mobile,3),'****',RIGHT(ba.Mobile,4)) as mobile,
+		ifnull(date_format(ag.CreateTime,'%Y-%m-%d %H:%i:%s'),'') as createTime,
+		sum(case when pc.ClueStatus &lt; 9 then 1 else 0 end) as report,
+		sum(case when pc.ClueStatus &lt; 9 and pc.ClueStatus &gt; 1 then 1 else 0 end) as arrive
+		FROM a_accountactive_give ag
+		left join a_broker_user ba on ag.brokerid = ba.id
+		left join a_account_performance ap on ag.brokerid = ap.brokerid and ag.accountid = ap.accountid and ag.projectid = ap.projectid and ap.isdel = 0
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId and pc.isdel = 0
+		where 1=1
+		and ag.ActiveId = #{ActiveId}
+		<if test="BrokerName != null and BrokerName !='' ">
+			and (ba.name like '%${BrokerName}%' or ba.Mobile like '%${BrokerName}%')
+		</if>
+		GROUP BY ag.id
+	</select>
+
+	<select id="getCustomerByActiveId" parameterType="java.util.Map" resultType="java.util.Map">
+		select
+		pc.CustomerName,
+		pc.CustomerMobile,
+		ifnull(DATE_FORMAT(pc.ReportCreateTime, '%Y-%m-%d %H:%i:%s' ),'') as ReportCreateTime,
+		case when pc.ClueStatus = 1 then '未到访'
+		when pc.ClueStatus = 2 then '已到访'
+		when pc.ClueStatus = 3 then '排小卡'
+		when pc.ClueStatus = 4 then '排大卡'
+		when pc.ClueStatus = 5 then '订房'
+		when pc.ClueStatus = 6 then '认筹'
+		when pc.ClueStatus = 7 then '认购'
+		when pc.ClueStatus = 8 then '签约'
+		when pc.ClueStatus = 9 then '作废'
+		else '' end as ClueStatus,
+		bu.name as BrokerName,
+		bu.Mobile as BrokerMobile,
+		ifnull(DATE_FORMAT( pc.TheFirstVisitDate, '%Y-%m-%d %H:%i:%s' ),'') AS TheFirstVisitDate,
+		ifnull(DATE_FORMAT(ot.SubscribingDate, '%Y-%m-%d %H:%i:%s' ),'') as SubscribingDate,
+		ifnull(DATE_FORMAT(ot.ContractDate, '%Y-%m-%d %H:%i:%s' ),'') as ContractDate,
+		ifnull(DATE_FORMAT(
+		( CASE
+		WHEN now() &gt; pc.BrokerCustomerExpiryDate and pc.ClueStatus &lt;8 then pc.BrokerCustomerExpiryDate
+		WHEN pc.ClueStatus = 9 THEN
+		pc.InvalidDate
+		END ), '%Y-%m-%d %H:%i:%s' ),'') AS ExpireDate
+		from a_account_performance ap
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId
+		left join a_broker_user bu on ap.brokerid = bu.id
+		left join b_project_opportunity po on ap.ProjectClueId = po.ProjectClueId
+		LEFT JOIN (
+		SELECT OpportunityClueId,
+		MAX(case when ClueStatus = '认购' then bot.OrderYwgsDate ELSE NULL END) SubscribingDate,
+		MAX(case when ClueStatus = '签约' then bot.ContractYwGsDate ELSE NULL END) ContractDate
+		FROM b_opportunity_trade bot
+		WHERE bot.ClueStatus IN('签约','认购')
+		AND bot.ProjectID =  (select ProjectID from a_accountactive where id = #{ActiveId} and isdel = 0)
+		AND TradeStatus = '激活'
+		GROUP BY OpportunityClueId
+		) ot ON ot.OpportunityClueId = po.OpportunityClueId
+		where ap.activeid = #{ActiveId}
+		<if test="BrokerName != null and BrokerName !='' ">
+			and (bu.name like '%${BrokerName}%' or bu.Mobile like '%${BrokerName}%')
+		</if>
+		<if test="CustomerName != null and CustomerName !='' ">
+			and (pc.CustomerName like '%${CustomerName}%' or pc.CustomerMobile like '%${CustomerName}%')
+		</if>
+		<if test="ClueStatusList != null and ClueStatusList.size() > 0">
+			and pc.ClueStatus in
+			<foreach collection="ClueStatusList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and ap.isdel = 0
+	</select>
+
+	<select id="getCustomerByActiveIdExcel" parameterType="java.util.Map" resultType="cn.visolink.system.seniorbroker.vo.CustomerActiveExcel">
+		select
+		pc.CustomerName,
+		pc.CustomerMobile as CustomerMobileAll,
+		concat(left(pc.CustomerMobile,3),'****',RIGHT(pc.CustomerMobile,4)) as CustomerMobile,
+		ifnull(DATE_FORMAT(pc.ReportCreateTime, '%Y-%m-%d %H:%i:%s' ),'') as ReportCreateTime,
+		case when pc.ClueStatus = 1 then '未到访'
+		when pc.ClueStatus = 2 then '已到访'
+		when pc.ClueStatus = 3 then '排小卡'
+		when pc.ClueStatus = 4 then '排大卡'
+		when pc.ClueStatus = 5 then '订房'
+		when pc.ClueStatus = 6 then '认筹'
+		when pc.ClueStatus = 7 then '认购'
+		when pc.ClueStatus = 8 then '签约'
+		when pc.ClueStatus = 9 then '作废'
+		else '' end as ClueStatus,
+		bu.name as BrokerName,
+		bu.Mobile as BrokerMobileAll,
+		concat(left(bu.Mobile,3),'****',RIGHT(bu.Mobile,4)) as BrokerMobile,
+		ifnull(DATE_FORMAT( pc.TheFirstVisitDate, '%Y-%m-%d %H:%i:%s' ),'') AS TheFirstVisitDate,
+		ifnull(DATE_FORMAT(ot.SubscribingDate, '%Y-%m-%d %H:%i:%s' ),'') as SubscribingDate,
+		ifnull(DATE_FORMAT(ot.ContractDate, '%Y-%m-%d %H:%i:%s' ),'') as ContractDate,
+		ifnull(DATE_FORMAT(
+		( CASE
+		WHEN now() &gt; pc.BrokerCustomerExpiryDate and pc.ClueStatus &lt;8 then pc.BrokerCustomerExpiryDate
+		WHEN pc.ClueStatus = 9 THEN
+		pc.InvalidDate
+		END ), '%Y-%m-%d %H:%i:%s' ),'') AS ExpireDate
+		from a_account_performance ap
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId
+		left join a_broker_user bu on ap.brokerid = bu.id
+		left join b_project_opportunity po on ap.ProjectClueId = po.ProjectClueId
+		LEFT JOIN (
+		SELECT OpportunityClueId,
+		MAX(case when ClueStatus = '认购' then bot.OrderYwgsDate ELSE NULL END) SubscribingDate,
+		MAX(case when ClueStatus = '签约' then bot.ContractYwGsDate ELSE NULL END) ContractDate
+		FROM b_opportunity_trade bot
+		WHERE bot.ClueStatus IN('签约','认购')
+		AND bot.ProjectID =  (select ProjectID from a_accountactive where id = #{ActiveId} and isdel = 0)
+		AND TradeStatus = '激活'
+		GROUP BY OpportunityClueId
+		) ot ON ot.OpportunityClueId = po.OpportunityClueId
+		where ap.activeid = #{ActiveId}
+		<if test="BrokerName != null and BrokerName !='' ">
+			and (bu.name like '%${BrokerName}%' or bu.Mobile like '%${BrokerName}%')
+		</if>
+		<if test="CustomerName != null and CustomerName !='' ">
+			and (pc.CustomerName like '%${CustomerName}%' or pc.CustomerMobile like '%${CustomerName}%')
+		</if>
+		<if test="ClueStatusList != null and ClueStatusList.size() > 0">
+			and pc.ClueStatus in
+			<foreach collection="ClueStatusList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and ap.isdel = 0
+	</select>
+
+
+	<select id="getAccountProject"  parameterType="java.lang.String" resultType="java.util.Map">
+		 select * from v_account_project where projectid = #{projectId}
+	</select>
+
+	<!-- 获取二级经纪人活动数据 -->
+	<select id="getSeniorBroker"  parameterType="java.util.Map" resultType="java.util.Map">
+		select
+			ba.id,
+			p.id as ProjectId,
+			p.KindeeProjectID,
+			p.AreaName,
+			p.projectName as ProjectName,
+			a.id as AccountId,
+			a.EmployeeName as AccountName,
+			a.Mobile as AccountMobile,
+			bu.id as BrokerId,
+			bu.name as BrokerName,
+			bu.Mobile as BrokerMobile,
+			ifnull(date_format(ba.CreateTime,'%Y-%m-%d %H:%i:%s'),'') as CreateTime,
+			count(distinct ag.id) as ActiveGive,
+			sum(case when pc.ClueStatus &lt; 9 then 1 else 0 end) as Report,
+			sum(case when pc.ClueStatus &lt; 9 and pc.ClueStatus &gt; 1 then 1 else 0 end) as Arrive
+		from a_broker_account ba
+		inner join a_broker_user bu on ba.brokerid = bu.id
+		inner join a_user_role ur on ba.brokerid = ur.brokerid and ur.isdel = 0
+		left join b_account a on ba.accountid = a.id and a.isdel = 0 and a.status = 1
+		left join b_project p on ba.projectid = p.id and p.isdel = 0
+		left join a_accountactive_give ag on ba.brokerid = ag.brokerid and ba.accountid = ag.accountid and ba.projectid = ag.projectid
+		left join a_account_performance ap on ba.brokerid = ap.brokerid and ba.accountid = ap.accountid and ba.projectid = ap.projectid and ap.isdel = 0
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId and pc.isdel = 0 and ((pc.ClueStatus = 1 and a.status = 1) or (pc.ClueStatus &gt; 1 and pc.ClueStatus &lt; 9))
+		where ba.isdel = 0
+		<if test="idList != null and idList.size() > 0">
+			and ba.id in
+			<foreach collection="idList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="projectIdList != null and projectIdList.size() > 0">
+			and ba.ProjectID in
+			<foreach collection="projectIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="AccountName != null and AccountName !='' ">
+			and (a.EmployeeName like '%${AccountName}%' or a.Mobile like '%${AccountName}%')
+		</if>
+		<if test="BrokerName != null and BrokerName !='' ">
+			and (bu.name like '%${BrokerName}%' or bu.Mobile like '%${BrokerName}%')
+		</if>
+		<if test="RoleNameList != null and RoleNameList.size() > 0">
+			and ur.RoleName in
+			<foreach collection="RoleNameList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+
+		<choose>
+			<when test="key != null and key !='' and key == 1">
+				<if test="startDate != null and startDate != ''">
+					and ba.CreateTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and ba.CreateTime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 2">
+				<if test="startDate != null and startDate != ''">
+					and pc.CreateTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and pc.CreateTime &lt; #{endDate}
+				</if>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		GROUP BY ba.id
+	</select>
+
+
+	<!-- 二级经纪人数据导出 -->
+	<select id="getSeniorBrokerExcel"  parameterType="java.util.Map" resultType="cn.visolink.system.seniorbroker.vo.SeniorBrokerActiveExcel">
+		select
+			ba.id,
+			p.id as ProjectId,
+			p.KindeeProjectID,
+			p.AreaName,
+			p.projectName as ProjectName,
+			a.id as AccountId,
+			a.EmployeeName as AccountName,
+			a.Mobile as AccountMobileAll,
+			concat(left(a.Mobile,3),'****',RIGHT(a.Mobile,4)) as AccountMobile,
+			bu.id as BrokerId,
+			bu.name as BrokerName,
+			bu.Mobile as BrokerMobileAll,
+			concat(left(bu.Mobile,3),'****',RIGHT(bu.Mobile,4)) as BrokerMobile,
+			ifnull(date_format(ba.CreateTime,'%Y-%m-%d %H:%i:%s'),'') as CreateTime,
+			count(distinct ag.id) as ActiveGive,
+			sum(case when pc.ClueStatus &lt; 9 then 1 else 0 end) as Report,
+			sum(case when pc.ClueStatus &lt; 9 and pc.ClueStatus &gt; 1 then 1 else 0 end) as Arrive
+		from a_broker_account ba
+		inner join a_broker_user bu on ba.brokerid = bu.id
+		inner join a_user_role ur on ba.brokerid = ur.brokerid and ur.isdel = 0
+		left join b_account a on ba.accountid = a.id and a.isdel = 0 and a.status = 1
+		left join b_project p on ba.projectid = p.id and p.isdel = 0
+		left join a_accountactive_give ag on ba.brokerid = ag.brokerid and ba.accountid = ag.accountid and ba.projectid = ag.projectid
+		left join a_account_performance ap on ba.brokerid = ap.brokerid and ba.accountid = ap.accountid and ba.projectid = ap.projectid and ap.isdel = 0
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId and pc.isdel = 0 and ((pc.ClueStatus = 1 and a.status = 1) or (pc.ClueStatus &gt; 1 and pc.ClueStatus &lt; 9))
+		where ba.isdel = 0
+
+		<if test="idList != null and idList.size() > 0">
+			and ba.id in
+			<foreach collection="idList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="projectIdList != null and projectIdList.size() > 0">
+			and ba.ProjectID in
+			<foreach collection="projectIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="AccountName != null and AccountName !='' ">
+			and (a.EmployeeName like '%${AccountName}%' or a.Mobile like '%${AccountName}%')
+		</if>
+		<if test="BrokerName != null and BrokerName !='' ">
+			and (bu.name like '%${BrokerName}%' or bu.Mobile like '%${BrokerName}%')
+		</if>
+		<if test="RoleNameList != null and RoleNameList.size() > 0">
+			and ur.RoleName in
+			<foreach collection="RoleNameList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+
+		<choose>
+			<when test="key != null and key !='' and key == 1">
+				<if test="startDate != null and startDate != ''">
+					and ba.CreateTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and ba.CreateTime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 2">
+				<if test="startDate != null and startDate != ''">
+					and pc.CreateTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and pc.CreateTime &lt; #{endDate}
+				</if>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		GROUP BY ba.id
+	</select>
+
+	<!-- 获取二级经纪人活动数据 -->
+	<select id="getSeniorBrokerActive"  parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT
+		ag.activeid as ActiveId,
+		a.ActiveName,
+		ifnull(date_format(ag.createtime,'%Y-%m-%d %H:%i:%s'),'') as GiveTime,
+		ifnull(date_format(a.ReleaseTime,'%Y-%m-%d %H:%i:%s'),'') as ReleaseTime,
+		ifnull(date_format(a.BeginTime,'%Y-%m-%d %H:%i:%s'),'') as BeginTime,
+		ifnull(date_format(a.EndTime,'%Y-%m-%d %H:%i:%s'),'') as EndTime,
+		ifnull(date_format(a.DisableTime,'%Y-%m-%d %H:%i:%s'),'') as DisableTime,
+		sum(case when pc.ClueStatus &lt; 9 then 1 else 0 end) as Report,
+		sum(case when pc.ClueStatus &lt; 9 and pc.ClueStatus &gt; 1 then 1 else 0 end) as Arrive
+		FROM a_accountactive_give ag
+		left join a_accountactive a on ag.activeid = a.id
+		left join a_account_performance ap on ag.brokerid = ap.brokerid and ag.activeid = ap.activeid and ap.isdel = 0
+		left join b_project_clues pc on ap.ProjectClueId = pc.ProjectClueId and pc.isdel = 0
+		where a.isdel = 0
+		and ag.brokerid = #{BrokerId}
+
+		<if test="ActiveName != null and ActiveName !='' ">
+			and a.ActiveName like '%${ActiveName}%'
+		</if>
+		<choose>
+			<when test="ActiveStatus != null and ActiveStatus !='' and ActiveStatus == 1">
+				and a.BeginTime &lt; now() and a.EndTime &gt; now()
+			</when>
+			<when test="ActiveStatus != null and ActiveStatus !='' and ActiveStatus == 2">
+				and a.EndTime &lt; now()
+			</when>
+			<when test="ActiveStatus != null and ActiveStatus !='' and ActiveStatus == 3">
+				and a.status = 5
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		<choose>
+			<when test="key != null and key !='' and key == 5">
+				<if test="startDate != null and startDate != ''">
+					and ag.createtime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and ag.createtime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 1">
+				<if test="startDate != null and startDate != ''">
+					and a.ReleaseTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and a.ReleaseTime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 2">
+				<if test="startDate != null and startDate != ''">
+					and a.BeginTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and a.BeginTime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 3">
+				<if test="startDate != null and startDate != ''">
+					and a.EndTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and a.EndTime &lt; #{endDate}
+				</if>
+			</when>
+			<when test="key != null and key !='' and key == 4">
+				<if test="startDate != null and startDate != ''">
+					and a.DisableTime &gt;= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and a.DisableTime &lt; #{endDate}
+				</if>
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		GROUP BY ag.id
+	</select>
+
+	<!-- 获取经纪人的大客户数据 -->
+	<select id="getAccountByBrokerId" parameterType="java.lang.String" resultType="java.util.Map">
+		select
+			ba.ProjectName,
+			a.EmployeeName as AccountName,
+			a.Mobile as AccountMobile,
+			ifnull(date_format(ba.CreateTime,'%Y-%m-%d %H:%i:%s'),'') as CreateTime
+		from a_broker_account ba
+		left join b_account a on ba.accountid = a.id and a.isdel = 0 and a.status = 1
+		where ba.BrokerId = #{BrokerId}
+		and ba.isdel = 0 and a.isdel = 0
+	</select>
+
+
+	<update id="updateBrokerAccount" parameterType="java.util.List" >
+		<foreach collection="RoleNameList" index="index" item="item" >
+			update a_broker_account set accountid = #{item.AccountId} and edittime = now()
+			where brokerid = #{item.BrokerId} and projectid = #{item.ProjectId};
+		</foreach>
+	</update>
+
+
+	<!--查询业绩归属表数据-->
+	<select id="getAccountPerformanceList" parameterType="java.lang.String" resultType="cn.visolink.system.seniorbroker.vo.AccountPerformance">
+
+		select
+		ap.id,
+		ap.activeid as activeId,
+		ap.projectid AS projectId,
+		ap.accountid AS accountId,
+		ap.brokerid AS brokerId,
+		ap.projectclueid AS  projectClueId,
+		bpc.ClueStatus as clueStatus
+		from
+		a_account_performance ap
+		left join b_project_clues bpc on bpc.ProjectClueId = ap.projectclueid
+		left join a_broker_account ba on ap.projectid = ba.projectid and ap.accountid = ba.accountid  and ap.brokerid = ba.brokerid
+		where
+		ba.id in
+		<foreach collection="brokerActIdList" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+		and ap.isdel = 0
+		and ba.isdel = 0
+	</select>
+
+	<!--查询经纪人活动-->
+	<select id="getActivityByAccountId" parameterType="java.lang.String" resultType="java.lang.String">
+        select id from a_accountactive where projectid = #{projectId} and accountid = #{accountId} and isdel = 0
+    </select>
+
+	<!--更新业绩归属表数据-->
+	<update id="updateAccountPerformance" parameterType="java.lang.String">
+		update
+		a_account_performance set activeid = null,accountid = #{userId}
+		where id in
+		<foreach collection="idList" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<!--更新业绩归属表数据-->
+	<update id="updateAccountPerformanceTwo" parameterType="java.lang.String">
+		update
+		a_account_performance set accountid = #{userId}
+		where id in
+		<foreach collection="idList" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<!--查询原大客户经理-->
+	<select id="getOldAccountManagerL" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			ba.id,
+			ba.projectid,
+			ba.projectname,
+			b.EmployeeName AS accountName,
+			b.id as accountId,
+			b.Mobile as accountMobile,
+			bu.id as brokerId,
+			bu.Mobile as brokerMobile,
+			bu.OpenId as openId,
+			bu.`Name` as brokerName
+		FROM
+			a_broker_account ba
+		LEFT JOIN b_account b ON b.id = ba.accountid and b.isdel = 0 and b.status = 1
+		left join a_broker_user bu on bu.id = ba.brokerid
+		where ba.id in
+		<foreach collection="brokerActIdList" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<!--保存重分配记录-->
+	<insert id="saveBrokerAccountRecords" parameterType="cn.visolink.system.seniorbroker.vo.BrokerAccountRecords">
+		INSERT INTO `a_broker_account_records`
+		(`id`, `brokerid`, `broker_openid`, `brokername`, `brokermobile`, `accountid`, `accountname`, `accountmobile`, `projectid`,
+		`projectname`, `accountid_old`, `accountname_old`, `accountmobile_old`, `projectid_old`, `projectname_old`, `isdel`,
+		`createtime`, `creator`,`remarks`,`reason`,`entrance`,batch_id)
+		VALUES
+		<foreach collection="brokerAccountRecordsList" item="list" separator=",">
+			(uuid(), #{list.brokerId}, #{list.brokerOpenId}, #{list.brokerName}, #{list.brokerMobile}, #{list.accountId}, #{list.accountName},
+			#{list.accountMobile},#{list.projectId}, #{list.projectName}, #{list.accountIdOld}, #{list.accountNameOld}, #{list.accountMobileOld},
+			#{list.projectIdOld}, #{list.projectNameOld},0, NOW(), #{list.creator},#{list.remarks},#{list.reason},#{list.entrance},#{list.batchId})
+		</foreach>
+
+	</insert>
+
+
+	<!--保存修改信息记录日志-->
+	<insert id="recordUpdateUserLog" parameterType="java.util.Map">
+		insert into a_user_edit_log (ID,BrokerId,BrokerName,EditField,BeforeChange,AfterAlteration,CreateTime,Creator)
+		values
+		<foreach collection="mapList" item="list" separator=",">
+			(uuid(),#{list.brokerId},#{list.brokerName},'大客户经理-项目',#{list.beforeChange},#{list.afterAlteration},now(),#{list.creator})
+		</foreach>
+	</insert>
+
+	<!--更新大客户经理关联关系-->
+	<update id="updateBrokerAccountId" parameterType="java.lang.String">
+		update a_broker_account set accountid = #{userId},edittime = now()
+		where id in
+		<foreach collection="brokerActIdList"
+				 index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+
+	<!--新增消息-->
+	<insert id="saveMessageInfo" parameterType="cn.visolink.system.seniorbroker.vo.Message">
+        insert into s_message
+        (ID,Subject,Content,Sender,SendTime,MessageType,IsDel,Receiver,IsRead,ReadTime,ProjectClueId,IsPush,IsNeedPush,Ext2,Ext3,ProjectID)
+        values
+        (
+        #{id},#{subject},#{content},#{sender},now(),#{messageType},#{isDel},
+        #{receiver},#{isRead},now(),#{projectClueId},#{isPush},#{isNeedPush},#{ext2},#{ext3},#{projectId}
+        )
+    </insert>
+
+	<insert id="saveMessageClueRelation" parameterType="java.util.List">
+		insert into s_message_clue_relation
+		(id,MessageId,ProjectClueId,OpportunityClueId,CreateTime)
+		values
+		<foreach collection="messageClueList" item="list" separator=",">
+			(
+			UUID(),#{list.messageId},#{list.projectClueId},#{list.opportunityClueId},now()
+			)
+		</foreach>
+	</insert>
+
+	<!-- 获取二级经纪人分配历史 -->
+	<select id="getBrokerAccountRecords" parameterType="java.util.Map" resultType="java.util.Map">
+		select
+			bar.creator,
+			a.EmployeeName as EmployeeName,
+			ifnull(date_format(bar.createtime,'%Y-%m-%d %H:%i:%s'),'') as createTime,
+			bar.remarks,
+			bar.brokerId,
+			bar.brokerName,
+			bar.brokerMobile,
+			bar.projectId,
+			bar.projectName,
+			bar.accountName,
+			ifnull(date_format(bar.createtime,'%Y-%m-%d %H:%i:%s'),'') as GiveTime,
+			bar.accountid_old as accountIdOld,
+			bar.accountname_old as accountNameOld,
+			ifnull(date_format(ba.createtime,'%Y-%m-%d %H:%i:%s'),'') as GiveTimeOld,
+			s.dictName as reason,
+			bar.entrance
+		from a_broker_account_records bar
+		left join b_account a on bar.creator = a.id and a.isdel = 0 and a.status = 1
+		left join a_broker_account ba on bar.brokerId = ba.brokerId and bar.projectId = ba.projectId and ba.isdel = 0
+		left join S_Dictionary s on bar.reason = s.dictCode and s.status = 1 and s.isdel = 0
+		where bar.isdel = 0
+		<if test="projectIdList != null and projectIdList.size() > 0">
+			and bar.ProjectID in
+			<foreach collection="projectIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="BrokerName != null and BrokerName !='' ">
+			and (bar.brokerName like '%${BrokerName}%' or bar.brokerMobile like '%${BrokerName}%')
+		</if>
+		<if test="startDate != null and startDate != ''">
+			and bar.createtime &gt;= #{startDate}
+		</if>
+		<if test="endDate != null and endDate != ''">
+			and bar.createtime &lt; #{endDate}
+		</if>
+		order by bar.createtime desc
+	</select>
+
+	<select id="getDkhCfpType" resultType="java.util.Map">
+		select id,DictCode,DictName
+		from S_Dictionary
+		where isdel = 0 and status = 1
+		and pid in (select id from S_Dictionary where dictCode = 'dkh_cfp_type')
+	</select>
+
+	<!--查询所有楼盘-->
+	<select id="getAllBuildBook" parameterType="java.util.Map" resultType="java.lang.String">
+		SELECT
+		book.BuildBookName bookName
+		FROM
+		a_build_book book
+		where
+		book.IsDel = 0
+		AND book.`Status` = 1
+		<choose>
+			<when test="projectId != null and projectId != ''">
+				and book.ProjectID = #{projectId}
+			</when>
+			<otherwise>
+				and book.ProjectID in
+				(
+				SELECT
+				sorg.ProjectID
+				FROM
+				s_jobsuserrel sju
+				INNER JOIN s_jobs sjo ON sjo.id = sju.JobID
+				INNER JOIN s_organization sorg ON sorg.ID = sjo.JobOrgID
+				INNER JOIN s_commonjobs sc ON sc.id = sjo.CommonJobID
+				WHERE
+				sju.AccountID = #{userId}
+				and sju.status = 1
+				AND sjo.IsDel = 0
+				AND sorg.IsDel = 0
+				and sjo.isIdm = 0
+				AND sc.IsDel = 0
+				and sc.isIdm = 0
+				AND sjo.STATUS = 1
+				AND sorg.STATUS = 1
+				AND sc.STATUS = 1
+				AND sc.jobCode = 'dkhjl'
+				)
+			</otherwise>
+		</choose>
+	</select>
+
+	<!--保存消息-->
+	<insert id="insertMessageList" parameterType="java.util.List">
+		insert into s_message
+		(ID,Subject,Content,Sender,SendTime,MessageType,IsDel,Receiver,IsRead,ReadTime,ProjectClueId,IsPush,IsNeedPush,ProjectID,Ext2,Ext3)
+		values
+		<foreach collection="messageList" item="list" separator=",">
+			(
+			UUID(),#{list.subject},#{list.content},#{list.sender},now(),#{list.messageType},#{list.isDel},
+			#{list.receiver},#{list.isRead},now(),#{list.projectClueId},#{list.isPush},#{list.isNeedPush},#{list.projectId},#{list.ext2},#{list.ext3}
+			)
+		</foreach>
+	</insert>
+
+	<!--保存大客户经理变更批次-->
+	<insert id="saveBrokerAccountRecordsBatch" parameterType="cn.visolink.system.job.authorization.model.BrokerAccountRecordsBatch">
+		INSERT INTO `a_broker_account_records_batch`
+		(`id`, `reason`, `createUser`, `createTime`, `countNumber`, `projectId`, `note`, `entrance`, `message`, `accountid`)
+		VALUES
+		(uuid(), #{reason},  #{createUser},  now(),  #{countNumber},  #{projectId},  #{note},  #{entrance},  #{message},  #{accountId})
+	</insert>
+</mapper>

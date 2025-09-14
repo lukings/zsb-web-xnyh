@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.brokerrule.mapper.BrokerRuleMapper">
+
+    <!--查询全民经纪人规则列表-->
+    <select id="getBrokerRuleList" parameterType="cn.visolink.system.brokerrule.model.form.BrokerRuleForm" resultType="cn.visolink.system.brokerrule.model.vo.BrokerRuleVO">
+        select @rownum:=@rownum+1 AS num, n.* from (SELECT @rownum:=0) r,(
+        select
+        *
+        from (
+            select
+            br.id,
+            br.RuleID,
+            br.BrokerType,
+            br.ActivityId,
+            br.ActivityName,
+            br.ProjectArea,
+            br.ProjectName,
+            br.BrokerageRule,
+            br.IsEnable,
+            (case
+                br.IsEnable
+            when 1 then "是"
+            when 0 then "否"
+            else "" end) as IsEnableName,
+            br.EnableDate,
+            br.EndDate,
+            br.PreventIntercept,
+            br.ReportExpireDays,
+            br.ReportDaysWarning,
+            br.ChannelProtectionPeriod,
+            br.ChannelProtectionPeriodWarning,
+            br.ReportMax,
+            br.IsDisabled,
+            (case
+            br.IsDisabled
+            when 1 then "是"
+            when 0 then "否"
+            else "" end) as IsDisabledName,
+            br.DisabledTime,
+            br.DisUser,
+            br.DisUserName,
+            br.IsDel,
+            br.CreateDate,
+            br.CreateUser,
+            br.CreateUserName,
+            br.EditDate,
+            br.EditUser,
+            ppr.ProjectID
+            from b_broker_rule br
+            left join b_project_protect_rule ppr on br.RuleID = ppr.id
+            where
+            ppr.SourceType = 4
+            <if test="projectIdList != null and projectIdList.size() > 0">and ppr.ProjectID in
+            <foreach
+                    collection="projectIdList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="isEnable != null and isEnable !=''">
+                and br.IsEnable = #{isEnable}
+            </if>
+            <if test="isDisabled != null and isDisabled !=''">
+                and br.IsDisabled = #{isDisabled}
+            </if>
+            <if test="activityName != null and activityName != '' ">
+                and br.ActivityName like CONCAT('%',#{activityName},'%')
+            </if>
+            <if test="createUser != null and createUser != '' ">
+                and br.CreateUserName like CONCAT('%',#{createUser},'%')
+            </if>
+            <if test="dateType != null and dateType == '1'.toString() ">
+                <if test=" enableDate != null and enableDate != '' and endDate != null and endDate != ''">
+                    and (br.EnableDate BETWEEN DATE_FORMAT(#{enableDate},'%Y-%m-%d %H:%i:%s') AND
+                    DATE_FORMAT(#{endDate},'%Y-%m-%d %H:%i:%s'))
+                </if>
+            </if>
+            <if test="dateType != null and dateType == '2'.toString() ">
+                <if test=" enableDate != null and enableDate != '' and endDate != null and endDate != ''">
+                    and (br.EndDate BETWEEN DATE_FORMAT(#{enableDate},'%Y-%m-%d %H:%i:%s') AND
+                    DATE_FORMAT(#{endDate},'%Y-%m-%d %H:%i:%s'))
+                </if>
+            </if>
+            <if test="dateType != null and dateType == '3'.toString() ">
+                <if test=" enableDate != null and enableDate != '' and endDate != null and endDate != ''">
+                    and (br.CreateDate BETWEEN DATE_FORMAT(#{enableDate},'%Y-%m-%d %H:%i:%s') AND
+                    DATE_FORMAT(#{endDate},'%Y-%m-%d %H:%i:%s'))
+                </if>
+            </if>
+        ) t group by t.ActivityId ) n ORDER BY
+        n.CreateDate DESC
+    </select>
+    <!--根据项目查询全民经纪人规则详情-->
+    <select id="getBrokerRuleDetailsByProId" parameterType="java.lang.String" resultType="cn.visolink.system.brokerrule.model.vo.BrokerRuleVO">
+        SELECT
+            br.id,
+            br.RuleID,
+            br.BrokerType,
+            br.ActivityId,
+            br.ActivityName,
+            br.ProjectArea,
+            br.ProjectName,
+            br.BrokerageRule,
+            br.IsEnable,
+            ( CASE br.IsEnable WHEN 1 THEN "是" WHEN 0 THEN "否" ELSE "" END ) AS IsEnableName,
+            br.EnableDate,
+            br.EndDate,
+            br.PreventIntercept,
+            br.ReportExpireDays,
+            br.ReportDaysWarning,
+            br.ChannelProtectionPeriod,
+            br.ChannelProtectionPeriodWarning,
+            br.ReportMax,
+            br.RuleDesc,
+            br.RuleValidity,
+            br.IsDel,
+            br.CreateDate,
+            br.CreateUser,
+            br.CreateUserName,
+            br.EditDate,
+            br.EditUser,
+            ppr.ProjectID
+        FROM
+            b_broker_rule br
+                LEFT JOIN b_project_protect_rule ppr ON br.RuleID = ppr.id
+        WHERE
+            ppr.ProjectID = #{projectId}
+            ORDER BY br.CreateDate desc limit 4
+    </select>
+    <!--查询全民经纪人规则详情-->
+    <select id="getBrokerRuleDetails" parameterType="java.lang.String" resultType="cn.visolink.system.brokerrule.model.vo.BrokerRuleVO">
+        select
+            br.id,
+            br.RuleID,
+            br.BrokerType,
+            br.ActivityId,
+            br.ActivityName,
+            br.ProjectArea,
+            br.ProjectName,
+            br.BrokerageRule,
+            br.IsEnable,
+            (case
+                br.IsEnable
+            when 1 then "是"
+            when 0 then "否"
+            else "" end) as IsEnableName,
+            br.EnableDate,
+            br.EndDate,
+            br.PreventIntercept,
+            br.ReportExpireDays,
+            br.ReportDaysWarning,
+            br.ChannelProtectionPeriod,
+            br.ChannelProtectionPeriodWarning,
+            br.ReportMax,
+            br.RuleDesc,
+            br.IsDel,
+            br.CreateDate,
+            br.CreateUser,
+            br.CreateUserName,
+            br.RuleValidity,
+            br.EditDate,
+            br.EditUser,
+            ppr.ProjectID,
+            bp.HotLine
+        from b_broker_rule br
+        left join b_project_protect_rule ppr on br.RuleID = ppr.id
+        left join b_project bp on bp.id = ppr.ProjectID
+        where
+            br.ActivityId = #{activityId}
+    </select>
+
+    <!--插入全民经纪人规则数据-->
+    <insert id="insertBrokerRule" parameterType="cn.visolink.system.brokerrule.model.form.BrokerRuleForm">
+    insert into b_broker_rule
+        (ID,RuleID,BrokerType,ActivityId,ActivityName,ProjectArea,ProjectName,BrokerageRule,IsEnable,
+        EnableDate,EndDate,PreventIntercept,ReportExpireDays,ReportDaysWarning,ChannelProtectionPeriod,
+        ChannelProtectionPeriodWarning,ReportMax,RuleDesc,IsDel,CreateDate,CreateUser,CreateUserName,RuleValidity,IsDisabled)
+    values
+    <foreach collection="brokerRuleList" item="list" separator=",">
+        (uuid(),#{list.ruleID},#{list.brokerType},#{list.activityId,},#{list.activityName},#{list.projectArea},#{list.projectName},#{list.brokerageRule},
+        #{list.isEnable},#{list.enableDate},#{list.endDate},#{list.preventIntercept},#{list.reportExpireDays},#{list.reportDaysWarning},
+        #{list.channelProtectionPeriod},#{list.channelProtectionPeriodWarning},#{list.reportMax},#{list.ruleDesc},0,now(),#{list.createUser},#{list.createUserName},#{list.ruleValidity},#{list.isDisabled})
+    </foreach>
+    </insert>
+
+    <!--插入规则数据-->
+    <insert id="insertProtectRule" parameterType="cn.visolink.system.channel.model.form.ProjectProtectRuleForm">
+        INSERT INTO b_project_protect_rule (
+                ID,
+                ProjectID,
+                ProjectOrgCategory,
+                SourceType,
+                EditTime,
+                Editor,
+                IsEnterPublicPool
+                )
+                VALUES
+                (
+                #{id},
+                #{projectId},
+                #{projectOrgCategory},
+                #{sourceType},
+                now(),
+                #{editor},
+                #{isEnterPublicPool}
+                );
+    </insert>
+
+    <!--更新全民经纪人规则-->
+    <update id="updateBrokerRule" parameterType="cn.visolink.system.brokerrule.model.form.BrokerRuleForm">
+        <foreach collection="brokerRuleList" item="list" separator=";">
+            update b_broker_rule
+            set
+                ActivityName = #{list.activityName},
+                ProjectArea = #{list.projectArea},
+                ProjectName = #{list.projectName},
+                BrokerageRule =#{list.brokerageRule},
+                IsEnable = #{list.isEnable},
+                EnableDate = #{list.enableDate},
+                EndDate = #{list.endDate},
+                PreventIntercept = #{list.preventIntercept},
+                ReportExpireDays = #{list.reportExpireDays},
+                ReportDaysWarning = #{list.reportDaysWarning},
+                ChannelProtectionPeriod = #{list.channelProtectionPeriod},
+                ChannelProtectionPeriodWarning = #{list.channelProtectionPeriodWarning},
+                ReportMax = #{list.reportMax},
+                RuleDesc = #{list.ruleDesc},
+                RuleValidity = #{list.ruleValidity},
+                EditUser = #{list.editUser},
+                EditDate = now()
+            where id = #{list.id}
+        </foreach>
+    </update>
+    <!--删除规则-->
+    <delete id="delBrokerRule" parameterType="java.lang.String">
+      delete from b_broker_rule where ActivityId = #{activityId}
+    </delete>
+    <!--禁用规则-->
+    <update id="disabledBrokerRule" parameterType="java.util.Map">
+        update b_broker_rule
+        set IsDisabled = 1,
+            DisabledTime = now(),
+            DisUser = #{disUser},
+            <if test="isEnable ='1'">
+            IsEnable = 0,
+            </if>
+            DisUserName = #{disUserName}
+        where ActivityId = #{activityId}
+    </update>
+
+    <update id="enableBrokerRule" parameterType="java.util.Map">
+        update b_broker_rule
+        set IsDisabled = 0,EditDate = now(),EditUser = #{editUser}
+        where ActivityId = #{activityId}
+    </update>
+    <!--查询项目这段时间是否有活动-->
+    <select id="getBrokerRuleIsEnableD" parameterType="java.lang.String" resultType="java.lang.String">
+        select
+            ActivityId
+        from b_broker_rule br
+        left join b_project_protect_rule ppr on br.RuleID = ppr.id
+        where ppr.ProjectID = #{projectId}
+        and ppr.SourceType = 4
+        and br.isDel = 0 and br.IsDisabled = 0 and br.endDate &gt; now()
+        <if test=" enableDate != null and enableDate != '' and endDate != null and endDate != ''">
+            and (br.EnableDate BETWEEN #{enableDate} and #{endDate} or br.endDate BETWEEN #{enableDate} and #{endDate} or (br.EnableDate &lt; #{enableDate} and br.endDate &gt; #{endDate}))
+        </if>
+        limit 1
+    </select>
+
+    <!--查询项目是否有启动的活动-->
+    <select id="getBrokerRuleIsEnable" parameterType="java.lang.String" resultType="java.lang.String">
+        select
+        ActivityId
+        from b_broker_rule br
+        left join b_project_protect_rule ppr on br.RuleID = ppr.id
+        where ppr.ProjectID = #{projectId}
+        and ppr.SourceType = 4
+        and br.isDel = 0 and br.IsEnable='1'
+        limit 1
+    </select>
+
+    <!--更新楼盘信息-->
+    <update id="updateBuildBookIsReport" parameterType="java.util.Map">
+        update a_build_book
+        <set>
+            <if test="isReport != null and isReport != ''">
+                IsReport = #{isReport},
+            </if>
+            <if test="brokerageRule != null  and brokerageRule != ''">
+                CommissionRate = #{brokerageRule},
+            </if>
+            <if test="startTime != null and startTime != ''">
+                StartTime = #{startTime},
+            </if>
+            <if test="endTime != null and endTime != ''">
+                EndTime = #{endTime}
+            </if>
+        </set>
+        where ProjectID = #{projectId}
+    </update>
+
+    <!--查询规则表中是否有数据-->
+    <select id="getProjectRuleId" parameterType="java.lang.String" resultType="java.lang.String">
+        select
+            id
+        from
+            b_project_protect_rule
+         where ProjectID = #{projectId}
+         and SourceType = 4
+    </select>
+    <!--是否存在楼盘-->
+    <select id="getBuildBookbyPro" parameterType="java.lang.String" resultType="_int">
+        select count(1) from a_build_book where ProjectID = #{projectId}
+    </select>
+    <!--是否有规则启动-->
+    <select id="getIsProjectRule" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select
+            count(1)
+        from b_broker_rule
+        where IsEnable='1' and ID = #{id}
+    </select>
+
+    <!--更新项目咨询电话-->
+    <update id="updateProjectHotLine" parameterType="java.util.Map">
+        update b_project
+        <set>
+            <if test="hotLine != null and hotLine != ''">
+                HotLine = #{hotLine}
+            </if>
+        </set>
+        where ID = #{projectId}
+    </update>
+</mapper>

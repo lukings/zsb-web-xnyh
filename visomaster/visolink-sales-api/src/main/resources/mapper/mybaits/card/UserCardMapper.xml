@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.card.mapper.UserCardMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.visolink.system.card.model.UserCard">
+        <id column="id" property="id"/>
+        <result column="account_id" property="accountId"/>
+        <result column="name" property="name"/>
+        <result column="mobile" property="mobile"/>
+        <result column="signature" property="signature"/>
+        <result column="img_url" property="imgUrl"/>
+    </resultMap>
+
+    <!--根据用户ID查询名片详情-->
+    <select id="getCardInfoByUserId" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+            id,
+            account_id,
+            `name`,
+            mobile,
+            signature,
+            img_url
+        FROM
+            c_user_card uc
+        WHERE
+            account_id = #{userId}
+    </select>
+
+    <!--根据用户ID查询用户详情-->
+    <select id="getUserBaseInfo" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT ID AS accountId, EmployeeName AS `name`, Gender, Mobile, Image imgUrl
+        FROM b_account
+        WHERE ID = #{userId}
+    </select>
+
+    <!--新增名片-->
+    <insert id="addCardInfo" parameterType="cn.visolink.system.card.model.UserCard">
+        INSERT INTO c_user_card(id, account_id, `name`, mobile, signature, tag, img_url, gender, creator, create_time, status, is_del)
+        VALUES (#{id}, #{accountId}, #{name}, #{mobile}, #{signature}, #{tag}, #{imgUrl}, #{gender}, #{creator}, NOW(), 1, 0);
+    </insert>
+
+    <!--删除名片楼盘排序数据-->
+    <delete id="delCardBuildBook" parameterType="java.util.Map">
+        delete from c_card_build where account_id = #{userId} and project_id = #{projectId}
+    </delete>
+</mapper>

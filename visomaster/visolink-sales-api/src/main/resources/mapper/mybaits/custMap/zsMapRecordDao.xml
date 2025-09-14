@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.custMap.dao.ZsMapRecordDao">
+	<insert id="save">
+		INSERT INTO b_zsmap_record (record_id,permissions_id,type,user_names,area_permissions,area_start_date,area_end_date,proj_permissions,proj_start_date,proj_end_date,create_by,create_time,update_by,update_time,is_del) VALUES
+			(#{recordId},#{permissionsId},#{type},#{userNames},#{areaPermissions},#{areaStartDate},#{areaEndDate},#{projPermissions},#{projStartDate},#{projEndDate},#{createBy},#{createTime},#{updateBy},#{updateTime},#{isDel})
+	</insert>
+  <select id="getZsMapPermissionsRecord"
+    resultType="cn.visolink.system.custMap.bo.ZsMapPermissionsRecordBO">
+		SELECT record_id recordId,
+					 permissions_id permissionsId,
+					 area_permissions areaPermissions,
+					 user_names userNames,
+					 concat(area_start_date,'至',area_end_date) areaExpirationDate,
+					 proj_permissions projPermissions,
+					 concat(proj_start_date,'至',proj_end_date) projExpirationDate,
+					 date_format(create_time,'%Y-%m-%d %H:%i:%s') operatorTime,
+					 (
+						 select
+							 ba.EmployeeName
+						 from
+							 b_account ba
+						 where
+							 ba.id = bzr.create_by) operator
+		FROM b_zsmap_record bzr WHERE 1=1
+			<if test="permissionsId != null and permissionsId != ''">
+				and permissions_id = #{permissionsId}
+			</if>
+			<if test="type != null">
+				and type = #{type}
+			</if>
+			<if test="userName != null and userName != ''">
+				and user_names like concat('%',#{userName},'%')
+			</if>
+			<if test="startDate != null">
+				and create_time &gt;= #{startDate}
+			</if>
+			<if test="endDate != null">
+				and create_time &lt;= #{endDate}
+			</if>
+			<if test="accountIds != null and accountIds.size() > 0">
+					and create_by in
+					<foreach collection="accountIds" item="item" open="(" separator="," close=")">
+						#{item}
+					</foreach>
+			</if>
+		order by create_time desc
+	</select>
+	<select id="getAccountIds" resultType="java.lang.String">
+		select ID from b_account ba where IsDel =0 and EmployeeName like concat('%',#{operator},'%')
+	</select>
+</mapper>

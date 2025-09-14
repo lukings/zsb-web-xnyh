@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.visitandcallexcel.dao.ProjectProtectRuleDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.visolink.system.visitandcallexcel.model.ProjectProtectRule" autoMapping="true"></resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, ProjectID, ProjectOrgID, ProjectOrgCategory, ProtectDays, IsAllowRepeatReport, IsForceCustomer, IsReportOwner, IsFouceRecycle, IsFollowFouceRecycle, IsVisitAudit, ReportExpireDays, VisitExpireDays, TheFirstVisitFollowupExpireDays, TheNextVisitFollowupExpireDays, TreeReportExpireDays, TreeVisitExpireDays, SourceType, CutGuestInvite, CutGuestDrainage, StandbyMode, ChannelProtectionPeriod, TreeType, EditTime, Editor, FollowupExpireDaysWarning, VisitingWarning, ValidityOfContract, ValidityOfWarning, RemittanceWarning, OldOwnerReport, OwnerAgain
+    </sql>
+
+    <!--获取组织ID-->
+    <select id="getOrgId" parameterType="java.util.Map" resultType="java.lang.String">
+        select org.id as orgId from b_account act
+         inner join s_organization org on org.orgcompanyid = act.SubordCompanyID
+         where act.id = #{reportUserID} and org.projectId = #{projectId} and org.status=1 and org.IsDel=0 and act.Status=1 and act.IsDel=0;
+    </select>
+
+</mapper>

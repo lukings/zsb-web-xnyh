@@ -1,0 +1,1278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.channel.dao.PublicpoolDao">
+
+    <!--查询案场重分配记录的信息-->
+    <select id="queryRedistributionRecord" parameterType="java.util.Map" resultType="cn.visolink.system.channel.model.vo.CustomerDistributionRecordsVO">
+        SELECT
+        ba.EmployeeName confirmPersonName,
+        bc.ConfirmTime confirmTime,
+        bpc.ProjectName projectName,
+        if(length(trim(bpc.diy_hide_customer_name)) = 0 or bpc.diy_hide_customer_name is null,concat(left(bpc.CustomerName,1),'**'),bpc.diy_hide_customer_name) customerName,
+        bpc.CustomerName oldCustomerName,
+        CONCAT(
+        LEFT ( bpc.CustomerMobile, 3 ),
+        '****',
+        RIGHT ( bpc.CustomerMobile, 4 )) customerMobile,
+        bpc.CustomerMobile oldCustomerMobile,
+        bc.OldSalesName oldSalesName,
+        bc.SalesName salesName,
+        bc.Type type,
+        bc.ProjectName oldProjectName,
+        bc.main_project_name newProjectName
+        FROM b_customerdistributionRecords bc
+        LEFT JOIN b_project_opportunity bpc ON bpc.OpportunityClueId = bc.OpportunityClueId
+        LEFT JOIN b_account ba ON ba.ID = bc.ConfirmID
+        WHERE
+        1 = 1
+        <if test="projectList != null and projectList.size() > 0">
+            AND bc.ProjectId IN
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="newProjectList != null and newProjectList.size() > 0">
+            AND bc.main_project_id IN
+            <foreach collection="newProjectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="customerName != null and customerName != ''">
+            AND bpc.CustomerName = #{customerName}
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            AND bpc.CustomerMobile = #{customerMobile}
+        </if>
+        <if test="confirmStartTime!=null and confirmStartTime!='' and confirmEndTime!=null and confirmEndTime!=''">
+            and bc.ConfirmTime between #{confirmStartTime} and #{confirmEndTime}
+        </if>
+        <if test="oldSalesName != null and oldSalesName != ''">
+            AND bc.OldSalesName = #{oldSalesName}
+        </if>
+        <if test="salesName != null and salesName != ''">
+            AND bc.SalesName = #{salesName}
+        </if>
+        <if test="confirmPersonName != null and confirmPersonName != ''">
+            AND ba.EmployeeName = #{confirmPersonName}
+        </if>
+        <if test="userId != null and userId != ''">
+            AND bc.ConfirmID = #{userId}
+        </if>
+        AND bc.Type = 1
+        ORDER BY bc.ConfirmTime DESC
+    </select>
+
+
+    <select id="getRelson" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT DictName FROM s_dictionary WHERE DictCode =#{dictCode} AND DictCode!=0 limit 1
+    </select>
+    <select id="ProjectClueDeriveMustAcByToker" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            1 as rownum,
+            brb.id, -- 重分配批次
+            brb.createUser, --  操作人ID
+           (select EmployeeName from b_account where ID=brb.createUser) as EmployeeName, -- 操作人姓名
+            bc.ConfirmPersonName, -- 被分配人
+            bc.ConfirmTime, -- 分配时间
+            (case
+            brb.RedistributionGenre
+            when 1 then '渠道台账'
+            when 2 then '案场台账'
+            when 3 then 'app'
+            when 4 then '公共池'
+            else '' end ) as RedistributionGenre,-- 重分配类型（1.拓客台账 2.案场台账 3.app 4.公共池）
+            brb.RedistributionType,-- 重分配原因
+            bpc.CustomerName,-- 客户手机
+            concat(left(bpc.CustomerMobile,3),'****',right(bpc.CustomerMobile,4)) as CustomerMobile, -- 客户手机
+            (case
+            bpc.ClueStatus
+            when 1 then '报备'
+            when 2 then '到访'
+            when 3 then '排小卡'
+            when 4 then '排大卡'
+            when 5 then '订房'
+            when 6 then '认筹'
+            when 7 then '认购'
+            when 8 then '签约'
+            when 9 then '放弃'
+            else '' end) as ClueStatus,  -- 线索状态（客户状态）
+            bpc.Level, -- 客户等级
+            bpc.CustomerCardTypeDesc, -- 客户证件类型
+            bpc.CustomerCardNum, -- 证件号
+            bc.SalesName, -- 归属人员
+            bc.SalesAttributionTime,-- 归属时间
+            bc.OldSalesName,-- 原归属人
+            bc.OldSalesId, -- 原归属人id
+            bc.OldTokerAttributionTime,
+            bc.OldSalesAttributionTime,
+            -- 来源类型
+            bc.Type,
+            bpc.ProjectClueId,
+            bc.OpportunityClueId,
+            bpc.BasicCustomerId,
+            bpc.TokerAttributionTime, -- 原业绩归属时间
+            bpc.PerformanceAttributorOld, -- 原业绩归属人
+            bpc.ProjectName
+            FROM
+            b_redistribution_batch brb
+            JOIN B_CustomerDistributionRecords bc ON brb.id = bc.RedistributionBatchId
+            left join b_project_clues bpc on bpc.ProjectClueId = bc.ProjectClueId
+            WHERE
+             brb.RedistributionGenre=1
+            <if test="projectList != null ">
+                and brb.projectId in
+                <foreach collection="projectList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="name!=null and name!=''">
+                and bpc.CustomerName LIKE '%${name}%'
+            </if>
+            <if test="mobile!=null and mobile!=''">
+                and bpc.CustomerMobile LIKE '%${mobile}%'
+            </if>
+            order by ConfirmTime desc
+    </select>
+
+    <select id="ProjectClueDeriveMustAcByToker_COUNT" parameterType="java.util.Map" resultType="Long">
+        SELECT
+        count(1)
+        FROM
+        b_redistribution_batch brb
+        JOIN B_CustomerDistributionRecords bc ON brb.id = bc.RedistributionBatchId
+        left join b_project_clues bpc on bpc.ProjectClueId = bc.ProjectClueId
+        WHERE
+        brb.RedistributionGenre=1
+        <if test="projectList != null ">
+            and brb.projectId in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="name!=null and name!=''">
+            and bpc.CustomerName LIKE '%${name}%'
+        </if>
+        <if test="mobile!=null and mobile!=''">
+            and bpc.CustomerMobile LIKE '%${mobile}%'
+        </if>
+    </select>
+
+    <!--添加批次表信息-->
+    <insert id="insertNewBatch" parameterType="java.util.Map">
+      INSERT INTO b_redistribution_batch(ID,RedistributionType,createUser,
+      createTime,countNumber,projectId,note,RedistributionGenre)
+      VALUES(#{uuid},${Reason},#{UserID},NOW(),#{countNumber},#{ProjectID},#{DoDesc},#{redistributionGenre});
+    </insert>
+
+    <!--查询单个人的案场机会信息-->
+    <select id="QueryOnePeople" resultType="java.util.Map">
+        select * from b_project_opportunity
+        where
+        OpportunityClueId=#{ClueID}
+        and projectId=#{ProjectID}
+    </select>
+
+    <!--查询单个人的渠道线索信息-->
+    <select id="QueryOnePeopleClue" resultType="java.util.Map">
+        select * from b_project_clues
+        where
+        ProjectClueId=#{ClueID}
+        and projectId=#{ProjectID}
+    </select>
+
+    <!--修改批次详情表-->
+    <!--<update id="UpdatePiCiDetail" parameterType="java.util.Map">-->
+        <!--update B_CustomerDistributionRecords set IsNew='0' where ProjectClueId=#{ClueID}-->
+    <!--</update>-->
+
+    <!--添加批次详细信息表-->
+    <!--<insert id="InsertPICIDetail" parameterType="java.util.Map">-->
+        <!--INSERT INTO b_customerdistributionrecords-->
+        <!--(ID,ProjectClueId,projectId,ProjectName,ConfirmID,ConfirmPersonName,-->
+        <!--ConfirmTime,IsNew,Reason,Entrance,RedistributionBatchId,OldTokerAttributionTime,-->
+        <!--OldSalesAttributionTime,OldSalesId,SalesId,SalesAttributionTime,OpportunityClueId,-->
+        <!--note,Type,SalesName,OldSalesName,OldSalesAttributionTeamName,OldSalesAttributionTeamId,SalesAttributionTeamName,SalesAttributionTeamId,ChildType)-->
+        <!--VALUES(UUID(),#{projectClueId},#{ProjectID},#{ProjectName},#{UserID},#{userName},-->
+        <!--#{ConfirmTime},1,#{Reason},1,#{uuid},#{TokerAttributionTime},#{OriginalSalesAttributionTime},-->
+        <!--#{OldSalesAttributionId},#{SaleID},#{SalesAttributionTime},#{OpportunityClueId},-->
+        <!--#{DoDesc},#{Type},#{accoutName},#{OldSalesAttributionName},#{OldSalesAttributionTeamName},#{OldSalesAttributionTeamId},-->
+        <!--#{SalesAttributionTeamName},#{SalesAttributionTeamId},#{childType});-->
+    <!--</insert>-->
+    <!--查询登录人的信息-->
+    <select id="selectUserJob" resultType="java.util.Map">
+        select * from s_jobsuserrel s join s_jobs sj on s.JobID=sj.id where s.AccountID=#{UserID} and isdel=0 and s.CurrentJob=1 and s.status = 1
+    </select>
+
+    <!--修改客户线索表和机会表渠道相关字段-->
+    <update id="UpdateXianSuoChance" parameterType="java.util.Map">
+            update b_project_clues
+            <trim prefix="set" suffixOverrides=",">
+                <if test="UserID!=null and UserID!='' ">DisPerson=#{UserID},</if>
+                <if test="userName!=null and userName!='' ">DisPersonName=#{userName},</if>
+
+                <if test="SaleID!=nul and SaleID!='' ">
+                    TokerAttributionId=#{SaleID},ReportUserID=#{SaleID},
+                </if>
+                <if test="accoutName!=null and accoutName!=''">
+                    TokerAttributionName=#{accoutName},ReportUserName=#{accoutName},
+                </if>
+
+                <if test="SalesAttributionGroupId!=null and SalesAttributionGroupId!=''">TokerAttributionGroupId=#{SalesAttributionGroupId},</if>
+                <if test="AttributionGroupName!=null and AttributionGroupName!=''">TokerAttributionGroupName=#{AttributionGroupName},</if>
+                <if test="ReportExpireDate!='' and ReportExpireDate!=null">ReportExpireDate=#{ReportExpireDate},</if>
+                <if test="ChannelProtectionPeriod!='' and ChannelProtectionPeriod!=null">TokerVisitExpireDate=#{ChannelProtectionPeriod},</if>
+
+                <if test="SalesAttributionTeamId!=null and SalesAttributionTeamId!=''">
+                    TokerAttributionTeamId=#{SalesAttributionTeamId},ReportTeamID=#{SalesAttributionTeamId},
+                </if>
+                <if test="SalesAttributionTeamName!=null and SalesAttributionTeamName!=''">
+                    TokerAttributionTeamName=#{SalesAttributionTeamName},ReportTeamName=#{SalesAttributionTeamName}
+                </if>
+                <if test="TheNextVisitFollowupExpireDays!=null and TheNextVisitFollowupExpireDays!=''">SalesFollowExpireDate=#{TheNextVisitFollowupExpireDays},</if>
+
+                <if test="ReportExpireWarningDate!='' and ReportExpireWarningDate!=null ">ReportExpireWarningDate=#{ReportExpireWarningDate},</if>
+                <if test="ChannelProtectionPeriodWarning!='' and ChannelProtectionPeriodWarning!=null ">TokerVisitExpireWarningDate=#{ChannelProtectionPeriodWarning},</if>
+                <if test="followupExpireDaysWarning!='' and followupExpireDaysWarning!=null ">SalesFollowExpireWarningDate=#{followupExpireDaysWarning},</if>
+                <if test="SourceType!=null and SourceType!=''">SourceType=#{SourceType},</if>
+                <if test="SourceTypeDesc!=null and SourceTypeDesc!=''">SourceTypeDesc=#{SourceTypeDesc},</if>
+                <if test="SourceTypeOld!=null and SourceTypeOld!=''">SourceTypeOld=#{SourceTypeOld},</if>
+                <if test="SourceTypeOldDesc!=null and SourceTypeOldDesc!=''">SourceTypeOldDesc=#{SourceTypeOldDesc},</if>
+                -- 原业绩归属人姓名
+               <!-- <if test="OldPerformanceAttributor!=null and OldPerformanceAttributor!=''">
+                    PerformanceAttributorOld=#{OldPerformanceAttributor},
+                </if>
+                <if test="OldPerformanceAttributorID!=null and OldPerformanceAttributorID!=''">
+                    PerformanceAttributorOldID=#{OldPerformanceAttributorID},
+                </if>-->
+                -- 原业绩归属人 和 现有业绩归属人 一样
+                -- 业绩归属人
+                <if test="achievementId!=null">
+                    PerformanceAttributorID=#{achievementId},PerformanceAttributorOldID=#{achievementId},
+                </if>
+                <if test="achievementName!=null">
+                    PerformanceAttributor=#{achievementName},PerformanceAttributorOld=#{achievementName},
+                </if>
+
+                DisType=3, DisTime=NOW(),TokerAttributionTime=NOW(),IsReportExpire=0,
+                IsTokerVisitExpire=0,IsTokerFollowExpire=0,EditorTime=NOW()
+            </trim>
+            where projectId=#{ProjectID}
+            AND ProjectClueId =#{projectClueId};
+
+        update b_project_opportunity
+        <trim prefix="set" suffixOverrides=",">
+            <if test="UserID!=null and UserID!='' ">DisPerson=#{UserID},</if>
+            <if test="userName!=null and userName!='' ">DisPersonName=#{userName},</if>
+
+            <if test="SaleID!=nul and SaleID!='' ">
+                TokerAttributionId=#{SaleID},ReportUserID=#{SaleID},PerformanceAttributorID=#{SaleID},
+            </if>
+            <if test="accoutName!=null and accoutName!=''">
+                TokerAttributionName=#{accoutName},ReportUserName=#{accoutName},PerformanceAttributor=#{accoutName},
+            </if>
+
+            <if test="SalesAttributionGroupId!=null and SalesAttributionGroupId!=''">TokerAttributionGroupId=#{SalesAttributionGroupId},</if>
+            <if test="AttributionGroupName!=null and AttributionGroupName!=''">TokerAttributionGroupName=#{AttributionGroupName},</if>
+            <if test="ReportExpireDate!='' and ReportExpireDate != null ">ReportExpireDate=#{ReportExpireDate},</if>
+            <if test="ChannelProtectionPeriod!='' and ChannelProtectionPeriod != null ">TokerVisitExpireDate=#{ChannelProtectionPeriod},</if>
+
+            <if test="SalesAttributionTeamId!=null and SalesAttributionTeamId!=''">
+                TokerAttributionTeamId=#{SalesAttributionTeamId},ReportTeamID=#{SalesAttributionTeamId},
+            </if>
+            <if test="SalesAttributionTeamName!=null and SalesAttributionTeamName!=''">
+                TokerAttributionTeamName=#{SalesAttributionTeamName},ReportTeamName=#{SalesAttributionTeamName}
+            </if>
+            <if test="TheNextVisitFollowupExpireDays!='' and TheNextVisitFollowupExpireDays != null">SalesFollowExpireDate=#{TheNextVisitFollowupExpireDays},</if>
+
+            <if test="ReportExpireWarningDate!='' and ReportExpireWarningDate != null ">ReportExpireWarningDate=#{ReportExpireWarningDate},</if>
+            <if test="ChannelProtectionPeriodWarning!=''and ChannelProtectionPeriodWarning != null ">TokerVisitExpireWarningDate=#{ChannelProtectionPeriodWarning},</if>
+            <if test="followupExpireDaysWarning!='' and followupExpireDaysWarning != null ">SalesFollowExpireWarningDate=#{followupExpireDaysWarning},</if>
+            <if test="SourceType!=null and SourceType!=''">SourceType=#{SourceType},</if>
+            <if test="SourceTypeDesc!=null and SourceTypeDesc!=''">SourceTypeDesc=#{SourceTypeDesc},</if>
+            <if test="SourceTypeOld!=null and SourceTypeOld!=''">SourceTypeOld=#{SourceTypeOld},</if>
+            <if test="SourceTypeOldDesc!=null and SourceTypeOldDesc!=''">SourceTypeOldDesc=#{SourceTypeOldDesc},</if>
+
+            -- 原业绩归属人姓名
+           <!-- <if test="OldPerformanceAttributor!=null and OldPerformanceAttributor!=''">
+                PerformanceAttributorOld=#{OldPerformanceAttributor},
+            </if>
+            <if test="OldPerformanceAttributorID!=null and OldPerformanceAttributorID!=''">
+                PerformanceAttributorOldID=#{OldPerformanceAttributorID},
+            </if>-->
+            -- 原业绩归属人 和 现有业绩归属人 一样
+            -- 业绩归属人
+            <if test="achievementId!=null">
+                PerformanceAttributorID=#{achievementId}, PerformanceAttributorOldID=#{achievementId},
+            </if>
+            <if test="achievementName!=null">
+                PerformanceAttributor=#{achievementName},PerformanceAttributorOld=#{achievementName},
+            </if>
+
+
+            DisType=3, DisTime=NOW(),TokerAttributionTime=NOW(),IsReportExpire=0,
+            IsTokerVisitExpire=0,IsTokerFollowExpire=0,EditorTime=NOW()
+        </trim>
+        where projectId=#{ProjectID}
+        AND ProjectClueId =#{projectClueId};
+    </update>
+    <!--修改客户线索表和机会表渠道相关字段-->
+    <update id="updateXianSuo" parameterType="java.util.List">
+        <foreach collection="mapList" item="list" separator=";">
+            update b_project_clues
+            <trim prefix="set" suffixOverrides=",">
+                <if test="list.UserID!=null and list.UserID!='' ">DisPerson=#{list.UserID},</if>
+                <if test="list.userName!=null and list.userName!='' ">DisPersonName=#{list.userName},</if>
+                <if test="list.SaleID!=null and list.SaleID!='' ">
+                    TokerAttributionId=#{list.SaleID},ReportUserID=#{list.SaleID},
+                </if>
+                <if test="list.accoutName!=null and list.accoutName!=''">
+                    TokerAttributionName=#{list.accoutName},ReportUserName=#{list.accoutName},
+                </if>
+                <if test="list.SalesAttributionTeamId!=null and list.SalesAttributionTeamId!=''">
+                    TokerAttributionTeamId=#{list.SalesAttributionTeamId},ReportTeamID=#{list.SalesAttributionTeamId},
+                </if>
+                <if test="list.SalesAttributionTeamName!=null and list.SalesAttributionTeamName!=''">
+                    TokerAttributionTeamName=#{list.SalesAttributionTeamName},ReportTeamName=#{list.SalesAttributionTeamName},
+                </if>
+
+                <if test="list.SaleID!=null and list.SaleID!='' and list.SourceType == '3'.toString() ">
+                    SalesAttributionId=#{list.SaleID},
+                </if>
+                <if test="list.accoutName!=null and list.accoutName!='' and list.SourceType == '3'.toString()">
+                    SalesAttributionName=#{list.accoutName},
+                </if>
+                <if test="list.SalesAttributionTeamId!=null and list.SalesAttributionTeamId!='' and list.SourceType == '3'.toString()">
+                    SalesAttributionTeamId=#{list.SalesAttributionTeamId},
+                </if>
+                <if test="list.SalesAttributionTeamName!=null and list.SalesAttributionTeamName!='' and list.SourceType == '3'.toString()">
+                    SalesAttributionTeamName=#{list.SalesAttributionTeamName},
+                </if>
+                <if test="list.ReportExpireDate!=null and list.ReportExpireDate!='' ">ReportExpireDate=#{list.ReportExpireDate},</if>
+                <if test="list.ChannelProtectionPeriod!=null and list.ChannelProtectionPeriod!='' ">TokerVisitExpireDate=#{list.ChannelProtectionPeriod},</if>
+
+                <if test="list.TheNextVisitFollowupExpireDays!=null and list.TheNextVisitFollowupExpireDays!=''">SalesFollowExpireDate=#{list.TheNextVisitFollowupExpireDays},</if>
+                <if test="list.ReportExpireWarningDate!=null and list.ReportExpireWarningDate!=''  ">ReportExpireWarningDate=#{list.ReportExpireWarningDate},</if>
+                <if test="list.ChannelProtectionPeriodWarning!=null and list.ChannelProtectionPeriodWarning!='' ">TokerVisitExpireWarningDate=#{list.ChannelProtectionPeriodWarning},</if>
+                <if test="list.followupExpireDaysWarning!=null and list.followupExpireDaysWarning!='' ">SalesFollowExpireWarningDate=#{list.followupExpireDaysWarning},</if>
+                <if test="list.SourceType!=null and list.SourceType!=''">SourceType=#{list.SourceType},</if>
+                <if test="list.SourceTypeDesc!=null and list.SourceTypeDesc!=''">SourceTypeDesc=#{list.SourceTypeDesc},</if>
+                <if test="list.SourceTypeOld!=null and list.SourceTypeOld!=''">SourceTypeOld=#{list.SourceTypeOld},</if>
+                <if test="list.SourceTypeOldDesc!=null and list.SourceTypeOldDesc!=''">SourceTypeOldDesc=#{list.SourceTypeOldDesc},</if>
+                <if test="list.achievementId!=null">
+                    PerformanceAttributorID=#{list.achievementId},PerformanceAttributorOldID=#{list.achievementId},
+                </if>
+                <if test="list.achievementName!=null">
+                    PerformanceAttributor=#{list.achievementName},PerformanceAttributorOld=#{list.achievementName},
+                </if>
+                DisType=3, DisTime=NOW(),TokerAttributionTime=NOW(),IsReportExpire=0,
+                IsTokerVisitExpire=0,IsTokerFollowExpire=0,EditorTime=NOW()
+            </trim>
+            where projectId=#{list.ProjectID}
+            AND ProjectClueId =#{list.projectClueId}
+        </foreach>
+    </update>
+    <!--修改客户线索表和机会表案场相关字段-->
+    <update id="UpdateChanceInformation" parameterType="java.util.Map">
+        update b_project_clues
+        <trim prefix="set" suffixOverrides=",">
+            <if test="UserID!=null and UserID!='' ">DisPerson=#{UserID},</if>
+            <if test="userName!=null and userName!='' ">DisPersonName=#{userName},</if>
+            <if test="SaleID!=nul and SaleID!='' ">SalesAttributionId=#{SaleID},</if>
+            <if test="accoutName!=null and accoutName!=''">SalesAttributionName=#{accoutName},</if>
+            <if test="SalesAttributionGroupId!=null and SalesAttributionGroupId!=''">SalesAttributionGroupId=#{SalesAttributionGroupId},</if>
+            <if test="AttributionGroupName!=null and AttributionGroupName!=''">SalesAttributionGroupName=#{AttributionGroupName},</if>
+            <if test="ReportExpireDate!=''">ReportExpireDate=#{ReportExpireDate},</if>
+            <if test="VisitExpireDays!='' ">SalesVisitExpireDate=#{VisitExpireDays},</if>
+            <if test="SalesAttributionTeamId!=null and SalesAttributionTeamId!=''">SalesAttributionTeamId=#{SalesAttributionTeamId},</if>
+            <if test="SalesAttributionTeamName!=null and SalesAttributionTeamName!=''">SalesAttributionTeamName=#{SalesAttributionTeamName},</if>
+            <if test="TheNextVisitFollowupExpireDays!=''">SalesFollowExpireDate=#{TheNextVisitFollowupExpireDays},</if>
+
+            <if test="ReportExpireWarningDate!='' ">ReportExpireWarningDate=#{ReportExpireWarningDate},</if>
+            <if test="VisitExpireDays!='' ">SalesVisitExpireWarningDate=#{VisitingWarning},</if>
+            <if test="followupExpireDaysWarning!=''">SalesFollowExpireWarningDate=#{followupExpireDaysWarning},</if>
+            <if test="SourceType!=null and SourceType!=''">SourceType=#{SourceType},</if>
+            <if test="SourceTypeDesc!=null and SourceTypeDesc!=''">SourceTypeDesc=#{SourceTypeDesc},</if>
+            <if test="SourceTypeOld!=null and SourceTypeOld!=''">SourceTypeOld=#{SourceTypeOld},</if>
+            <if test="SourceTypeOldDesc!=null and SourceTypeOldDesc!=''">SourceTypeOldDesc=#{SourceTypeOldDesc},</if>
+
+            DisType=3, DisTime=NOW(),IsReportExpire=0,
+            EditorTime=NOW(),IsSalesVisitExpire=0,IsSalesFollowExpire=0,SalesAttributionTime=NOW()
+        </trim>
+        where projectId=#{ProjectID}
+        AND ProjectClueId =#{projectClueId};
+
+        update b_project_opportunity
+        <trim prefix="set" suffixOverrides=",">
+            <if test="UserID!=null and UserID!='' ">DisPerson=#{UserID},</if>
+            <if test="userName!=null and userName!='' ">DisPersonName=#{userName},</if>
+            <if test="SaleID!=nul and SaleID!='' ">SalesAttributionId=#{SaleID},</if>
+            <if test="accoutName!=null and accoutName!=''">SalesAttributionName=#{accoutName},</if>
+            <if test="SalesAttributionGroupId!=null and SalesAttributionGroupId!=''">SalesAttributionGroupId=#{SalesAttributionGroupId},</if>
+            <if test="AttributionGroupName!=null and AttributionGroupName!=''">SalesAttributionGroupName=#{AttributionGroupName},</if>
+            <if test="ReportExpireDate!=''">ReportExpireDate=#{ReportExpireDate},</if>
+            <if test="VisitExpireDays!='' ">SalesVisitExpireDate=#{VisitExpireDays},</if>
+            <if test="SalesAttributionTeamId!=null and SalesAttributionTeamId!=''">SalesAttributionTeamId=#{SalesAttributionTeamId},</if>
+            <if test="SalesAttributionTeamName!=null and SalesAttributionTeamName!=''">SalesAttributionTeamName=#{SalesAttributionTeamName},</if>
+            <if test="TheNextVisitFollowupExpireDays!=''">SalesFollowExpireDate=#{TheNextVisitFollowupExpireDays},</if>
+
+            <if test="ReportExpireWarningDate!='' ">ReportExpireWarningDate=#{ReportExpireWarningDate},</if>
+            <if test="VisitExpireDays!='' ">SalesVisitExpireWarningDate=#{VisitingWarning},</if>
+            <if test="followupExpireDaysWarning!='' ">SalesFollowExpireWarningDate=#{followupExpireDaysWarning},</if>
+            <if test="SourceType!=null and SourceType!=''">SourceType=#{SourceType},</if>
+            <if test="SourceTypeDesc!=null and SourceTypeDesc!=''">SourceTypeDesc=#{SourceTypeDesc},</if>
+            <if test="SourceTypeOld!=null and SourceTypeOld!=''">SourceTypeOld=#{SourceTypeOld},</if>
+            <if test="SourceTypeOldDesc!=null and SourceTypeOldDesc!=''">SourceTypeOldDesc=#{SourceTypeOldDesc},</if>
+
+            DisType=3, DisTime=NOW(),IsReportExpire=0,
+            EditorTime=NOW(),IsSalesVisitExpire=0,IsSalesFollowExpire=0,SalesAttributionTime=NOW()
+        </trim>
+        where projectId=#{ProjectID}
+        AND OpportunityClueId=#{OpportunityClueId};
+
+
+    </update>
+
+    <!--开始添加客户历史人员表-->
+    <insert id="insertCustomerHistory" parameterType="java.util.Map">
+        insert into b_customer_history
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="SaleCustomerId != null and SaleCustomerId!=''">
+                SaleCustomerId,
+            </if>
+            <if test="UserMobile != null and UserMobile!=''">
+                mobile,
+            </if>
+            <if test="bianCan != null and bianCan!=''">
+                UserSource,
+            </if>
+            <if test="guishurenName != null and guishurenName!=''">
+                UserName,
+            </if>
+            <if test="UserID != null and UserID!=''">
+                UserId,
+            </if>
+            <if test="suoShuTeam != null and suoShuTeam!=''">
+                UserTeamName,
+            </if>
+            id,attributionDate,crateDate
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="SaleCustomerId != null and SaleCustomerId!=''">
+                #{SaleCustomerId},
+            </if>
+            <if test="UserMobile != null and UserMobile!=''">
+                #{UserMobile},
+            </if>
+            <if test="bianCan != null and bianCan!=''">
+                #{bianCan},
+            </if>
+            <if test="guishurenName != null and guishurenName!=''">
+                #{guishurenName},
+            </if>
+            <if test="UserID != null and UserID!=''">
+                #{UserID},
+            </if>
+            <if test="suoShuTeam != null and suoShuTeam!=''">
+                #{suoShuTeam},
+            </if>
+            UUID(),NOW(),NOW()
+        </trim>
+    </insert>
+
+    <!--删除公共池相关的信息-->
+    <delete id="deletePool" parameterType="java.util.Map">
+        delete from B_CustomerPublicPool
+        where projectId=#{ProjectID} AND ProjectClueId=#{projectClueId}
+    </delete>
+
+    <!--重分配选择人员-->
+    <select id="selectMan" parameterType="java.util.Map" resultType="java.util.Map">
+        select * from (
+        SELECT act.ID, org.ID as PID,org.OrgName as Pname,act.EmployeeName,org.OrgCategory,999 as Levels,concat(act.EmployeeName,'-',act.UserName) as UserName
+        FROM s_organization org
+        inner join s_jobs job on job.JobOrgID = org.id and job.IsDel = 0 and job.Status = 1
+        inner join s_jobsuserrel jsr on jsr.JobID = job.ID and jsr.status = 1
+        inner join b_account act on act.id = jsr.AccountID and act.IsDel = 0 and act.Status = 1
+        inner join s_commonjobs scj on job.CommonJobID = scj.id
+        WHERE org.ProjectID=#{projectId} AND FIND_IN_SET(org.OrgCategory,#{orgCategory})  AND org.IsDel = 0 AND org.Status = 1
+        AND FIND_IN_SET(scj.JobCode,#{JobCode})
+        <if test="employeeName!=null and employeeName!='' ">
+            and (act.EmployeeName  LIKE '%${employeeName}%' or act.UserName  LIKE '%${employeeName}%' )
+        </if>
+        union all
+        SELECT org.id,org.PID,0 as Pname,org.OrgName,OrgCategory,org.Levels,OrgName as UserName
+        FROM s_organization org
+        WHERE ProjectID=#{projectId} AND FIND_IN_SET(OrgCategory,#{orgCategory}) AND IsDel = 0 AND Status = 1
+        <!--中介公司-->
+        <if test="companyNum!=null and companyNum=='1'.toString() ">
+            union all
+            select a.id,o.id as pid,o.OrgName as Pname,a.EmployeeName,7 as OrgCategory,999 as Levels,concat(a.EmployeeName,'-',a.Mobile) as UserName
+            from s_organization o
+            inner join s_company_info c on c.id = o.OrgCompanyID AND c.IsDel = 0 AND c.Status = 1
+            inner join b_account a on a.SubordCompanyID = c.id and a.IsDel = 0 and a.Status = 1
+            where o.projectid = #{projectId}
+            and o.IsDel = 0 AND o.Status = 1
+            <if test="employeeName!=null and employeeName!='' ">
+                and (a.EmployeeName  LIKE '%${employeeName}%' or a.UserName  LIKE '%${employeeName}%' )
+            </if>
+            union all
+            select distinct o.id,o.pid,0 as Pname,o.OrgName,o.OrgCategory,o.Levels,OrgName as UserName  from s_organization o
+            inner join s_company_info c on c.id = o.OrgCompanyID AND c.IsDel = 0 AND c.Status = 1
+            inner join b_account a on a.SubordCompanyID = c.id and a.IsDel = 0 and a.Status = 1
+            where o.projectid = #{projectId}
+            and o.IsDel = 0 AND o.Status = 1
+        </if>
+        ) t order by Levels asc
+
+    </select>
+
+    <!--查询公共池中的数据(导出)-->
+    <select id="queryPublicPools" parameterType="cn.visolink.system.channel.model.form.PublicpoolForm" resultType="cn.visolink.system.channel.model.vo.PublicpoolVO">
+        SELECT
+        @rownum:=@rownum+1 AS rownum,
+        ID,
+        CustomerName, -- 客户姓名
+        concat(left(CustomerMobile,3),'****',RIGHT(CustomerMobile,4)) as CustomerMobile, -- 手机
+        CustomerMobile CustomerMobileAll,
+        (case
+        ClueStatus
+        when 1 then '报备'
+        when 2 then '到访'
+        when 3 then '排小卡'
+        when 4 then '排大卡'
+        when 5 then '订房'
+        when 6 then '认筹'
+        when 7 then '认购'
+        when 8 then '签约'
+        when 9 then '放弃'
+        else '' end) as ClueStatus,  -- 状态
+        OperationTime,  -- 加入公共池时间
+        (case
+        AddType
+        when 1 then '报备逾期'
+        when 2 then '跟进逾期'
+        when 3 then '认购逾期'
+        when 4 then '放弃'
+        when 5 then '判单回收'
+        when 6 then '导入数据无归属'
+        when 7 then '跟进逾期'
+        else '' end ) as Reason, -- 加入原因
+        ProjectClueId, -- 线索id
+        OpportunityClueId,-- 机会id
+        ReportUserName, -- 报备人员
+        ReportTime, -- 报备时间
+        ReportTime as ReportCreateTime, -- 报备时间
+        TheFirstVisitDate, -- 首访时间
+        TokerAttributionName, -- 原渠道归属人
+        TokerAttributionTime, -- 原渠道归属时间
+        SalesAttributionName, -- 原案场归属人
+        SalesAttributionTime, -- 原案场归属时间
+        (select ProjectName from b_project where id = bcp.projectId LIMIT 1 ) as ProjectName,
+        (case
+        CusetomerSource
+        when 1 then TokerTheLatestFollowDate
+        when 2 then SalesTheLatestFollowDate
+        else '' end ) as genjinshijan -- -- 拓客最近跟进日期 或者 案场最近跟进日期
+        FROM
+        (SELECT @rownum:=0) r,B_CustomerPublicPool bcp
+        WHERE
+        projectId=#{projectId}
+        <if test="clueStatusList != null and clueStatusList.size() > 0">
+            and ClueStatus in
+            <foreach collection="clueStatusList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="redistributionIdList != null and redistributionIdList.size() > 0">
+            and OpportunityClueId in
+            <foreach collection="redistributionIdList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="clueStatus!=null and clueStatus!='' ">
+            AND ClueStatus in (${clueStatus})
+        </if>
+        <if test="reason!=null and reason!='' ">
+            AND AddType in (${reason})
+        </if>
+        <if test="saleName!=null and saleName!='' ">
+            AND SalesAttributionName LIKE '%${saleName}%'
+        </if>
+        <if test="reportUserName!=null and reportUserName!='' ">
+            AND ReportUserName LIKE '%${reportUserName}%'
+        </if>
+        <if test="search!=null and search!='' ">
+            AND (CustomerName LIKE '%${search}%' or CustomerMobile LIKE '%${search}%')
+        </if>
+        <if test="searchTime==1 and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+            and OperationTime BETWEEN #{beginTime} AND #{endTime}
+        </if>
+        <if test="searchTime==2 and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+            and ReportTime BETWEEN #{beginTime} AND #{endTime}
+        </if>
+        <if test="searchTime==3 and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+            and TheFirstVisitDate BETWEEN #{beginTime} AND #{endTime}
+        </if>
+        ORDER BY(OperationTime) DESC
+    </select>
+    <!--查询公共池中的数据-->
+    <select id="queryPublicPool" parameterType="cn.visolink.system.channel.model.form.PublicpoolForm"
+            resultType="cn.visolink.system.channel.model.vo.PublicpoolVO">
+        SELECT * FROM
+        (
+        SELECT
+        bcp.ID id,
+        if(length(trim(opp.diy_hide_customer_name)) = 0 or opp.diy_hide_customer_name is null,CONCAT(LEFT(bcp.CustomerName, 1),'**'),opp.diy_hide_customer_name) customerName,
+        bcp.CustomerName oldCustomerName,
+        CONCAT(
+        LEFT( bcp.CustomerMobile, 3),
+        '****',
+        RIGHT( bcp.CustomerMobile, 4)) AS customerMobile,
+        bcp.CustomerMobile customerMobileAll,
+        bcp.projectId AS projectId,
+        opp.ProjectName AS projectName,
+        bcp.Contacts AS contacts,
+        (
+        CASE
+        bcp.ClueStatus
+        WHEN 0 THEN '走访'
+        WHEN 1 THEN '报备'
+        WHEN 2 THEN '到访'
+        WHEN 7 THEN '认购'
+        WHEN 8 THEN '签约'
+        WHEN 9 THEN '丢失'
+        ELSE '作废'
+        END
+        ) clueStatus,
+        (
+        CASE bcp.PoolType
+        WHEN '1' THEN bcp.add_pro_time
+        WHEN '2' THEN bcp.add_region_time
+        WHEN '3' THEN bcp.add_country_time
+        WHEN '4' THEN bcp.add_attract_time
+        WHEN '5' THEN bcp.add_all_attract_time
+        ELSE ''
+        END
+        ) addDate,
+        (
+        CASE
+        bcp.AddType
+        WHEN 1 THEN '逾期过保'
+        WHEN 2 THEN '主动丢失'
+        WHEN 3 THEN '强制丢失'
+        WHEN 4 THEN '导入数据无归属'
+        ELSE ''
+        END
+        ) AS addTypeDesc,
+        (
+        CASE bcp.PoolType
+        WHEN '1' THEN '项目客户池'
+        WHEN '2' THEN '区域客户池'
+        WHEN '3' THEN '全国客户池'
+        WHEN '4' THEN '招商客户池'
+        WHEN '5' THEN '总招商客户池'
+        ELSE ''
+        END
+        ) poolType,
+        (
+        CASE bcp.customer_date_label
+        WHEN '1' THEN '逾期半年内'
+        WHEN '2' THEN '逾期半年至一年'
+        WHEN '3' THEN '逾期一年以上'
+        ELSE ''
+        END
+        ) customerDateLabel,
+        bcp.SalesAttributionId salesAttributionId,
+        bcp.SalesAttributionName salesAttributionName,
+        bac.EmployeeName reportUserName,
+        bcp.ReportTime reportTime,
+        opp.CustomerAddress customerAddress,bin.DetailedAddress detailedAddress,opp.SourceMode sourceMode,opp.MainProducts mainProducts,
+        if(opp.IsPark = 0,'否','是') isPark,opp.ParkAddress parkAddress,opp.ParkName parkName,opp.ParkFloor parkFloor,
+        bin.BelongIndustriseDesc belongIndustriseDesc,bin.BelongIndustriseTwoDesc belongIndustriseTwoDesc,bin.MainRawMaterials mainRawMaterials,
+        bin.PeopleNum peopleNum,bin.AnnualOutputValue annualOutputValue,bin.IntentionalAreaDesc intentionalAreaDesc,bin.IntentionalPrice intentionalPrice,
+        bin.TaxAmountYear taxAmountYear,bin.WorkShopTypeDesc workShopTypeDesc,bin.IntentionTypeDesc intentionTypeDesc,bin.IntentionalFloorDesc intentionalFloorDesc,
+        bin.ExistingPlantArea existingPlantArea,bcp.ProjectClueId projectClueId,bcp.OpportunityClueId opportunityClueId, opp.PlantTypeDesc plantTypeDesc,
+        bcp.visit_count visitCount,bcp.three_ones_before_count threeOnesBeforeCount,bcp.three_ones_after_count threeOnesAfterCount,bcp.come_visit_count comeVisitCount
+        FROM b_customerpublicpool bcp
+            left join b_project_opportunity opp on bcp.OpportunityClueId = opp.OpportunityClueId
+            left join b_information bin on opp.OpportunityClueId = bin.OpportunityClueId
+            left join b_account bac on bac.ID = opp.CreateUserId
+        WHERE
+        1 = 1
+        AND bcp.is_del = 0
+        <if test="poolType != null and poolType != '' and  poolType == '1'.toString()">
+            AND bcp.PoolType = 1
+            AND bcp.projectId IN (
+            <foreach collection="projectList" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="poolType != null and poolType != '' and  poolType == '2'.toString()">
+            AND bcp.PoolType = 2
+            AND bcp.projectId IN (
+            <foreach collection="projectList" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="poolType != null and poolType != '' and  poolType == '3'.toString()">
+            AND bcp.PoolType = 3
+            <if test="projectList != null and projectList.size() > 0">
+                AND bcp.projectId IN (
+                <foreach collection="projectList" item="item" separator=",">
+                    #{item}
+                </foreach>
+                )
+            </if>
+        </if>
+        <if test="customerName != null and customerName != '' ">
+            AND bcp.CustomerName = #{customerName}
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            AND bcp.CustomerMobile = #{customerMobile}
+        </if>
+        <if test="saleName != null and saleName != '' ">
+            AND bcp.SalesAttributionName LIKE '%${saleName}%'
+        </if>
+        <if test="reportUserName != null and reportUserName != '' ">
+            AND bac.EmployeeName LIKE '%${reportUserName}%'
+        </if>
+        <if test="addTypeList != null and addTypeList.size() > 0">
+            AND bcp.AddType IN
+            <foreach collection="addTypeList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="customerDateLabel!=null and customerDateLabel!=''">
+            and bcp.customer_date_label = #{customerDateLabel}
+        </if>
+        <if test="customerAddress!=null and customerAddress!=''">
+            and opp.CustomerAddress like '%${customerAddress}%'
+        </if>
+        <if test="source != null and source.size() > 0">
+            AND opp.SourceMode IN (
+            <foreach collection="source" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="mainProductsList != null and mainProductsList.size() > 0">
+            AND (
+            <foreach collection="mainProductsList" item="item" separator="or">
+                opp.MainProducts like concat('%',#{item},'%')
+            </foreach>
+            )
+        </if>
+        <if test="belongIndustriseList != null and belongIndustriseList.size() > 0">
+            AND bin.BelongIndustrise IN (
+            <foreach collection="belongIndustriseList" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="belongIndustriseTwoList != null and belongIndustriseTwoList.size() > 0">
+            AND bin.BelongIndustriseTwo IN (
+            <foreach collection="belongIndustriseTwoList" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="belongIndustriseThreeList != null and belongIndustriseThreeList.size() > 0">
+            AND bin.BelongIndustriseThree IN (
+            <foreach collection="belongIndustriseThreeList" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="belongIndustriseFourList != null and belongIndustriseFourList.size() > 0">
+            AND bin.BelongIndustriseFour IN (
+            <foreach collection="belongIndustriseFourList" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="visitStartCount!=null and visitStartCount!=''">
+            and bcp.visit_count &gt;= #{visitStartCount}
+        </if>
+        <if test="visitEndCount!=null and visitEndCount!=''">
+            and bcp.visit_count &lt;= #{visitEndCount}
+        </if>
+        <if test="threeOnesBeforeStartCount!=null and threeOnesBeforeStartCount!=''">
+            and bcp.three_ones_before_count &gt;= #{threeOnesBeforeStartCount}
+        </if>
+        <if test="threeOnesBeforeEndCount!=null and threeOnesBeforeEndCount!=''">
+            and bcp.three_ones_before_count &lt;= #{threeOnesBeforeEndCount}
+        </if>
+        <if test="threeOnesAfterStartCount!=null and threeOnesAfterStartCount!=''">
+            and bcp.three_ones_after_count &gt;= #{threeOnesAfterStartCount}
+        </if>
+        <if test="threeOnesAfterEndCount!=null and threeOnesAfterEndCount!=''">
+            and bcp.three_ones_after_count &lt;= #{threeOnesAfterEndCount}
+        </if>
+        <if test="comeVisitStartCount!=null and comeVisitStartCount!=''">
+            and bcp.come_visit_count &gt;= #{comeVisitStartCount}
+        </if>
+        <if test="comeVisitEndCount!=null and comeVisitEndCount!=''">
+            and bcp.come_visit_count &lt;= #{comeVisitEndCount}
+        </if>
+
+        order by addDate DESC
+       ) t
+        WHERE 1 = 1
+            <if test="beginTime != null and beginTime != '' and endTime != null and endTime != ''">
+                AND t.addDate BETWEEN #{beginTime} AND #{endTime}
+            </if>
+    </select>
+
+    <!--查询规则-->
+    <select id="selectRuleByType" parameterType="java.util.Map" resultType="cn.visolink.system.channel.model.vo.ProjectProtectRuleVO">
+            SELECT
+            *
+            FROM
+            b_project_protect_rule
+            WHERE
+            ProjectID = #{ProjectID}
+            <if test="SourceTypeSourceType!=null and SourceTypeSourceType!='' ">
+                and SourceType = #{SourceTypeSourceType}
+            </if>
+            <if test="ProjectOrgCategory!=null and ProjectOrgCategory!='' ">
+                and ProjectOrgCategory=#{ProjectOrgCategory}
+            </if>
+            <if test="ProjectOrgId!=null and ProjectOrgId!='' ">
+                and ProjectOrgID=#{ProjectOrgId}
+            </if>
+    </select>
+
+    <!--重分配原因-->
+    <select id="getClueResetCause" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+				sd.DictCode,sd.DictName
+			FROM
+				s_dictionary sd
+			WHERE
+				sd.PID IN (
+					SELECT
+						sdd.id
+					FROM
+						s_dictionary sdd
+					WHERE
+						sdd.dictname = '重分配原因'
+				)
+			and sd.isdel = 0
+			 AND (sd.`DictionaryLevel`=1 OR (sd.`DictionaryLevel`=2 AND sd.`ProjectID`=#{projectId}))
+			ORDER BY
+				sd.ListIndex
+    </select>
+
+    <!--业绩归属人变更记录-->
+    <insert id="insertDistributionRecords" parameterType="java.util.Map">
+        INSERT INTO b_sourcetype_distribution_records
+        (ID, ProjectClueId, OpportunityClueId, projectId, ProjectName, Type,
+        ChangeResult, SourceTypeOld, SourceTypeOldDesc, PerformanceAttributorOld,
+        PerformanceAttributorOldID, SourceType, SourceTypeDesc, PerformanceAttributor,
+        PerformanceAttributorID, CreateTime, CreateUserId, EditTime, EditUserId)
+        VALUES
+        <foreach collection="mapList" item="list" separator=",">
+            (UUID(), #{list.projectClueId}, NULL,#{list.ProjectID}, #{list.ProjectName},6,
+            '渠道重分配', NULL, NULL, #{list.OldPerformanceAttributor}, #{list.OldPerformanceAttributorID}, NULL,
+            NULL, #{list.accoutName},#{list.SaleID}, NOW(), #{list.UserID}, NULL, NULL)
+        </foreach>
+    </insert>
+
+
+    <!--查询个人的精确信息-->
+    <select id="selectDetailedInformation" parameterType="java.util.Map" resultType="java.util.Map">
+        select b.Mobile,b.UserOrgID,(select s.OrgName from s_organization s where s.id = b.UserOrgID) as OrgName
+        from b_account b where b.id = #{ID}
+    </select>
+
+    <!--审计台账操作中的修改线索金和机会表中报备人相关的信息-->
+    <update id="updateDetaileReport" parameterType="java.util.Map">
+        UPDATE b_project_clues
+            <set>
+                <if test="reportUserId != null">
+                    ReportUserID = #{reportUserId},
+                </if>
+                <if test="reportUserName != null">
+                    ReportUserName = #{reportUserName},
+                </if>
+                <if test="performanceId != null">
+                    PerformanceAttributorID = #{performanceId},
+                    PerformanceAttributorOldID = #{performanceId},
+                </if>
+                <if test="performanceName != null">
+                    PerformanceAttributor = #{performanceName},
+                    PerformanceAttributorOld = #{performanceName},
+                </if>
+                <if test="reportTeamId != null">
+                    ReportTeamID = #{reportTeamId},
+                </if>
+                <if test="reportTeamName != null">
+                    ReportTeamName = #{reportTeamName},
+                </if>
+                <if test="sourceType != null">
+                    SourceType = #{sourceType},
+                    SourceTypeOld = #{sourceType},
+                </if>
+                <if test="sourceTypeDesc != null">
+                    SourceTypeDesc = #{sourceTypeDesc},
+                    SourceTypeOldDesc = #{sourceTypeDesc},
+                </if>
+                <if test="MainMediaGUID != null">
+                    MainMediaGUID = #{MainMediaGUID},
+                </if>
+                <if test="MainMediaName != null">
+                    MainMediaName =#{MainMediaName},
+                </if>
+                <if test="SubMediaGUID != null">
+                    SubMediaGUID = #{SubMediaGUID},
+                </if>
+                <if test="SubMediaName != null">
+                    SubMediaName =#{SubMediaName},
+                </if>
+                <if test="update != null and update == '1'.toString()">
+                    IsReportExpire = 0,ReportExpireDate = #{ReportExpireDate},ReportExpireWarningDate =#{ReportExpireWarningDate},
+                </if>
+                <if test="update != null and update == '2'.toString()">
+                    IsTokerVisitExpire = 0,TokerVisitExpireDate = #{TokerVisitExpireDate},TokerVisitExpireWarningDate =#{TokerVisitExpireWarningDate},
+                </if>
+            </set>
+            where ProjectClueId = #{projectClueId};
+
+        UPDATE b_project_opportunity
+        <set>
+            <choose>
+                <when test="sourceType != null and sourceType == '1'.toString">
+                    <if test="reportUserId != null">
+                        ReportUserID = #{reportUserId},
+                    </if>
+                    <if test="reportTeamId != null">
+                        PerformanceAttributorID = #{reportTeamId},
+                        PerformanceAttributorOldID = #{reportTeamId},
+                    </if>
+                    <if test="reportUserName != null">
+                        ReportUserName = #{reportUserName},
+                    </if>
+                    <if test="reportTeamName != null">
+                        PerformanceAttributor = #{reportTeamName},
+                        PerformanceAttributorOld = #{reportTeamName},
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="reportUserId != null">
+                        ReportUserID = #{reportUserId},
+                        PerformanceAttributorID = #{reportUserId},
+                        PerformanceAttributorOldID = #{reportUserId},
+                    </if>
+                    <if test="reportUserName != null">
+                        ReportUserName = #{reportUserName},
+                        PerformanceAttributor = #{reportUserName},
+                        PerformanceAttributorOld = #{reportUserName},
+                    </if>
+                </otherwise>
+            </choose>
+            <if test="reportTeamId != null">
+                ReportTeamID = #{reportTeamId},
+            </if>
+            <if test="reportTeamName != null">
+                ReportTeamName = #{reportTeamName},
+            </if>
+            <if test="sourceType != null">
+                SourceType = #{sourceType},
+                SourceTypeOld = #{sourceType},
+            </if>
+            <if test="sourceTypeDesc != null">
+                SourceTypeDesc = #{sourceTypeDesc},
+                SourceTypeOldDesc = #{sourceTypeDesc},
+            </if>
+            <if test="MainMediaGUID != null">
+                MainMediaGUID = #{MainMediaGUID},
+            </if>
+            <if test="MainMediaName != null">
+                MainMediaName =#{MainMediaName},
+            </if>
+            <if test="SubMediaGUID != null">
+                SubMediaGUID = #{SubMediaGUID},
+            </if>
+            <if test="SubMediaName != null">
+                SubMediaName =#{SubMediaName},
+            </if>
+            <if test="update != null and update == '1'.toString()">
+                IsReportExpire = 0,ReportExpireDate = #{ReportExpireDate},ReportExpireWarningDate =#{ReportExpireWarningDate},
+            </if>
+            <if test="update != null and update == '2'.toString()">
+                IsTokerVisitExpire = 0,TokerVisitExpireDate = #{TokerVisitExpireDate},TokerVisitExpireWarningDate =#{TokerVisitExpireWarningDate},
+            </if>
+        </set>
+        where ProjectClueId = #{projectClueId}
+    </update>
+
+    <!--审计台账修改后添加日志-->
+    <insert id="update_DetaileReport_log" parameterType="java.util.Map">
+        INSERT INTO s_modification_log
+        (updateLogId, projectClueId,createId, createName, updateAction,reasons,createTime,accessoryPath)
+        VALUES
+        (#{updateuuid},#{projectClueId},#{UserID},#{userName},#{updateType},#{reasonsRevision},now(),#{fileName});
+    </insert>
+
+    <!--审计台账修改详情-->
+    <insert id="insertModificationDetails" parameterType="java.util.Map">
+        INSERT INTO s_modification_details
+        (ID,ProjectClueId,projectId,ProjectName,Reason,updateLogId,OldReportUserId,OldReportUserName,OldReportTeamId,OldReportTeamName,
+        ReportUserId,ReportUserName,ReportTeamId,ReportTeamName,OldSourceType,OldSourceTypeDesc,OldOldSourceType,OldOldSourceTypeDesc,
+        SourceType,SourceTypeDesc,NowOldSourceType,NowOldSourceTypeDesc,OldMainMediaGUID,OldMainMediaName,OldSubMediaGUID,OldSubMediaName,
+        MainMediaGUID,MainMediaName,SubMediaGUID,SubMediaName,OldPerformanceAttributor,OldPerformanceAttributorID,OldPerformanceAttributorOld,
+        OldPerformanceAttributorOldID,PerformanceAttributor,PerformanceAttributorID,PerformanceAttributorOld,PerformanceAttributorOldID,
+        CreateUserId,CreateUserName,CreateTime)
+        values
+        (UUID(),#{projectClueId},#{ProjectID},#{ProjectName},#{DoDesc},#{updateuuid},#{OldReportUserId},#{OldReportUserName},#{OldReportTeamId},
+        #{OldReportTeamName},#{reportUserId},#{reportUserName},#{reportTeamId},#{reportTeamName},#{OldSourceType},#{OldSourceTypeDesc},#{OldOldSourceType},
+        #{OldOldSourceTypeDesc},#{sourceType},#{sourceTypeDesc},#{sourceType},#{sourceTypeDesc},#{OldMainMediaGUID},#{OldMainMediaName},
+        #{OldSubMediaGUID},#{OldSubMediaName},#{MainMediaGUID},#{MainMediaName},#{SubMediaGUID},#{SubMediaName},#{OldPerformanceAttributor},#{OldPerformanceAttributorID},
+        #{OldPerformanceAttributorOld},#{OldPerformanceAttributorOldID},#{PerformanceAttributors},#{PerformanceAttributorIDs},#{PerformanceAttributors},#{PerformanceAttributorIDs},#{UserID},#{userName},now())
+    </insert>
+
+    <!--查询修改日志-->
+    <select id="getModification" parameterType="java.lang.String" resultType="java.util.Map">
+        select
+            @rownum:=@rownum+1 AS rownum,
+            updateLogId,projectClueId,createId,createName,updateAction,reasons, DATE_FORMAT(createTime,'%Y-%m-%d %H:%i:%s') as createTime,accessoryPath
+        from (SELECT @rownum:=0) r,s_modification_log where projectClueId = #{projectClueId}
+        order by createTime desc
+    </select>
+
+    <!--查询修改详情-->
+    <select id="getModificationDetails" parameterType="java.lang.String" resultType="java.util.Map">
+        select
+            ProjectClueId,projectId,ProjectName,Reason,updateLogId,OldReportUserId,OldReportUserName,
+            OldReportTeamId,OldReportTeamName,ReportUserId,ReportUserName,ReportTeamId,ReportTeamName,
+            OldSourceType,OldSourceTypeDesc,OldOldSourceType,OldOldSourceTypeDesc,SourceType,SourceTypeDesc,
+            NowOldSourceType,NowOldSourceTypeDesc,OldMainMediaGUID,OldMainMediaName,OldSubMediaGUID,OldSubMediaName,
+            MainMediaGUID,MainMediaName,SubMediaGUID,SubMediaName,OldPerformanceAttributor,OldPerformanceAttributorID,
+            OldPerformanceAttributorOld,OldPerformanceAttributorOldID,PerformanceAttributor,PerformanceAttributorID,
+            PerformanceAttributorOld,PerformanceAttributorOldID,CreateUserId,CreateUserName
+        from s_modification_details where updateLogId = #{updateLogId}
+    </select>
+
+    <!--查询中介公司-->
+    <select id="getCompanyInfo" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            ba.ID,
+            ba.EmployeeName,
+            ci.ID as companyId,
+            ci.companyName,
+            ci.companyCode,
+            ci.shortName,
+            ci.companyAttr
+        FROM
+            b_account ba
+            left join s_company_info ci on ba.SubordCompanyID = ci.ID
+        where
+         ba.ID = #{userId}
+    </select>
+
+    <!--修改批次详情表-->
+    <update id="UpdatePiCiDetail" parameterType="java.util.Map">
+        update B_CustomerDistributionRecords set IsNew='0'
+        where ProjectClueId in
+        <foreach collection="clueIdList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!--添加批次详细信息表-->
+    <insert id="InsertPICIDetail" parameterType="java.util.Map">
+        INSERT INTO b_customerdistributionrecords
+        (ID,ProjectClueId,projectId,ProjectName,ConfirmID,ConfirmPersonName,
+        ConfirmTime,IsNew,Reason,Entrance,RedistributionBatchId,OldTokerAttributionTime,
+        OldSalesAttributionTime,OldSalesId,SalesId,SalesAttributionTime,OpportunityClueId,
+        note,Type,SalesName,OldSalesName,OldSalesAttributionTeamName,OldSalesAttributionTeamId,SalesAttributionTeamName,SalesAttributionTeamId,ChildType)
+        VALUES
+        <foreach collection="mapList" item="list" separator=",">
+            (UUID(),#{list.projectClueId},#{list.ProjectID},#{list.ProjectName},#{list.UserID},#{list.userName},
+            #{list.ConfirmTime},1,#{list.Reason},1,#{list.uuid},#{list.TokerAttributionTime},#{list.OriginalSalesAttributionTime},
+            #{list.OldSalesAttributionId},#{list.SaleID},#{list.SalesAttributionTime},#{list.OpportunityClueId},
+            #{list.DoDesc},#{list.Type},#{list.accoutName},#{list.OldSalesAttributionName},#{list.OldSalesAttributionTeamName},#{list.OldSalesAttributionTeamId},
+            #{list.SalesAttributionTeamName},#{list.SalesAttributionTeamId},#{list.childType})
+        </foreach>
+    </insert>
+
+    <!--添加批次详细信息表-->
+    <insert id="InsertPICIDetailTao" parameterType="java.util.Map">
+        INSERT INTO b_customerdistributionrecords
+        (ID,ProjectClueId,projectId,ProjectName,ConfirmID,ConfirmPersonName,
+        ConfirmTime,IsNew,Reason,Entrance,RedistributionBatchId,OldTokerAttributionTime,
+        OldSalesAttributionTime,OldSalesId,SalesId,SalesAttributionTime,OpportunityClueId,
+        note,Type,SalesName,OldSalesName,OldSalesAttributionTeamName,OldSalesAttributionTeamId,SalesAttributionTeamName,SalesAttributionTeamId,ChildType)
+        VALUES
+        <foreach collection="mapList" item="list" separator=",">
+            (UUID(),#{list.projectClueId},#{list.ProjectID},#{list.ProjectName},#{list.UserID},#{list.userName},
+            #{list.ConfirmTime},1,#{list.Reason},#{list.Entrance},#{list.uuid},#{list.TokerAttributionTime},#{list.OriginalSalesAttributionTime},
+            #{list.OldSalesAttributionId},#{list.SaleID},#{list.SalesAttributionTime},#{list.OpportunityClueId},
+            #{list.DoDesc},#{list.Type},#{list.accoutName},#{list.OldSalesAttributionName},#{list.OldSalesAttributionTeamName},#{list.OldSalesAttributionTeamId},
+            #{list.SalesAttributionTeamName},#{list.SalesAttributionTeamId},#{list.childType})
+        </foreach>
+    </insert>
+
+    <!--逾期消息删除-->
+    <update id="updateMessageByClueId" parameterType="java.lang.String">
+        update s_message
+        set IsDel = 1,
+        ReadTime = now()
+        where ProjectClueId in
+        <foreach collection="clueIdList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        and MessageType in
+        <foreach collection="messageTypeList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="getDistributionUserInfo" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT act.ID, org.ID as PID,org.OrgName as Pname,act.EmployeeName,org.OrgCategory,999 as Levels,concat(act.EmployeeName,'-',act.UserName) as UserName
+        FROM s_organization org
+        inner join s_jobs job on job.JobOrgID = org.id and job.IsDel = 0 and job.Status = 1 and job.isIdm = 0
+        inner join s_jobsuserrel jsr on jsr.JobID = job.ID
+        inner join b_account act on act.id = jsr.AccountID and act.IsDel = 0 and act.Status = 1
+        inner join s_commonjobs scj on job.CommonJobID = scj.id and scj.isIdm = 0
+        WHERE org.ProjectID=#{projectId}
+        AND org.IsDel = 0 AND org.Status = 1
+        and act.id = #{userId}
+        <if test="tuokeOrAc == '3'.toString()">
+            AND scj.JobCode = 'nqgw'
+        </if>
+        <if test="tuokeOrAc != '3'.toString()">
+            AND scj.JobCode = 'zygw'
+        </if>
+    </select>
+
+    <delete id="delAccountPerformance" parameterType="java.lang.String">
+        update a_account_performance
+        set isdel = 1
+        where projectclueid = #{projectClueId}
+    </delete>
+
+    <select id="getUserZjJobOrgInfo" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT scj.JobCode  jobCode,
+               so.ProjectID projectId,
+               so.ID,
+               so.OrgName
+        FROM b_account ac
+                 INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID
+                 INNER JOIN s_jobs job ON job.ID = jur.JobID
+            AND job.STATUS = 1
+            AND job.IsDel = 0
+            and job.isIdm = 0
+                 INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+            AND scj.IsDel = 0
+            AND scj.STATUS = 1
+            and scj.isIdm = 0
+                 INNER JOIN s_organization so ON job.JobOrgID = so.ID
+            AND so.STATUS = 1
+            AND so.IsDel = 0
+        WHERE ac.ID = #{userId}
+          AND scj.JobCode in('zszj','qyzszj')
+    </select>
+
+    <select id="getJobsAppFunctionRel" resultType="java.util.Map">
+        SELECT  job.ID                                                        jobId,
+                jur.AccountID                                                 userId,
+                bp.AreaName                                                   areaName,
+                bp.ProjectName                                                projectName,
+                so.OrgName                                                    teamName,
+                ba.UserName                                                   userName,
+                ba.EmployeeName                                               employeeName,
+                concat(ba.EmployeeName, '-', so.OrgName, '-', bp.ProjectName) label,
+                if(ael.FunCode is null, 0, 1)                                 value
+        from s_jobs job
+            LEFT JOIN s_jobsuserrel jur on jur.JobID = job.ID
+            LEFT JOIN s_organization so on so.ID = job.JobOrgID
+            LEFT JOIN b_project bp on bp.id = so.ProjectID
+            left join s_commonjobs scj on job.CommonJobID = scj.ID
+            left join b_account ba on jur.AccountID = ba.ID
+            left join s_jobsappfunrel ael on jur.AccountID = ael.UserID and jur.JobID = ael.JobID and ael.FunCode = #{funCode}
+        where 1 = 1
+            and scj.JobCode in('zygw', 'qyzygw')
+            and job.IsDel = 0
+            and so.IsDel = 0
+            and ba.IsDel = 0
+            and (bp.IsDel = 0 or bp.IsDel is null)
+            and scj.IsDel = 0
+            and job.Status = 1
+            and so.Status = 1
+            and ba.Status = 1
+            and jur.is_post = 0
+            and bp.ID in (
+            <foreach collection="zjList" item="item" separator=",">
+                #{item.projectId}
+            </foreach>
+            )
+            <if test="sreachName != null and sreachName != ''">
+                and ba.EmployeeName = #{sreachName}
+            </if>
+        order by bp.ProjectName asc, so.OrgName asc, ba.EmployeeName
+    </select>
+
+    <insert id="saveJobsAppFunctionRel">
+        insert into s_jobsappfunrel(ID, JobID, UserID, FunCode)
+        values (UUID(),#{jobId},#{userId},#{funCode})
+    </insert>
+
+    <delete id="delJobsAppFunctionRel">
+        delete from s_jobsappfunrel where JobID = #{jobId} and UserID = #{userId}
+    </delete>
+
+    <select id="getProjectListHasObtainCst" resultType="java.util.Map">
+        select distinct bp.ID projectId, bp.ProjectName projectName,job.ID jobId, (case com.JobCode when 'zygw' then '1' when 'qyzygw' then '2' else '' end) reportUserRole
+        from b_project bp
+                 left join s_organization so on bp.ID = so.ProjectID
+                 left join s_jobs job on job.JobOrgID = so.ID
+                 left join s_jobsuserrel rel on rel.JobID = job.ID
+                 left join s_commonjobs com on com.ID = job.CommonJobID
+                 left join b_account ba on ba.ID = rel.AccountID
+                 left join s_jobsappfunrel apprel on apprel.JobID = job.ID and apprel.UserID = ba.ID
+        where bp.Status = 1
+          and bp.IsDel = 0
+          and so.Status = 1
+          and so.IsDel = 0
+          and job.Status = 1
+          and job.IsDel = 0
+          and ba.Status = 1
+          and ba.IsDel = 0
+          and com.JobCode in('zygw', 'qyzygw')
+          and apprel.FunCode = #{funCode}
+          and ba.ID = #{userId}
+          <if test="proList != null and proList.size() > 0">
+              and bp.ID in  (
+              <foreach collection="proList" item="item" separator=",">
+                  #{item}
+              </foreach>
+              )
+          </if>
+    </select>
+
+    <select id="getProListAll" resultType="java.lang.String">
+        select ID from b_project where ComGUID = (select ComGUID from b_project where ID = #{projectId})
+    </select>
+
+    <select id="getProListAllRegions" resultType="java.lang.String">
+        select ID
+        from b_project where pid is null
+        and ComGUID in(
+        <foreach collection="areaList" item="item" separator=",">
+            #{item}
+        </foreach>)
+    </select>
+</mapper>

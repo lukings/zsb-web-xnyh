@@ -1,0 +1,1022 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.companyQw.dao.CompanyQwDao">
+
+    <!--查询小程序页面信息-->
+    <select id="getComAppletPage" resultType="java.util.Map">
+        select page_name pageName,page_path pagePath,page_type pageType from b_qw_applet_page where status=1 and isDel=0
+    </select>
+    <!--获查询是否可以配置素材-->
+    <select id="getProMediaIsOk" resultType="_int" parameterType="java.lang.String">
+        select count(1) from b_qw_pro_media where project_id=#{projectId} and is_del=0
+    </select>
+    <!--获取项目素材-->
+    <select id="getMediaDetails" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.MediaDetail">
+        select id,
+               project_id projectId,
+               title,
+               media_id mediaId,
+               media_url mediaUrl,
+               appid,
+               page,
+               media_type mediaType
+        from b_qw_pro_media
+        where project_id = #{projectId} and is_del = 0
+    </select>
+    <!--获取原素材信息-->
+    <select id="getMediaIds" parameterType="java.lang.String" resultType="java.lang.String">
+        select id
+        from b_qw_pro_media
+        where project_id = #{projectId} and is_del = 0
+    </select>
+    <!--获取素材列表-->
+    <select id="getProMediaList" parameterType="java.util.Map" resultType="java.util.Map">
+        select me.project_id projectId,
+               bp.projectName,
+               sum(case when me.media_type = 1 then 1 else 0 end) photoCount,
+               sum(case when me.media_type = 2 then 1 else 0 end) videoCount,
+               sum(case when me.media_type = 3 then 1 else 0 end) appletCount,
+               sum(case when me.media_type = 4 then 1 else 0 end) h5Count,
+               sum(case when me.media_type = 5 then 1 else 0 end) fileCount,
+               max(me.create_time) editTime
+        from b_qw_pro_media me
+        inner join b_project bp on bp.id = me.project_id
+        where me.is_del = 0
+          and me.project_id in (
+            <foreach collection="ids" separator="," item="item">
+                #{item}
+            </foreach>
+            )
+        GROUP BY me.project_id
+    </select>
+    <!--保存项目素材-->
+    <insert id="addProMediaList" parameterType="cn.visolink.system.companyQw.model.MediaDetail">
+        insert into b_qw_pro_media(project_id,title,media_url,appid,page,media_type,creator,create_time)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.projectId},#{item.title},#{item.mediaUrl},#{item.appid},#{item.page},#{item.mediaType},#{item.creator},now())
+        </foreach>
+    </insert>
+    <!--删除素材-->
+    <update id="delProMedia" parameterType="java.util.List">
+        update b_qw_pro_media set is_del = 1
+        where id in (
+          <foreach collection="list" separator="," item="item">
+              #{item}
+          </foreach>
+            );
+        update b_qw_pro_media_record set is_del = 1
+        where pro_media_id in (
+        <foreach collection="list" separator="," item="item">
+            #{item}
+        </foreach>
+        );
+    </update>
+    <!--获取需要删除的文件信息-->
+    <select id="getDelProMedia" parameterType="java.util.List" resultType="java.lang.String">
+        select media_url
+        from b_qw_pro_media
+        where id in (
+        <foreach collection="list" separator="," item="item">
+            #{item}
+        </foreach>
+        ) and media_type in ('1','2','5')
+    </select>
+
+    <!--根据有权限的项目ID查询活动-->
+    <select id="getActivityByProId" parameterType="java.util.Map" resultType="java.util.Map">
+        select DISTINCT info.id id,info.activity_name as `name`,
+                        concat('?actid=',info.id) path,ma.material_address imgUrl
+        from a_activity_projects ap
+        INNER JOIN a_activity_info info on ap.actity_id = info.id
+        INNER JOIN a_activity_material ma on info.id = ma.activity_id and ma.material_type = 3
+        where  ap.isdel = 0 and ap.project_id = #{projectId}
+        and info.status = 1 and info.act_status = 2
+        and info.is_del = 0 and info.release_time &lt; now() and info.activity_endtime &gt; now()
+    </select>
+
+    <!--根据有权限的项目ID查询楼盘-->
+    <select id="getBuildingByProId" parameterType="java.util.Map" resultType="java.util.Map">
+        select ID id,ProjectShowName name,HeadImgUrl imgUrl,
+               ProjectID,ProjectName
+        from a_build_book
+        where IsDel = 0 and Status = 1 and IsShowHeadImg = 1
+          and ProjectID = #{projectId}
+    </select>
+    <!--根据项目ID查询新闻-->
+    <select id="getNewsByCityId" parameterType="java.util.Map" resultType="java.util.Map">
+        select ID id,HeadImgUrl imgUrl,
+               (case when length(Title)>45 then CONCAT(LEFT(Title,15),'...') else Title end) name,
+               concat('?detailsnews=',ID) path
+        from a_news
+        where IsDel = 0 and CityId = (
+            select CityID from a_city_project
+            where ProjectID = #{projectId})
+          and Status = 1 and IsPublish = 1;
+    </select>
+
+    <!--根据项目ID查询楼盘户型-->
+    <select id="getBuildHxByProId" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            book.ID buildBookId,
+            bw.ID id,
+            bw.HouseBigType name,
+            bw.HouseImg imgUrl
+        FROM
+            a_build_book book
+                INNER JOIN a_build_book_warehouse bw ON book.ID = bw.BuildBookID
+        WHERE
+            book.IsDel = 0
+          AND book.Status = 1
+          AND book.IsShowHeadImg = 1
+          AND book.ProjectID = #{projectId}
+          AND bw.IsDel = 0
+          AND bw.`Status` = 1
+    </select>
+    <!--查询敏感词分类是否存在-->
+    <select id="getSensitiveWordsTypeIsOk" parameterType="java.lang.String" resultType="_int">
+        select count(1) from b_qw_sensitive_words_type where type_name = #{sensitiveWordsType};
+    </select>
+
+    <!--保存敏感词分类-->
+    <insert id="addSensitiveWordsType" parameterType="java.util.Map">
+        insert into b_qw_sensitive_words_type(type_name,creator,create_time,is_del)
+        values(#{type_name},#{creator},now(),0)
+    </insert>
+
+    <select id="getDepartmentByPro" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            qwo.dept_id deptId,
+            org.ProjectID projectId
+        FROM
+            s_organization org
+                INNER JOIN b_qw_org qwo ON org.ID = qwo.jk_org_id and qwo.is_del = 0
+        WHERE
+            org.OrgCategory = 4
+          AND org.ProjectID IN (
+            ${paramIds}
+            );
+    </select>
+
+    <!--查询敏感词分类-->
+    <select id="getSensitiveWordsTypes" resultType="java.util.Map">
+        select concat(id,'') id,type_name name from b_qw_sensitive_words_type where is_del = 0
+    </select>
+
+    <update id="delSensitiveWord" parameterType="java.lang.String">
+        update b_qw_sensitive_words set is_del = 1
+        where id = #{id};
+    </update>
+    <!--获取敏感词规则ID-->
+    <select id="getSensitiveWordById" parameterType="java.lang.String" resultType="java.lang.String">
+        select rule_id from b_qw_sensitive_words
+        where id = #{id};
+    </select>
+    <!--获取敏感词列表-->
+    <select id="getSensitiveWords" parameterType="java.util.Map" resultType="cn.visolink.system.companyQw.model.SensitiveWordVo">
+        SELECT
+            bq.id,
+            t.projectNames,
+            t.projectIds,
+            bq.rule_name ruleName,
+            bq.word_list wordList,
+            type.type_name typeName,
+            bq.type_id typeId,
+            bq.create_time createTime,
+            bq.edit_time editTime,
+            bq.intercept_type interceptType
+        FROM
+            b_qw_sensitive_words bq
+                INNER JOIN (
+                SELECT
+                    GROUP_CONCAT( bp.ProjectName ) projectNames,
+                    bsp.word_id wordId,
+                    GROUP_CONCAT( bp.ID ) projectIds
+                FROM
+                    b_qw_sensitive_words_pro bsp
+                        INNER JOIN b_project bp ON bsp.project_id = bp.id
+                GROUP BY
+                    bsp.word_id
+            ) t ON t.wordId = bq.id
+                left JOIN b_qw_sensitive_words_type type ON type.id = bq.type_id
+        where bq.is_del = 0
+          <if test="ids!=null and ids.size()>0">
+              and bq.id in (select word_id from b_qw_sensitive_words_pro where project_id in (
+                <foreach collection="ids" separator="," item="item">
+                    #{item}
+                </foreach>
+                ))
+          </if>
+          <if test="ruleName!=null and ruleName !=''">
+                and bq.rule_name like '%${ruleName}%'
+          </if>
+            <if test="wordList!=null and wordList !=''">
+                and bq.word_list like '%${wordList}%'
+            </if>
+            <if test="typeId!=null and typeId !=''">
+                and bq.type_id = #{typeId}
+            </if>
+
+    </select>
+
+    <!--保存关键词-->
+    <insert id="addSensitiveWord" parameterType="cn.visolink.system.companyQw.model.SensitiveWordVo" useGeneratedKeys="true" keyProperty="id">
+        insert into b_qw_sensitive_words(rule_name,word_list,intercept_type,type_id,rule_id,creator,create_time)
+        values(#{ruleName},#{wordList},#{interceptType},#{typeId},#{ruleId},#{creator},now())
+    </insert>
+    <!--保存关键词关联项目-->
+    <insert id="addWordPros" parameterType="java.util.List">
+        insert into b_qw_sensitive_words_pro(department_id,word_id,rule_id,project_id,creator,create_time)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.deptId},#{item.wordId},#{item.ruleId},#{item.projectId},#{item.creator},now())
+        </foreach>
+    </insert>
+    <!--删除关键词关联项目-->
+    <update id="delWordPros" parameterType="java.util.Map">
+        update b_qw_sensitive_words_pro set is_del = 1
+        where word_id = #{wordId} and department_id in (${deptIds})
+    </update>
+
+    <!--查询单个渠道码信息-->
+    <select id="getChannelCodeById" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.ChannelCode">
+        SELECT
+               id,
+            `type`,
+            skip_verify skipVerify,
+            state,
+            qr_code qrCode,
+            creator,
+            create_time createTime,
+            editor,
+            edit_time editTime,
+            project_id projectId,
+            is_auto_editname isAutoEditname,
+            is_auto_add_remark isAutoAddRemark,
+            description,
+            is_auto_add_tag isAutoAddTag,
+            tag_name tagName,
+            is_add_welcome_words isAddWelcomeWords,
+            config_id configId
+        FROM
+            b_qw_contact
+        where id = #{id} and is_del = 0;
+    </select>
+
+    <!--删除渠道码-->
+    <update id="delChannelCodeById" parameterType="java.lang.String">
+        update b_qw_contact set is_del = 1 where id = #{id};
+        update b_qw_contact_media set is_del = 1 where contact_id = #{id};
+        update b_qw_contact_user set is_del = 1 where contact_id = #{id};
+    </update>
+
+    <!--查询项目渠道码列表-->
+    <select id="getChannelCodes" parameterType="java.util.Map" resultType="cn.visolink.system.companyQw.model.ChannelCode">
+        SELECT
+            con.id,
+            con.type,
+            con.skip_verify skipVerify,
+            con.state,
+            con.qr_code qrCode,
+            ba.EmployeeName creator,
+            con.create_time createTime,
+            con.editor,
+            con.edit_time editTime,
+            con.project_id projectId,
+            bp.ProjectName projectName,
+            con.is_auto_editname isAutoEditname,
+            con.is_auto_add_remark isAutoAddRemark,
+            con.description,
+            con.is_auto_add_tag isAutoAddTag,
+            con.tag_name tagName,
+            con.is_add_welcome_words isAddWelcomeWords,
+            con.config_id configId
+        FROM
+            b_qw_contact con
+                INNER JOIN b_account ba on ba.id = con.creator
+                INNER JOIN b_project bp on bp.id = con.project_id
+        WHERE con.is_del = 0
+            and con.project_id in (
+              <foreach collection="ids" separator="," item="item">
+                  #{item}
+              </foreach>
+            )
+            <if test="state!=null and state!=''">
+                and con.state like '%${state}%'
+            </if>
+    </select>
+    <!--获取渠道码成员-->
+    <select id="getChannelCodeUser" resultType="java.lang.String" parameterType="java.lang.String">
+        select user_id from b_qw_contact_user where contact_id = #{id} and is_del = 0
+    </select>
+
+    <!--获取成员-->
+    <select id="getEmployees" parameterType="java.lang.String" resultType="java.util.Map">
+        select DISTINCT qu.userid id,qu.`name` name
+        from b_qw_user qu
+                 INNER JOIN b_qw_org_user_rel  rel on qu.userid = rel.user_id and rel.is_del = 0
+                 INNER JOIN b_qw_org org on org.dept_id = rel.dept_id and org.is_del = 0
+        where org.jk_pro_id = #{projectId} and qu.status = 1
+    </select>
+
+    <insert id="addChannelCode" parameterType="cn.visolink.system.companyQw.model.ChannelCode" useGeneratedKeys="true" keyProperty="id">
+        insert into b_qw_contact(`type`,skip_verify,state,config_id,qr_code,creator,create_time,
+                                 project_id,is_auto_editname,is_auto_add_remark,description,is_auto_add_tag,
+                                 tag_name,tag_id,is_add_welcome_words)
+        values(#{type},#{skipVerify},#{state},#{configId},#{qrCode},#{creator},
+               now(),#{projectId},#{isAutoEditname},#{isAutoAddRemark},#{description},#{isAutoAddTag},
+               #{tagName},#{tagId},#{isAddWelcomeWords})
+    </insert>
+
+    <update id="updateChannelCode" parameterType="cn.visolink.system.companyQw.model.ChannelCode">
+        update b_qw_contact
+        <set>
+            <if test="type!=null and type!=''">
+                `type`= #{type},
+            </if>
+            <if test="skipVerify!=null">
+                skip_verify = #{skipVerify},
+            </if>
+            <if test="state!=null and state!=''">
+                state = #{state},
+            </if>
+            <if test="projectId!=null and projectId!=''">
+                project_id = #{projectId},
+            </if>
+            <if test="isAutoEditname!=null">
+                is_auto_editname = #{isAutoEditname},
+            </if>
+            <if test="isAutoAddRemark!=null">
+                is_auto_add_remark = #{isAutoAddRemark},
+            </if>
+            <if test="description!=null and description!=''">
+                description = #{description},
+            </if>
+            <if test="isAutoAddTag!=null">
+                is_auto_add_tag = #{isAutoAddTag},
+            </if>
+            <if test="tagName!=null and tagName!=''">
+                tag_name = #{tagName},
+            </if>
+            <if test="tagId!=null and tagId!=''">
+                tag_id = #{tagId},
+            </if>
+            <if test="isAddWelcomeWords!=null">
+                is_add_welcome_words = #{isAddWelcomeWords},
+            </if>
+            edit_time = now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <insert id="addChannelCodeMediaList" parameterType="java.util.List">
+        insert into b_qw_contact_media(contact_id,title,media_url,appid,page,media_type,creator,create_time)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.contactId},#{item.title},#{item.mediaUrl},#{item.appid},#{item.page},#{item.mediaType},#{item.creator},now())
+        </foreach>
+    </insert>
+
+    <!--获取原渠道码素材信息-->
+    <select id="getChannelCodeMediaIds" parameterType="java.lang.String" resultType="java.lang.String">
+        select id
+        from b_qw_contact_media
+        where contact_id = #{id} and is_del = 0
+    </select>
+
+    <!--删除渠道码素材-->
+    <update id="delChannelCodeMedia" parameterType="java.util.List">
+        delete from b_qw_contact_media
+        where id in (
+        <foreach collection="list" separator="," item="item">
+            #{item}
+        </foreach>
+        )
+    </update>
+    <!--获取需要删除的渠道码文件信息-->
+    <select id="getDelChannelCodeMedia" parameterType="java.util.List" resultType="java.lang.String">
+        select media_url
+        from b_qw_contact_media
+        where id in (
+        <foreach collection="list" separator="," item="item">
+            #{item}
+        </foreach>
+        ) and media_type in ('1','2','5')
+    </select>
+
+    <!--获取渠道码素材-->
+    <select id="getChannelCodeMediaDetails" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.MediaDetail">
+        select id,
+               contact_id contactId,
+               title,
+               media_id mediaId,
+               media_url mediaUrl,
+               appid,
+               page,
+               media_type mediaType
+        from b_qw_contact_media
+        where contact_id = #{id} and is_del = 0
+    </select>
+    <delete id="delChannelCodeUser" parameterType="java.lang.String">
+        delete from b_qw_contact_user where contact_id = #{id}
+    </delete>
+
+    <insert id="addChannelCodeUser" parameterType="java.util.Map">
+        insert into b_qw_contact_user(`type`,contact_id,state,
+                                      config_id,qr_code,creator,
+                                      create_time,user_id)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.type},#{item.contactId},#{item.state},#{item.configId},#{item.qrCode},
+             #{item.creator},now(),#{item.userId})
+        </foreach>
+    </insert>
+
+    <select id="getChannelCodeIsOk" parameterType="java.util.Map" resultType="_int">
+        select count(1)
+        from b_qw_contact_user
+        where state = #{state}
+        and user_id in (
+          <foreach collection="userIds" separator="," item="item">
+              #{item}
+          </foreach>
+            )
+        <if test="contactId!=null and contactId!=''">
+            and contact_id != #{contactId}
+        </if>
+    </select>
+
+    <select id="getTagGroupIsOk" resultType="java.lang.String">
+        select group_id from b_qw_cst_tag_group where group_name = '渠道码标签' and is_del = 0
+    </select>
+
+    <select id="getTagGroupIsExist" parameterType="java.lang.String" resultType="java.lang.String">
+        select group_id from b_qw_cst_tag_group where group_name = #{groupName} and is_del = 0
+    </select>
+
+    <select id="getTagIsExist" resultType="java.lang.String" parameterType="java.lang.String">
+        select tag_id from b_qw_cst_tag_config
+        where group_name = #{groupName} and tag_name = #{tagName} and is_del = 0
+    </select>
+
+    <select id="getTagIsOk" resultType="java.lang.String" parameterType="java.lang.String">
+        select tag_id from b_qw_cst_tag_config
+        where group_name = '渠道码标签' and tag_name = #{tagName} and is_del = 0
+    </select>
+
+    <insert id="addTagGroup" parameterType="java.util.Map">
+        insert into b_qw_cst_tag_group(group_id,group_name,create_time,creator)
+        values(#{groupId},#{groupName},now(),#{creator})
+    </insert>
+
+    <insert id="addCstTag" parameterType="java.util.Map">
+        insert into b_qw_cst_tag_config(tag_id,tag_name,`type`,group_id,group_name,create_time,creator)
+        values(#{tagId},#{tagName},'1',#{groupId},#{groupName},now(),#{creator})
+    </insert>
+
+    <update id="updateCstTag" parameterType="cn.visolink.system.companyQw.model.QwCstTag">
+        update b_qw_cst_tag_config set tag_name = #{tagName},editor = #{editor},edit_time = now()
+        where tag_id = #{tagId} and is_del = 0
+    </update>
+
+    <select id="getQwCstTagList" parameterType="java.util.Map" resultType="cn.visolink.system.companyQw.model.QwCstTag">
+        select tag.tag_id tagId,tag.tag_name tagName,
+               tag.group_id groupId,tag.group_name groupName,
+               ba.EmployeeName creator,tag.create_time createTime,
+               ba1.EmployeeName editor,tag.edit_time editTime,
+              (case when tag.type = 1 then '企业设置'
+                    when tag.type = 2 then '用户自定义'
+                    when tag.type = 3 then '规则组标签' else '其他' end) `type`
+        from b_qw_cst_tag_config tag
+                 LEFT JOIN b_account ba on tag.creator = ba.id
+                 LEFT JOIN b_account ba1 on tag.editor = ba1.id
+        where is_del = 0
+        <if test="tagName!=null and tagName!=''">
+            and tag.tag_name like '%${tagName}%'
+        </if>
+        <if test="groups!=null and groups.size()>0">
+            and tag.group_id in (
+              <foreach collection="groups" separator="," item="item">
+                  #{item}
+              </foreach>
+            )
+        </if>
+    </select>
+
+    <select id="getDeptChild" parameterType="java.lang.String" resultType="_int">
+        select count(1) from b_qw_org where parentid = #{id} and is_del = 0
+    </select>
+
+    <select id="getDeptChildIsBind" parameterType="java.lang.String" resultType="_int">
+        select count(1) from b_qw_org where parentid = #{id} and is_del = 0 and jk_org_id is not null
+    </select>
+
+    <select id="getDeptUser" parameterType="java.lang.String" resultType="_int">
+        select count(1) from b_qw_org_user_rel where dept_id = #{id} and is_del = 0
+    </select>
+
+    <update id="delDeptById" parameterType="java.lang.String">
+        update b_qw_org set is_del = 1
+        where dept_id = #{id}
+    </update>
+
+    <select id="getCompanyQwDepts" parameterType="java.util.Map" resultType="cn.visolink.system.companyQw.model.CompanyQwDept">
+        SELECT
+            qworg.dept_id id,
+            qworg.dept_name deptName,
+            qworg.parentid parentid,
+            qworg1.dept_name parentDeptName,
+            org.id orgId,
+            org.OrgName orgName,
+            org.FullPath fullpath,
+            org.ProjectID projectId,
+            ( CASE WHEN qworg.jk_org_id IS NOT NULL THEN '1' ELSE '2' END ) status
+        FROM
+            b_qw_org qworg
+                LEFT JOIN s_organization org ON org.id = qworg.jk_org_id
+                LEFT JOIN b_qw_org qworg1 ON qworg.parentid = qworg1.dept_id
+                AND qworg1.is_del = 0
+        WHERE
+            qworg.is_del = 0
+        <if test="deptName!=null and deptName!=''">
+            and qworg.dept_name like '%${deptName}%'
+        </if>
+        <if test="orgName!=null and orgName!=''">
+            and org.OrgName like '%${orgName}%'
+        </if>
+        <if test="status!=null and status=='1'.toString()">
+            and qworg.jk_org_id IS NOT NULL
+        </if>
+        <if test="status!=null and status=='2'.toString()">
+            and qworg.jk_org_id IS NULL
+        </if>
+        ORDER BY
+            qworg.dept_id
+    </select>
+
+    <select id="getDeptUserCst" parameterType="java.lang.String" resultType="_int">
+        select count(1)
+        from b_qw_org qworg
+                 INNER JOIN b_qw_org_user_rel rel on qworg.dept_id = rel.dept_id and rel.is_del = 0
+                 INNER JOIN b_qw_user_cst_rel cstrel on cstrel.userid = rel.user_id and cstrel.is_del = 0
+                 INNER JOIN b_qw_cst_oppcst_rel oppcst on oppcst.external_userid = cstrel.external_userid and oppcst.is_del = 0
+        where qworg.dept_id = #{id};
+    </select>
+
+    <update id="delDeptOrg" parameterType="java.lang.String">
+        update b_qw_org set jk_org_id = null,jk_pro_id = null,edit_time = now(),editor = #{userId}
+        where dept_id = #{id};
+    </update>
+
+    <update id="bindOrg" parameterType="java.lang.String">
+        update b_qw_org set jk_org_id = #{orgId},jk_pro_id = #{projectId},edit_time = now(),editor = #{userId}
+        where dept_id = #{id};
+    </update>
+
+    <select id="getDeptParentIsBind" parameterType="java.lang.String" resultType="_int">
+        SELECT
+            count( 1 )
+        FROM
+            b_qw_org
+        WHERE
+            jk_org_id IS NOT NULL
+          AND dept_id = ( SELECT parentid FROM b_qw_org WHERE dept_id = #{id} AND jk_org_id IS NULL )
+    </select>
+
+    <select id="getQuitUserList" parameterType="java.util.Map" resultType="cn.visolink.system.companyQw.model.QuitUser">
+        select bp.id projectId,bp.ProjectName projectName,
+               us.userid userId,us.mobile userMobile,us.name userName,
+               count(1) allCstCount,
+               sum(case when red.`status` = 1 then 1 else 0 end) unassignedCount,
+               sum(case when red.`status` = 2 then 1 else 0 end) distributionCount,
+               sum(case when red.`status` = 3 then 1 else 0 end) inheritOk,
+               sum(case when (red.`status` = 4 or red.`status` = 5) then 1 else 0 end) inheritNotOk
+        from b_qw_cst_redistribution red
+                 INNER JOIN b_qw_user us on us.userid = red.userid_old
+                 INNER JOIN b_qw_org_user_rel rel on red.userid_old = rel.user_id and rel.is_del = 0
+                 INNER JOIN b_qw_org qworg on qworg.dept_id = rel.dept_id and qworg.is_del = 0
+                 INNER JOIN s_organization org on org.id = qworg.jk_org_id
+                 INNER JOIN b_project bp on bp.id = org.ProjectID
+        where bp.id in (
+            <foreach collection="ids" separator="," item="item">
+                #{item}
+            </foreach>
+            ) and red.is_del = 0
+            <if test="startTime!=null and endTime!=null and startTime!='' and endTime!= ''">
+                and us.quit_time between #{startTime} and #{endTime}
+            </if>
+        GROUP BY red.userid_old
+    </select>
+
+    <select id="quitUserRedistDetail" parameterType="java.util.Map" resultType="cn.visolink.system.companyQw.model.QuitUserCst">
+        SELECT
+            cst.external_userid externalUserid,
+            cst.`name` cstName,
+            red.userid_old useridOld,
+            red.userid_new useridNew,
+            us.`name` userNameNew,
+            (case when red.`status` = 1 then '待分配'
+            when red.`status` = 2 then '等待继承'
+            when red.`status` = 3 then '继承成功'
+            when red.`status` = 4 then '客户拒绝'
+            when red.`status` = 5 then '成员客户达上限' else '' end) statusDesc,
+            red.`status`,
+            red.dist_time distTime
+        FROM
+            b_qw_cst_redistribution red
+                INNER JOIN b_qw_cst cst ON cst.external_userid = red.external_userid
+                LEFT JOIN b_qw_user us ON us.userid = red.userid_new
+        WHERE
+            red.is_del = 0 AND red.userid_old = #{useridOld}
+            <if test="cstName!=null and cstName!=''">
+                  and cst.`name` like '%${cstName}%'
+            </if>
+            <if test="userNameNew!=null and userNameNew!=''">
+                and us.`name` like '%${userNameNew}%'
+            </if>
+            <if test="statusList!=null and statusList.size()>0">
+                and red.status in (
+                  <foreach collection="statusList" item="item" separator=",">
+                      #{item}
+                  </foreach>
+                )
+            </if>
+    </select>
+
+    <update id="updateQuitUserCst" parameterType="java.util.Map">
+        update b_qw_cst_redistribution
+        set dist_user = #{distUser},status = 2,userid_new = #{useridNew},
+            dist_time = now(),edit_time = now(),
+            editor = #{distUser}
+        where external_userid in (
+              <foreach collection="cstList" separator="," item="item">
+                  #{item}
+              </foreach>
+            ) and status = 1 and is_del = 0
+    </update>
+
+    <insert id="addRedistributionBatch" parameterType="java.util.Map">
+        insert into b_qw_cst_redistribution_batch(userid_old,external_userids,
+                                                  userid_new,creator,create_time,
+                                                  dist_time,dist_user)
+        values(#{userid_old},#{external_userids},#{userid_new},#{creator},now(),
+               now(),#{creator})
+    </insert>
+
+    <select id="getProEmployees" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT DISTINCT
+            qu.userid id,
+            (
+                CASE
+
+                    WHEN qu.mobile IS NOT NULL
+                        AND qu.mobile != '' THEN
+                        concat( qu.`name`, '-', qu.mobile ) ELSE qu.`name`
+                    END
+                ) NAME
+        FROM
+            b_qw_user qu
+                INNER JOIN b_qw_org_user_rel rel ON qu.userid = rel.user_id
+                AND rel.is_del = 0
+                INNER JOIN b_qw_org org ON org.dept_id = rel.dept_id
+                AND org.is_del = 0
+        where org.jk_pro_id = #{projectId} and qu.status = 1
+        <if test="userName!=null and userName!=''">
+            and qu.`name` like '%${userName}%'
+        </if>
+    </select>
+
+    <select id="getQwCstTagGroup" resultType="java.util.Map">
+        SELECT group_id groupId,group_name groupName
+        FROM b_qw_cst_tag_group where is_del = 0
+    </select>
+    <update id="delTagGroup" parameterType="java.util.Map">
+        update b_qw_cst_tag_group set is_del = 1,editor =#{editor},edit_time = now()
+        where group_id = #{groupId}
+    </update>
+
+    <update id="delCstTag" parameterType="java.util.Map">
+        update b_qw_cst_tag_config set is_del = 1,editor =#{editor},edit_time = now()
+        where tag_id = #{tagId}
+    </update>
+
+    <select id="getTagGroupByTagId" parameterType="java.lang.String" resultType="java.lang.String">
+        select a.group_id from (
+                                   select tag.group_id,count(1) count
+                                   from b_qw_cst_tag_config tag
+                                        INNER JOIN
+                                       (select group_id from b_qw_cst_tag_config
+                                        where tag_id = #{tagId}) t
+                                   on tag.group_id = t.group_id
+                                   GROUP BY tag.group_id HAVING count = 1) a;
+    </select>
+
+    <select id="getQwCstService" resultType="java.util.Map">
+        select open_kfid openKfid,cust_service_name name,avatar
+        from b_qw_cst_service where is_del = 0
+    </select>
+
+    <select id="getQwCstServiceUser" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            us.name userName,
+            us.mobile,
+            se.cust_service_name serviceName,
+            se.open_kfid openKfid,
+            bp.ProjectName projectName,
+            bp.id projectId,
+            us.userid userid,
+            ( CASE WHEN us.is_del = 0 THEN '在职' WHEN us.is_del = 1 THEN '离职' ELSE '' END ) userStatus
+        FROM
+            b_qw_cst_service_user rel
+                INNER JOIN b_qw_cst_service se ON rel.open_kfid = se.open_kfid
+                INNER JOIN b_qw_user us ON rel.userid = us.userid
+                INNER JOIN b_project bp ON bp.id = rel.project_id
+        WHERE
+            rel.is_del = 0
+            <if test="userName!=null and userName!=''">
+                and us.name like '%${userName}%'
+            </if>
+            <if test="openKfid!=null and openKfid!=''">
+                and rel.open_kfid = #{openKfid}
+            </if>
+        order by rel.create_time desc
+    </select>
+
+    <update id="updateQwService" parameterType="java.util.Map">
+        update b_qw_cst_service set cust_service_name = #{custServiceName},
+                                    avatar = #{avatar},
+                                    editor = #{editor},
+                                    edit_time = now()
+        where open_kfid = #{openKfid}
+    </update>
+
+    <insert id="addQwService" parameterType="java.util.Map">
+        insert into b_qw_cst_service(cust_service_name,open_kfid,avatar,creator,create_time)
+        values(#{custServiceName},#{openKfid},#{avatar},#{creator},now())
+    </insert>
+
+    <update id="delQwServiceUser" parameterType="java.util.Map">
+        update b_qw_cst_service_user set is_del = 1,editor = #{editor},edit_time = now()
+        where open_kfid = #{openKfid} and userid = #{userid}
+    </update>
+    
+    <insert id="addQwServiceUser" parameterType="java.util.Map">
+        insert into b_qw_cst_service_user(open_kfid,userid,project_id,creator,create_time)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.openKfid},#{item.userid},#{item.projectId},#{item.creator},now())
+        </foreach>
+    </insert>
+
+    <select id="getOldUsers" parameterType="java.util.Map" resultType="java.lang.String">
+        select userid from b_qw_cst_service_user
+        where open_kfid = #{openKfid}
+          and userid in (
+            <foreach collection="userIdList" separator="," item="item">
+                #{item}
+            </foreach>
+            ) and is_del = 0
+    </select>
+
+    <update id="delAutoReply" parameterType="java.util.Map">
+        update b_qw_cst_service_auto_reply set is_del = 1,editor = #{editor},edit_time = now()
+        where id = #{ruleId}
+    </update>
+
+    <select id="getQwServiceAutoReply" parameterType="java.util.Map" resultType="cn.visolink.system.companyQw.model.QwServiceAutoReply">
+
+        SELECT
+            DISTINCT
+            (
+                SELECT
+                    GROUP_CONCAT( bp.ProjectName )
+                FROM
+                    b_qw_cst_service_auto_reply_pro pro
+                        INNER JOIN b_project bp ON bp.id = pro.project_id
+                WHERE
+                    pro.rule_id = rep.id and pro.is_del = 0
+            ) projectName,
+            ( SELECT GROUP_CONCAT( ww.key_word ) FROM b_qw_cst_service_auto_reply_key_word ww WHERE ww.rule_id = rep.id and ww.is_del = 0 ) keyWords,
+            rep.rule_name ruleName,
+            ba.EmployeeName creator,
+            rep.create_time createTime,
+            ba1.EmployeeName editor,
+            rep.edit_time editTime,
+            rep.id
+        FROM
+            b_qw_cst_service_auto_reply rep
+                LEFT JOIN b_account ba ON ba.id = rep.creator
+                LEFT JOIN b_account ba1 ON ba1.id = rep.editor
+                LEFT JOIN b_qw_cst_service_auto_reply_pro pro2 on pro2.rule_id = rep.id
+        WHERE rep.is_del = 0
+              <if test="ruleName!=null and ruleName!=''">
+                and rep.rule_name like '%${ruleName}%'
+              </if>
+              <if test="ids!=null and ids.size()>0">
+                and pro2.project_id in (
+                  <foreach collection="ids" separator="," item="item">
+                      #{item}
+                  </foreach>
+                  )
+              </if>
+    </select>
+
+    <insert id="addAutoReply" parameterType="cn.visolink.system.companyQw.model.QwServiceAutoReply" useGeneratedKeys="true" keyProperty="id">
+        insert into b_qw_cst_service_auto_reply(rule_name,creator,create_time)
+        values(#{ruleName},#{creator},now())
+    </insert>
+
+    <update id="updateAutoReply" parameterType="cn.visolink.system.companyQw.model.QwServiceAutoReply">
+        update b_qw_cst_service_auto_reply set rule_name = #{ruleName},editor = #{editor},edit_time = now()
+        where id = #{id}
+    </update>
+
+    <insert id="addAutoReplyMedia" parameterType="cn.visolink.system.companyQw.model.QwServiceAutoReplyMedia">
+        insert into b_qw_cst_service_auto_reply_media(title,media_url,appid,page,media_type,creator,create_time,rule_id,pic_url)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.title},#{item.mediaUrl},#{item.appid},#{item.page},#{item.mediaType},#{item.creator},now(),#{item.ruleId},#{item.picUrl})
+        </foreach>
+    </insert>
+
+    <select id="getOldAutoReplyMedia" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.QwServiceAutoReplyMedia">
+        select id,title,media_url mediaUrl,appid,page,media_type mediaType,rule_id ruleId,pic_url picUrl
+               from b_qw_cst_service_auto_reply_media
+        where rule_id = #{ruleId} and is_del = 0
+    </select>
+
+    <delete id="delOldAutoReplyMedia" parameterType="java.lang.String">
+        delete from b_qw_cst_service_auto_reply_media where rule_id = #{ruleId}
+    </delete>
+
+    <insert id="addAutoReplyPro" parameterType="java.util.Map">
+        insert into b_qw_cst_service_auto_reply_pro(rule_id,project_id,creator,create_time)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.rule_id},#{item.project_id},#{item.creator},now())
+        </foreach>
+    </insert>
+
+    <delete id="delAutoReplyPro" parameterType="java.lang.String">
+        delete from b_qw_cst_service_auto_reply_pro where rule_id = #{ruleId}
+    </delete>
+
+    <delete id="delAutoReplyRel" parameterType="java.lang.String">
+        delete from b_qw_cst_service_auto_reply_rel where rule_id = #{ruleId}
+    </delete>
+
+    <delete id="delAutoReplyKeyWord" parameterType="java.lang.String">
+        delete from b_qw_cst_service_auto_reply_key_word where rule_id = #{ruleId}
+    </delete>
+
+    <insert id="addAutoReplyRel" parameterType="java.util.Map">
+        insert into b_qw_cst_service_auto_reply_rel(rule_id,open_kfid,creator,create_time)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.rule_id},#{item.open_kfid},#{item.creator},now())
+        </foreach>
+    </insert>
+
+    <insert id="addAutoReplyKeyWord" parameterType="cn.visolink.system.companyQw.model.QwServiceAutoReplyKeyWord">
+        insert into b_qw_cst_service_auto_reply_key_word(rule_id,key_word,matching_type,creator,create_time)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.ruleId},#{item.keyWord},#{item.matchingType},#{item.creator},now())
+        </foreach>
+    </insert>
+
+    <select id="getAutoReply" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.QwServiceAutoReply">
+        select id,rule_name ruleName
+        from b_qw_cst_service_auto_reply
+        where id = #{ruleId}
+    </select>
+
+    <select id="getAutoReplyPro" parameterType="java.lang.String" resultType="java.lang.String">
+        select project_id
+        from b_qw_cst_service_auto_reply_pro
+        where rule_id = #{ruleId} and is_del = 0
+    </select>
+
+    <select id="getAutoReplyRel" parameterType="java.lang.String" resultType="java.lang.String">
+        select open_kfid
+        from b_qw_cst_service_auto_reply_rel
+        where rule_id = #{ruleId} and is_del = 0
+    </select>
+
+    <select id="getAutoReplyKeyWord" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.QwServiceAutoReplyKeyWord">
+        select rule_id ruleId,key_word keyWord,matching_type matchingType
+        from b_qw_cst_service_auto_reply_key_word
+        where rule_id = #{ruleId} and is_del = 0
+    </select>
+
+    <select id="getChannelCodeCstSum" parameterType="java.util.Map" resultType="_int">
+        select count(1)
+        from b_qw_user_cst_rel rel
+                 INNER JOIN b_qw_user us on us.userid = rel.userid
+                 INNER JOIN b_qw_org_user_rel orel on us.userid = orel.user_id
+                 INNER JOIN b_qw_org qorg on qorg.dept_id = orel.dept_id
+                 INNER JOIN s_organization org on org.id = qorg.jk_org_id
+        where org.ProjectID in (
+          <foreach collection="ids" item="item" separator=",">
+              #{item}
+          </foreach>
+            ) and rel.state = #{state} and org.OrgCategory = 4;
+    </select>
+
+    <select id="getChannelCodeCstNewCount" parameterType="java.util.Map" resultType="_int">
+        select count(1) newCount
+        from b_qw_user_cst_rel rel
+                 INNER JOIN b_qw_user us on us.userid = rel.userid
+                 INNER JOIN b_qw_org_user_rel orel on us.userid = orel.user_id
+                 INNER JOIN b_qw_org qorg on qorg.dept_id = orel.dept_id
+                 INNER JOIN s_organization org on org.id = qorg.jk_org_id
+        where org.ProjectID in (
+        <foreach collection="ids" item="item" separator=",">
+            #{item}
+        </foreach>
+        ) and rel.state = #{state} and org.OrgCategory = 4
+        <if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+            and rel.addtime BETWEEN #{startTime} and #{endTime}
+        </if>
+    </select>
+
+    <select id="getChannelCodeCstDelCount" parameterType="java.util.Map" resultType="_int">
+        select count(1) delCount
+        from b_qw_user_cst_rel rel
+                 INNER JOIN b_qw_user us on us.userid = rel.userid
+                 INNER JOIN b_qw_org_user_rel orel on us.userid = orel.user_id
+                 INNER JOIN b_qw_org qorg on qorg.dept_id = orel.dept_id
+                 INNER JOIN s_organization org on org.id = qorg.jk_org_id
+        where org.ProjectID in (
+        <foreach collection="ids" item="item" separator=",">
+            #{item}
+        </foreach>
+        ) and rel.state = #{state} and org.OrgCategory = 4
+        <if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+            and rel.edit_time BETWEEN #{startTime} and #{endTime}
+        </if>
+          and rel.is_del = 1
+    </select>
+
+    <select id="getChannelCodeUserDetail" parameterType="java.util.Map" resultType="cn.visolink.system.companyQw.model.ChannelCodeUserDetail">
+        SELECT
+            count( 1 ) sumCount,
+            <if test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+                sum( CASE WHEN rel.addtime BETWEEN #{startTime} and #{endTime} THEN 1 ELSE 0 END ) newCount,
+                sum( CASE WHEN rel.is_del = 1 AND rel.edit_time BETWEEN #{startTime} and #{endTime} THEN 1 ELSE 0 END ) delCount,
+            </if>
+            <if test="startTime==null or startTime=='' or endTime==null or endTime==''">
+                count( 1 ) newCount,
+                sum( CASE WHEN rel.is_del = 1 THEN 1 ELSE 0 END ) delCount,
+            </if>
+            us.NAME userName,
+            us.mobile userMobile
+        FROM
+            b_qw_user_cst_rel rel
+                INNER JOIN b_qw_user us ON us.userid = rel.userid
+                INNER JOIN b_qw_org_user_rel orel ON us.userid = orel.user_id
+                INNER JOIN b_qw_org qorg ON qorg.dept_id = orel.dept_id
+                INNER JOIN s_organization org ON org.id = qorg.jk_org_id
+        WHERE
+                org.ProjectID IN (
+                  <foreach collection="ids" item="item" separator=",">
+                        #{item}
+                    </foreach>)
+          AND rel.state = #{state}
+          AND org.OrgCategory = 4
+        GROUP BY
+            rel.userid
+        order by sumCount desc
+    </select>
+
+    <select id="getSumChannelCodeLine" parameterType="java.util.Map" resultType="_int">
+        select count(1)
+        from b_qw_user_cst_rel rel
+        INNER JOIN b_qw_user us on us.userid = rel.userid
+        INNER JOIN b_qw_org_user_rel orel on us.userid = orel.user_id
+        INNER JOIN b_qw_org qorg on qorg.dept_id = orel.dept_id
+        INNER JOIN s_organization org on org.id = qorg.jk_org_id
+        where org.ProjectID in (
+        <foreach collection="ids" item="item" separator=",">
+            #{item}
+        </foreach>
+        ) and rel.state = #{state} and org.OrgCategory = 4
+        and rel.addtime BETWEEN #{startTime} and #{endTime}
+    </select>
+
+    <select id="getAutoReplyKeyWordIsOk" parameterType="java.util.Map" resultType="_int">
+        select ifnull(count(1),0) count
+        from b_qw_cst_service_auto_reply re
+                 INNER JOIN b_qw_cst_service_auto_reply_rel rel on re.id = rel.rule_id
+                 INNER JOIN b_qw_cst_service_auto_reply_key_word word on word.rule_id = re.id
+        where rel.open_kfid in (
+            <foreach collection="relList" separator="," item="item">
+                #{item}
+            </foreach>
+            ) and word.key_word = #{key} and word.is_del = 0
+        <if test="ruleId!=null and rule_id!=''">
+            and re.id != #{ruleId}
+        </if>
+    </select>
+
+</mapper>

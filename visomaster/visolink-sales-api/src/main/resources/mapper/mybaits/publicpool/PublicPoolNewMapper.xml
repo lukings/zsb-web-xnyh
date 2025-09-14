@@ -1,0 +1,800 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.pubilcPool.dao.PublicPoolDao">
+
+    <!--公共池实体类映射-->
+    <resultMap id="publicPoolMap" type="cn.visolink.system.pubilcPool.model.PublicPoolVO">
+        <result column="id" property="id" />
+        <result column="pool_type" property="poolType" />
+        <result column="add_time" property="addTime" />
+        <result column="add_type" property="addType" />
+        <result column="add_type_desc" property="addTypeDesc" />
+        <result column="add_reason_type" property="addReasonType" />
+        <result column="add_reason_desc" property="addReasonDesc" />
+        <result column="evaluate_desc" property="evaluateDesc" />
+        <result column="activate_reason_type" property="activateReasonType" />
+        <result column="activate_reason_desc" property="activateReasonDesc" />
+        <result column="project_id" property="projectId" />
+        <result column="project_name" property="projectName" />
+        <result column="customer_basic_id" property="customerBasicId" />
+        <result column="project_clue_id" property="projectClueId" />
+        <result column="customer_name" property="customerName" />
+        <result column="customer_mobile" property="customerMobile" />
+        <result column="customer_gender" property="customerGender" />
+        <result column="customer_level" property="customerLevel" />
+        <result column="level" property="level" />
+        <result column="channel_label" property="channelLabel" />
+        <result column="clue_status" property="clueStatus" />
+        <result column="source_type" property="sourceType" />
+        <result column="source_type_desc" property="sourceTypeDesc" />
+        <result column="main_media_id" property="mainMediaId" />
+        <result column="main_media_name" property="mainMediaName" />
+        <result column="sub_media_id" property="subMediaId" />
+        <result column="sub_media_name" property="subMediaName" />
+        <result column="report_user_id" property="reportUserId" />
+        <result column="report_user_name" property="reportUserName" />
+        <result column="report_time" property="reportTime" />
+        <result column="sales_id" property="salesId" />
+        <result column="sales_name" property="salesName" />
+        <result column="the_first_visit_date" property="theFirstVisitDate" />
+        <result column="lately_follow_up_person" property="latelyFollowUpPerson" />
+        <result column="lately_follow_up_mobile" property="latelyFollowUpMobile" />
+        <result column="lately_follow_up_time" property="latelyFollowUpTime" />
+        <result column="lately_follow_up_content" property="latelyFollowUpContent" />
+        <result column="add_number" property="addNumber" />
+        <result column="is_del" property="isDel" />
+        <result column="OpportunityClueId" property="opportunityClueId" />
+        <result column="DataCompleteRate" property="dataCompleteRate" />
+        <result column="DataCompleteAttachRate" property="dataCompleteAttachRate" />
+        <result column="SalesTheLatestFollowDate" property="salesTheLatestFollowDate" />
+    </resultMap>
+
+    <!--公共池记录实体类映射-->
+    <resultMap id="publicPoolHisMap" type="cn.visolink.system.pubilcPool.model.PublicPoolHisVO">
+        <result column="id" property="id" />
+        <result column="pool_type" property="poolType" />
+        <result column="public_pool_id" property="publicPoolId" />
+        <result column="batch_id" property="batchId" />
+        <result column="old_pool_type" property="oldPoolType" />
+        <result column="add_type" property="addType" />
+        <result column="add_type_desc" property="addTypeDesc" />
+        <result column="activate_reason_type" property="activateReasonType" />
+        <result column="activate_reason_desc" property="activateReasonDesc" />
+        <result column="record_type" property="recordType" />
+        <result column="record_time" property="recordTime" />
+        <result column="discard_time" property="discardTime" />
+        <result column="operator" property="operator" />
+        <result column="tao_guest_time" property="taoGuestTime" />
+        <result column="operator_name" property="operatorName" />
+        <result column="discard_reason" property="discardReason" />
+        <result column="evaluate_desc" property="evaluateDesc" />
+        <result column="project_id" property="projectId" />
+        <result column="project_name" property="projectName" />
+        <result column="customer_basic_id" property="customerBasicId" />
+        <result column="project_clue_id" property="projectClueId" />
+        <result column="customer_name" property="customerName" />
+        <result column="customer_mobile" property="customerMobile" />
+        <result column="customer_gender" property="customerGender" />
+        <result column="customer_level" property="customerLevel" />
+        <result column="level" property="level" />
+        <result column="channel_label" property="channelLabel" />
+        <result column="clue_status" property="clueStatus" />
+        <result column="source_type" property="sourceType" />
+        <result column="source_type_desc" property="sourceTypeDesc" />
+        <result column="main_media_id" property="mainMediaId" />
+        <result column="main_media_name" property="mainMediaName" />
+        <result column="sub_media_id" property="subMediaId" />
+        <result column="sub_media_name" property="subMediaName" />
+        <result column="report_user_id" property="reportUserId" />
+        <result column="report_user_name" property="reportUserName" />
+        <result column="old_report_user_id" property="oldReportUserId" />
+        <result column="old_report_user_name" property="oldReportUserName" />
+        <result column="report_time" property="reportTime" />
+        <result column="sales_id" property="salesId" />
+        <result column="sales_name" property="salesName" />
+        <result column="the_first_visit_date" property="theFirstVisitDate" />
+        <result column="subscribe_time" property="subscribeTime" />
+        <result column="lately_follow_up_person" property="latelyFollowUpPerson" />
+        <result column="lately_follow_up_mobile" property="latelyFollowUpMobile" />
+        <result column="lately_follow_up_time" property="latelyFollowUpTime" />
+        <result column="lately_follow_up_content" property="latelyFollowUpContent" />
+        <result column="add_tao_time" property="addTaoTime" />
+        <result column="allocation_type" property="allocationType" />
+    </resultMap>
+
+    <select id="getPublicPoolListByMobile" parameterType="cn.visolink.system.pubilcPool.model.form.PublicPoolListSearch" resultMap="publicPoolMap">
+        SELECT
+        bpp.id,
+        bpp.pool_type,
+        bpp.add_time,
+        bpp.add_type,
+        bpp.add_type_desc,
+        bpp.add_reason_type,
+        bpp.add_reason_desc,
+        bpp.evaluate_desc,
+        bpp.activate_reason_type,
+        bpp.activate_reason_desc,
+        bpp.project_id,
+        bpp.project_name,
+        bpp.customer_basic_id,
+        bpp.project_clue_id,
+        bpp.customer_name,
+        bpp.customer_mobile customerMobileAll,
+        concat(left(bpp.customer_mobile,3),'****',right(bpp.customer_mobile,4)) customer_mobile,
+        bpp.customer_gender,
+        bpp.customer_level,
+        bpp.`level`,
+        bpp.channel_label,
+        bpp.clue_status,
+        bpp.source_type,
+        bpp.source_type_desc,
+        bpp.main_media_id,
+        bpp.main_media_name,
+        bpp.sub_media_id,
+        bpp.sub_media_name,
+        bpp.report_user_id,
+        bpp.report_user_name,
+        bpp.report_time,
+        bpp.sales_id,
+        bpp.sales_name,
+        bpp.the_first_visit_date,
+        bpp.lately_follow_up_person,
+        bpp.lately_follow_up_mobile,
+        bpp.lately_follow_up_time,
+        bpp.lately_follow_up_content,
+        bpp.add_number,
+        bpp.intention_business intentionBusiness,
+        bpp.browse_number browseNumber,
+        bpp.browse_time browseTime,
+        bpp.browse_desc browseDesc,
+        bpp.discard_time discardTime,
+        bpp.add_tao_time addTaoTime
+        FROM
+        b_public_pool bpp
+        where
+        bpp.is_del = 0
+        <if test="poolType != null and poolType != ''">
+            and bpp.pool_type = #{poolType}
+        </if>
+        <if test="sourceType != null and sourceType != ''">
+            and bpp.source_type = #{sourceType}
+        </if>
+        <if test="clueStatus != null and clueStatus !=''">
+            <choose>
+                <when test="clueStatus == '1'.toString() ">
+                    <![CDATA[ and bpp.clue_status = 1 ]]>
+                </when>
+                <otherwise>
+                    <![CDATA[ and bpp.clue_status > 1 and bpp.clue_status < 7]]>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="cstIds !=null and cstIds.size() > 0">
+            and bpp.customer_mobile in
+            <foreach collection="cstIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="projectIds !=null and projectIds.size() > 0">
+            and bpp.project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        order by UNIX_TIMESTAMP(bpp.add_time) desc
+    </select>
+    <!--查询公共池数据-->
+    <select id="getPublicPoolList" parameterType="cn.visolink.system.pubilcPool.model.form.PublicPoolListSearch" resultMap="publicPoolMap">
+        SELECT
+            bpp.id,
+            bpp.pool_type,
+            bpp.add_time,
+            bpp.add_type,
+            bpp.add_type_desc,
+            bpp.add_reason_type,
+            bpp.add_reason_desc,
+            bpp.evaluate_desc,
+            bpp.activate_reason_type,
+            bpp.activate_reason_desc,
+            bpp.project_id,
+            bpp.project_name,
+            bpp.customer_basic_id,
+            bpp.project_clue_id,
+            bpp.customer_name,
+            bpp.customer_mobile customerMobileAll,
+            concat(left(bpp.customer_mobile,3),'****',right(bpp.customer_mobile,4)) customer_mobile,
+            bpp.customer_gender,
+            bpp.customer_level,
+            bpp.`level`,
+            bpp.channel_label,
+            bpp.clue_status,
+            bpp.source_type,
+            bpp.source_type_desc,
+            bpp.main_media_id,
+            bpp.main_media_name,
+            bpp.sub_media_id,
+            bpp.sub_media_name,
+            bpp.report_user_id,
+            bpp.report_user_name,
+            bpp.report_time,
+            bpp.sales_id,
+            bpp.sales_name,
+            bpp.the_first_visit_date,
+            bpp.lately_follow_up_person,
+            bpp.lately_follow_up_mobile,
+            bpp.lately_follow_up_time,
+            bpp.lately_follow_up_content,
+            bpp.add_number,
+            bpp.intention_business intentionBusiness,
+            bpp.browse_number browseNumber,
+            bpp.browse_time browseTime,
+            bpp.browse_desc browseDesc,
+            bpp.discard_time discardTime,
+            bpp.add_tao_time addTaoTime,
+            oop.OpportunityClueId,
+            oop.DataCompleteRate,
+            oop.DataCompleteAttachRate,
+            oop.SalesTheLatestFollowDate,
+            bpp.is_del
+        FROM
+            b_public_pool bpp
+        left join b_project_opportunity oop on oop.ProjectClueId = bpp.project_clue_id
+        where
+            bpp.is_del = 0
+        <if test="poolType != null and poolType != ''">
+            and bpp.pool_type = #{poolType}
+        </if>
+        <if test="addType !=null and addType.size() > 0">
+            and bpp.add_type in
+            <foreach collection="addType" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="clueStatus != null and clueStatus !=''">
+            <choose>
+                <when test="clueStatus == '1'.toString() ">
+                    <![CDATA[ and bpp.clue_status = 1 ]]>
+                </when>
+                <otherwise>
+                    <![CDATA[ and bpp.clue_status > 1 and bpp.clue_status < 7]]>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="sourceType != null and sourceType != ''">
+            and bpp.source_type = #{sourceType}
+        </if>
+        <if test="addReasonType !=null and addReasonType.size() > 0">
+            and bpp.add_reason_type in
+            <foreach collection="addReasonType" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="cstIds !=null and cstIds.size() > 0">
+            and bpp.customer_basic_id in
+            <foreach collection="cstIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="activateReasonType !=null and activateReasonType=='1'.toString()">
+            and bpp.activate_reason_type is not null
+        </if>
+        <if test="activateReasonType !=null and activateReasonType=='0'.toString()">
+            and bpp.activate_reason_type is null
+        </if>
+        <if test="projectIds !=null and projectIds.size() > 0">
+            and bpp.project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="selectTime == '1'.toString() and startTime != null and startTime != '' and endTime != null and endTime != ''">
+            and bpp.add_time BETWEEN #{startTime} and #{endTime}
+        </if>
+        <if test="selectTime == '2'.toString() and startTime != null and startTime != '' and endTime != null and endTime != ''">
+            and bpp.report_time BETWEEN #{startTime} and #{endTime}
+        </if>
+        <if test="selectTime == '3'.toString() and startTime != null and startTime != '' and endTime != null and endTime != ''">
+            and bpp.add_tao_time BETWEEN #{startTime} and #{endTime}
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and bpp.customer_name like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and bpp.customer_mobile like CONCAT('%',#{customerMobile},'%')
+        </if>
+        <if test="latelyFollowUpPerson != null and latelyFollowUpPerson != ''">
+            and bpp.lately_follow_up_person like CONCAT('%',#{latelyFollowUpPerson},'%')
+        </if>
+        <if test="reportUserName != null and reportUserName != ''">
+            and bpp.report_user_name like CONCAT('%',#{reportUserName},'%')
+        </if>
+        order by UNIX_TIMESTAMP(bpp.add_time) desc
+    </select>
+
+    <!--查询历史记录-->
+    <select id="getPublicPoolHisList" parameterType="cn.visolink.system.pubilcPool.model.form.PublicPoolListSearch" resultMap="publicPoolHisMap">
+        SELECT
+            bppb.pool_type,
+            bppb.old_pool_type,
+            bppb.add_type,
+            bppb.add_type_desc,
+            bppb.activate_reason_type,
+            bppb.activate_reason_desc,
+            bppb.record_type,
+            bppb.record_time,
+            bppb.discard_time,
+            bppb.operator,
+            bppb.tao_guest_time,
+            bppb.operator_name,
+            bppb.discard_reason,
+            bppb.evaluate_desc,
+            bppb.project_id,
+            bppb.customer_basic_id,
+            bppb.project_name,
+            bppb.project_clue_id,
+            bppb.customer_name,
+            bppb.customer_mobile customerMobileAll,
+            concat(left(bppb.customer_mobile,3),'****',right(bppb.customer_mobile,4)) customer_mobile,
+            bppb.customer_gender,
+            bppb.customer_level,
+            bppb.level,
+            bppb.channel_label,
+            bppb.source_type,
+            bppb.source_type_desc,
+            bppb.main_media_id,
+            bppb.main_media_name,
+            bppb.sub_media_id,
+            bppb.sub_media_name,
+            bppb.report_user_id,
+            bppb.report_user_name,
+            bppb.old_report_user_id,
+            bppb.old_report_user_name,
+            bppb.report_time,
+            (case when bppb.clue_status= 1 then '报备'
+                when bppb.clue_status= 2 then '到访'
+                when bppb.clue_status= 3 then '排小卡'
+                when bppb.clue_status= 4 then '排大卡'
+                when bppb.clue_status= 7 then '认购'
+                when bppb.clue_status= 8 then '签约' else '' end) clue_status,
+            bppb.the_first_visit_date,
+            bppb.subscribe_time,
+            bppb.lately_follow_up_person,
+            bppb.lately_follow_up_mobile,
+            bppb.lately_follow_up_time,
+            bppb.lately_follow_up_content,
+            bppb.add_tao_time
+        FROM b_public_pool_his bppb
+        where 1=1
+        <if test="recordType != null and recordType != ''">
+            and bppb.record_type = #{recordType}
+        </if>
+        <if test="sourceType != null and sourceType != ''">
+            and bppb.source_type = #{sourceType}
+        </if>
+        <if test="clueStatusList !=null and clueStatusList.size() > 0">
+            and bppb.clue_status in
+            <foreach collection="clueStatusList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="clueStatus != null and clueStatus !=''">
+            <choose>
+                <when test="clueStatus == '1'.toString() ">
+                    <![CDATA[ and bppb.clue_status = 1 ]]>
+                </when>
+                <otherwise>
+                    <![CDATA[ and bppb.clue_status > 1 and bppb.clue_status < 7]]>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="projectIds !=null and projectIds.size() > 0">
+            and bppb.project_id in
+            <foreach collection="projectIds" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="selectTime == '1'.toString() and startTime != null and startTime != '' and endTime != null and endTime != ''">
+            and bppb.discard_time BETWEEN #{startTime} and #{endTime}
+        </if>
+        <if test="selectTime == '2'.toString() and startTime != null and startTime != '' and endTime != null and endTime != ''">
+            and bppb.report_time BETWEEN #{startTime} and #{endTime}
+        </if>
+        <if test="customerName != null and customerName != ''">
+            and bppb.customer_name like CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile != null and customerMobile != ''">
+            and bppb.customer_mobile like CONCAT('%',#{customerMobile},'%')
+        </if>
+        <if test="operatorName != null and operatorName != ''">
+            and bppb.operator_name like CONCAT('%',#{operatorName},'%')
+        </if>
+        <if test="reportUserName != null and reportUserName != ''">
+            and bppb.old_report_user_name like CONCAT('%',#{reportUserName},'%')
+        </if>
+        order by UNIX_TIMESTAMP(bppb.record_time) desc
+    </select>
+    <!--获取操作人信息-->
+    <select id="getUserName" parameterType="java.lang.String" resultType="java.lang.String">
+        select EmployeeName from b_account where id = #{userId};
+    </select>
+
+    <!--新增分配批次表-->
+    <insert id="insertRedistributionBatch" parameterType="cn.visolink.system.pubilcPool.model.form.RedistributionBatch">
+        insert into b_redistribution_batch(
+            id,RedistributionType,createUser,createTime,countNumber,projectId,RedistributionGenre
+        )values(
+                   #{id},#{redistributionType},#{createUser},now(),#{countNumber},#{projectId},#{redistributionGenre}
+               )
+    </insert>
+
+    <!--新增分配记录表-->
+    <insert id="insertCustomerDistributionRecords" parameterType="java.util.List">
+        insert into b_customerdistributionrecords (
+        ID,ProjectClueId,projectId,ProjectName,ConfirmID,ConfirmPersonName,ConfirmTime,IsNew,Reason,
+        Entrance,RedistributionBatchId,OldTokerAttributionTime,OldSalesAttributionTime,OldSalesName,
+        OldSalesId,OldSalesAttributionTeamName,OldSalesAttributionTeamId,SalesName,SalesId,
+        SalesAttributionTeamName,SalesAttributionTeamId,SalesAttributionGroupId,SalesAttributionGroupName,
+        OldSalesAttributionGroupId,OldSalesAttributionGroupName,SalesAttributionTime,`Type`,ChildType
+        )values
+        <foreach collection="customerDistributionRecordsList" item="list" separator=",">
+            (
+            UUID(),#{list.projectClueId},#{list.projectId},#{list.projectName},#{list.confirmID},#{list.confirmPersonName},now() ,#{list.isNew},#{list.reason},
+            #{list.entrance},#{list.redistributionBatchId},#{list.oldTokerAttributionTime},#{list.oldSalesAttributionTime},#{list.oldSalesName},
+            #{list.oldSalesId},#{list.oldSalesAttributionTeamName},#{list.oldSalesAttributionTeamId},#{list.salesName},#{list.salesId},
+            #{list.salesAttributionTeamName},#{list.salesAttributionTeamId},#{list.salesAttributionGroupId},#{list.salesAttributionGroupName},
+            #{list.oldSalesAttributionGroupId},#{list.oldSalesAttributionGroupName},#{list.salesAttributionTime},#{list.type},#{list.childType}
+            )
+        </foreach>
+    </insert>
+    <!--新增批次记录表-->
+    <insert id="addPublicPoolBatch" parameterType="java.util.Map">
+        insert into b_public_pool_batch(id,record_type,reason,project_id,operation_time,count_number,creator,create_time)
+        values(#{id},#{record_type},#{reason},#{project_id},now(),#{count_number},#{creator},now());
+    </insert>
+
+    <!--更新记录表-->
+    <update id="updatePublicPoolVO" parameterType="cn.visolink.system.pubilcPool.model.form.RecoveryEdit">
+        update b_public_pool set is_del = 1,editor = #{editor},edittime = now()
+        where pool_type = 2
+        and project_id = #{projectId} and customer_basic_id in (
+        <foreach collection="cstId" item="item" separator=",">
+          #{item}
+        </foreach>);
+        update b_public_pool set is_del = 0,add_number = add_number+1,editor = #{editor},
+        edittime = now(),add_reason_type = 3,add_reason_desc = '淘客池回收',add_time = now()
+        where pool_type = 1 and source_type = #{sourceType}
+        and project_id = #{projectId} and customer_basic_id in (
+        <foreach collection="cstId" item="item" separator=",">
+            #{item}
+        </foreach>);
+    </update>
+    <!--更新公共池数据-->
+    <update id="updatePublicPool" parameterType="cn.visolink.system.pubilcPool.model.form.RecoveryEdit">
+        update b_public_pool set is_del = 1,editor = #{editor},edittime = now()
+        where pool_type = #{poolType}
+        and project_id = #{projectId}
+        and customer_basic_id in (
+        <foreach collection="cstId" item="item" separator=",">
+            #{item}
+        </foreach>);
+    </update>
+
+    <!--新增记录表-->
+    <insert id="addPublicPoolHis" parameterType="java.util.List">
+        insert into b_public_pool_his (
+        id,public_pool_id,batch_id,pool_type,old_pool_type,add_type,add_type_desc,record_type,record_time,
+        operator,operator_name,activate_reason_type,activate_reason_desc,evaluate_desc,project_id,customer_basic_id,
+        project_name,project_clue_id,customer_name,customer_mobile,customer_gender,customer_level,
+        level,channel_label,source_type,source_type_desc,main_media_id,main_media_name,sub_media_id,
+        sub_media_name,old_report_user_id,old_report_user_name,
+        report_time,clue_status,the_first_visit_date,lately_follow_up_person,
+        lately_follow_up_mobile,lately_follow_up_time,lately_follow_up_content,creator,createtime,allocation_type,discard_time,add_tao_time
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.isDel},#{item.id},#{item.batchId},#{item.poolType},#{item.oldPoolType},#{item.addType},#{item.addTypeDesc},#{item.recordType},now(),
+            #{item.editor},#{item.creator},#{item.activateReasonType},#{item.activateReasonDesc},#{item.evaluateDesc},
+            #{item.projectId},#{item.customerBasicId},#{item.projectName},#{item.projectClueId},#{item.customerName},
+            #{item.customerMobileAll},#{item.customerGender},#{item.customerLevel},#{item.level},
+            #{item.channelLabel},#{item.sourceType},#{item.sourceTypeDesc},#{item.mainMediaId},#{item.mainMediaName}
+            ,#{item.subMediaId},#{item.subMediaName},#{item.reportUserId},#{item.reportUserName},#{item.reportTime}
+            ,#{item.clueStatus},#{item.theFirstVisitDate},#{item.latelyFollowUpPerson},#{item.latelyFollowUpMobile},#{item.latelyFollowUpTime}
+            ,#{item.latelyFollowUpContent},#{item.editor},now(),#{item.allocationType},#{item.discardTime},#{item.addTaoTime}
+            )
+        </foreach>
+    </insert>
+
+    <!--保存公共池数据-->
+    <insert id="addPublicPoolList" parameterType="java.util.List">
+        INSERT INTO b_public_pool
+        (id, pool_type, add_time, add_type, add_type_desc, evaluate_desc, add_reason_type, add_reason_desc, activate_reason_type, activate_reason_desc,
+        project_id, project_name, customer_basic_id, project_clue_id, customer_name, customer_mobile, customer_gender, customer_level,
+        level, channel_label, clue_status, source_type, source_type_desc, main_media_id, main_media_name, sub_media_id, sub_media_name,
+        report_user_id, report_user_name, report_time, sales_id, sales_name, the_first_visit_date, lately_follow_up_person, lately_follow_up_mobile,
+        lately_follow_up_time, lately_follow_up_content, add_number, is_del, createtime, creator,intention_business,browse_number,browse_time,browse_desc,add_tao_time)
+        VALUES
+        <foreach collection="publicPoolVOList" item="list" separator=",">
+            (#{list.id}, #{list.poolType}, #{list.addTime}, #{list.addType}, #{list.addTypeDesc}, #{list.evaluateDesc}, #{list.addReasonType}, #{list.addReasonDesc},
+            #{list.activateReasonType},#{list.activateReasonDesc}, #{list.projectId}, #{list.projectName}, #{list.customerBasicId}, #{list.projectClueId},
+            #{list.customerName}, #{list.customerMobileAll}, #{list.customerGender},#{list.customerLevel}, #{list.level}, #{list.channelLabel}, #{list.clueStatus},
+            #{list.sourceType}, #{list.sourceTypeDesc}, #{list.mainMediaId}, #{list.mainMediaName},#{list.subMediaId}, #{list.subMediaName}, #{list.reportUserId},
+            #{list.reportUserName}, #{list.reportTime}, #{list.salesId}, #{list.salesName}, #{list.theFirstVisitDate},#{list.latelyFollowUpPerson},
+            #{list.latelyFollowUpMobile}, #{list.latelyFollowUpTime}, #{list.latelyFollowUpContent}, 1, '0', now(), #{list.editor},#{list.intentionBusiness},
+             #{list.browseNumber},#{list.browseTime},#{list.browseDesc},#{list.addTaoTime})
+        </foreach>
+    </insert>
+    <!--获取有效线索手机号数据-->
+    <select id="getCluesMobile" resultType="java.lang.String" parameterType="cn.visolink.system.pubilcPool.model.form.RecoveryEdit">
+        SELECT
+            bpc.CustomerMobile
+        FROM
+            b_project_clues bpc
+        inner join b_clue_opportunity_extend coe on coe.ProjectClueId = bpc.ProjectClueId and coe.clue_validity in (1,5)
+        WHERE
+        bpc.projectId = #{projectId} and bpc.SourceType &lt;&gt; 1
+        AND bpc.CustomerMobile in
+        <foreach collection="mobiles" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND ( ( bpc.ClueStatus > 1 AND bpc.ClueStatus &lt; 9 ) or ((bpc.ReportExpireDate is null and bpc.ClueStatus = 1)
+        or (bpc.ReportExpireDate > now( ) and bpc.ClueStatus = 1)))
+    </select>
+    <!--获取所有线索数据-->
+    <select id="getAllClues" resultType="cn.visolink.system.pubilcPool.model.CluesModel" parameterType="cn.visolink.system.pubilcPool.model.form.RecoveryEdit">
+        select ProjectClueId,CustomerMobile from b_project_clues
+        where ProjectClueId in
+        <foreach collection="clueIds" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!--更新线索状态-->
+    <update id="updateCluesStatusDel" parameterType="cn.visolink.system.pubilcPool.model.CluesModel">
+        <foreach collection="delClues" item="item" separator=";">
+            update b_public_pool set is_del = 1 where project_clue_id = #{item.ProjectClueId} and is_del = 0;
+            update b_clue_opportunity_extend set clue_validity = 4 where ProjectClueId = #{item.ProjectClueId} and clue_validity = 2
+        </foreach>
+    </update>
+
+    <select id="getCasePublicPoolList" parameterType="java.lang.String" resultType="cn.visolink.system.pubilcPool.model.CasePublicPoolVO">
+        SELECT
+            bp.id,
+            bp.AddType AS addType,
+            bp.OperationTime AS operationTime,
+            bp.TheFirstVisitDate AS theFirstVisitDate,
+            bp.ReportUserName AS reportUserName,
+            bp.ReportTime AS reportTime,
+            bp.SaleID AS saleId,
+            bp.SaleName AS saleName,
+            bp.ExpireTag AS expireTag,
+            bp.ClueStatus AS clueStatus,
+            bp.projectId AS projectId,
+            bp.ProjectClueId AS projectClueId,
+            bp.SalesAttributionName AS salesAttributionName,
+            bp.SalesAttributionId AS salesAttributionId,
+            bp.CustomerName AS customerName,
+            bp.CustomerMobile AS customerMobile,
+            bp.CustomerGender AS customerGender,
+            bp.CustomerAge AS customerAge,
+            bp.SourceType AS sourceType,
+            bp.SourceTypeDesc AS sourceTypeDesc,
+            bp.MainMediaGUID AS mainMediaGuId,
+            bp.MainMediaName AS mainMediaName,
+            bp.SubMediaGUID AS subMediaGuId,
+            bp.SubMediaName AS subMediaName,
+            bp.CustomerLevel AS customerLevel,
+            bp.Level AS level,
+            bp.TradeLevel AS tradeLevel,
+            bp.Label AS label,
+            bp.lately_follow_up_person AS latelyFollowUpPerson,
+            bp.lately_follow_up_mobile AS latelyFollowUpMobile,
+            bp.lately_follow_up_time AS latelyFollowUpTime,
+            bp.lately_follow_up_content AS latelyFollowUpContent,
+            bp.browse_number AS browseNumber,
+            bp.browse_time AS browseTime,
+            bp.browse_desc AS browseDesc,
+            bp.add_reason_type AS addReasonType,
+            bp.add_reason_desc AS addReasonDesc,
+            bp.add_number AS addNumber,
+            bp.activate_reason_type AS activateReasonType,
+            bp.activate_reason_desc AS activateReasonDesc,
+            bpc.BasicCustomerId as basicCustomerId,
+            bpc.projectName,
+            bpc.ReportUserID as reportUserId,
+            bpc.IntentionBusiness as intentionBusiness,
+            bpc.DataCompleteRate as dataCompleteRate,
+            bpc.DataCompleteAttachRate as dataCompleteAttachRate
+        FROM
+            b_customerpublicpool bp
+        inner join b_project_opportunity bpc on bp.ProjectClueId = bpc.ProjectClueId
+        WHERE
+            bp.ProjectClueId  IN
+        <foreach collection="projectClueIdList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        and is_del = 0
+    </select>
+
+    <!--删除公共池数据-->
+    <delete id="delPublicPool" parameterType="java.lang.String">
+        <if test="customerBasicIdList != null and customerBasicIdList.size() > 0">
+            delete from b_public_pool where project_id = #{projectId} and pool_type = #{poolType} and customer_basic_id in
+            <foreach collection="customerBasicIdList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </delete>
+
+    <!--删除案场公共池数据-->
+    <delete id="delCasePublicPool"  parameterType="java.lang.String">
+        <if test="projectClueIdList != null and projectClueIdList.size() > 0">
+            delete from b_customerpublicpool where ProjectClueId in
+            <foreach collection="projectClueIdList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </delete>
+
+    <!--认购逾期后添加公共池数据-->
+    <insert id="insertPublic"  parameterType="cn.visolink.system.pubilcPool.model.CasePublicPoolVO">
+        INSERT INTO b_customerpublicpool
+        (ID, OperationTime, TheFirstVisitDate, ReportUserName, ReportTime, SaleID, SaleName, ExpireTag, ClueStatus, projectId,
+         ProjectClueId, OpportunityClueId, AddType,SalesAttributionName, SalesAttributionId,  CustomerName,
+         CustomerMobile, CustomerGender,SalesAttributionTeamId, SalesAttributionTeamName, SourceType,
+         SourceTypeDesc, MainMediaGUID, MainMediaName, SubMediaGUID, SubMediaName,  CustomerLevel, Level, TradeLevel, Label, DataCompleteRate,
+         DataCompleteAttachRate, lately_follow_up_person, lately_follow_up_mobile, lately_follow_up_time, lately_follow_up_content, browse_number,
+         browse_time, browse_desc, add_reason_type, add_reason_desc, add_number, activate_reason_type, activate_reason_desc,SalesTheLatestFollowDate)
+         VALUES
+        <foreach collection="list" item="item" separator=",">
+            (uuid(),now(),#{item.theFirstVisitDate},#{item.reportUserName},#{item.reportTime},#{item.saleId},#{item.saleName},#{item.expireTag},
+            #{item.clueStatus},#{item.projectId},#{item.projectClueId},#{item.opportunityClueId},#{item.addType},#{item.salesAttributionName},
+            #{item.salesAttributionId},#{item.customerName},#{item.customerMobile},#{item.customerGender},
+            #{item.salesAttributionTeamId},#{item.salesAttributionTeamName},#{item.sourceType},#{item.sourceTypeDesc},
+            #{item.mainMediaGuId},#{item.mainMediaName},#{item.subMediaGuId},#{item.subMediaName},#{item.customerLevel},#{item.level},#{item.tradeLevel},
+            #{item.label},#{item.dataCompleteRate},#{item.dataCompleteAttachRate},#{item.latelyFollowUpPerson},#{item.latelyFollowUpMobile},
+            #{item.latelyFollowUpTime},#{item.latelyFollowUpContent},#{item.browseNumber},#{item.browseTime},#{item.browseDesc},#{item.addReasonType},
+            #{item.addReasonDesc},#{item.addNumber},#{item.activateReasonType},#{item.activateReasonDesc},#{item.salesTheLatestFollowDate})
+        </foreach>
+    </insert>
+
+    <!--更新记录表-->
+    <update id="updateAcPublicPoolVO" parameterType="cn.visolink.system.pubilcPool.model.form.RecoveryEdit">
+        update b_public_pool set is_del = 1,editor = #{editor},edittime = now()
+        where pool_type = 2 and project_id = #{projectId} and customer_basic_id in (
+        <foreach collection="cstId" item="item" separator=",">
+            #{item}
+        </foreach>);
+    </update>
+
+    <update id="editPublic"  parameterType="cn.visolink.system.pubilcPool.model.CasePublicPoolVO">
+        <foreach collection="list" item="item" separator=";">
+            update b_customerpublicpool
+            <set>
+                <if test="item.theFirstVisitDate != null and item.theFirstVisitDate !=''">
+                    TheFirstVisitDate = #{item.theFirstVisitDate},
+                </if>
+                <if test="item.reportUserName != null and item.reportUserName !=''">
+                    ReportUserName = #{item.reportUserName},
+                </if>
+                <if test="item.reportTime != null and item.reportTime !=''">
+                    ReportTime = #{item.reportTime},
+                </if>
+                <if test="item.saleId != null and item.saleId !=''">
+                    SaleID = #{item.saleId},
+                </if>
+                <if test="item.saleName != null and item.saleName !=''">
+                    SaleName = #{item.saleName},
+                </if>
+                <if test="item.expireTag != null and item.expireTag !=''">
+                    ExpireTag = #{item.expireTag},
+                </if>
+                <if test="item.clueStatus != null and item.clueStatus !=''">
+                    ClueStatus = #{item.clueStatus},
+                </if>
+                <if test="item.projectId != null and item.projectId !=''">
+                    projectId = #{item.projectId},
+                </if>
+                <if test="item.sourceType != null and item.sourceType !=''">
+                    SourceType = #{item.sourceType},
+                </if>
+                <if test="item.addType != null and item.addType !=''">
+                    AddType = #{item.addType},
+                </if>
+                <if test="item.salesAttributionName != null and item.salesAttributionName !=''">
+                    SalesAttributionName = #{item.salesAttributionName},
+                </if>
+                <if test="item.salesAttributionId != null and item.salesAttributionId !=''">
+                    SalesAttributionId = #{item.salesAttributionId},
+                </if>
+                <if test="item.customerName != null and item.customerName !=''">
+                    CustomerName = #{item.customerName},
+                </if>
+                <if test="item.customerMobile != null and item.customerMobile !=''">
+                    CustomerMobile = #{item.customerMobile},
+                </if>
+                <if test="item.customerGender != null and item.customerGender !=''">
+                    CustomerGender = #{item.customerGender},
+                </if>
+                <if test="item.customerAge != null and item.customerAge !=''">
+                    customerAge = #{item.customerAge},
+                </if>
+                <if test="item.salesAttributionTeamId != null and item.salesAttributionTeamId !=''">
+                    SalesAttributionTeamId = #{item.salesAttributionTeamId},
+                </if>
+                <if test="item.salesAttributionTeamName != null and item.salesAttributionTeamName !=''">
+                    SalesAttributionTeamName = #{item.salesAttributionTeamName},
+                </if>
+                <if test="item.sourceTypeDesc != null and item.sourceTypeDesc !=''">
+                    SourceTypeDesc = #{item.sourceTypeDesc},
+                </if>
+                <if test="item.level != null and item.level !=''">
+                    Level = #{item.level},
+                </if>
+                <if test="item.label != null and item.label !=''">
+                    Label = #{item.label},
+                </if>
+                <if test="item.salesTheLatestFollowDate != null and item.salesTheLatestFollowDate !=''">
+                    SalesTheLatestFollowDate = #{item.salesTheLatestFollowDate},
+                </if>
+                <if test="item.tradeLevel != null and item.tradeLevel !=''">
+                    TradeLevel = #{item.tradeLevel},
+                </if>
+                <if test="item.dataCompleteRate != null and item.dataCompleteRate !=''">
+                    DataCompleteRate = #{item.dataCompleteRate},
+                </if>
+                <if test="item.dataCompleteAttachRate != null and item.dataCompleteAttachRate !=''">
+                    DataCompleteAttachRate = #{item.dataCompleteAttachRate},
+                </if>
+                <if test="item.latelyFollowUpPerson != null and item.latelyFollowUpPerson !=''">
+                    lately_follow_up_person = #{item.latelyFollowUpPerson},
+                </if>
+                <if test="item.latelyFollowUpMobile != null and item.latelyFollowUpMobile !=''">
+                    lately_follow_up_mobile = #{item.latelyFollowUpMobile},
+                </if>
+                <if test="item.latelyFollowUpTime != null and item.latelyFollowUpTime !=''">
+                    lately_follow_up_time = #{item.latelyFollowUpTime},
+                </if>
+                <if test="item.latelyFollowUpContent != null and item.latelyFollowUpContent !=''">
+                    lately_follow_up_content = #{item.latelyFollowUpContent},
+                </if>
+                <if test="item.addReasonType != null and item.addReasonType !=''">
+                    add_reason_type = #{item.addReasonType},
+                </if>
+                <if test="item.addReasonDesc != null and item.addReasonDesc !=''">
+                    add_reason_desc = #{item.addReasonDesc},
+                </if>
+                <if test="item.basicCustomerId != null and item.basicCustomerId !=''">
+                    customer_basic_id = #{item.basicCustomerId},
+                </if>
+                is_del = 0,
+                add_number = add_number + 1,
+                OperationTime = now(),
+                EditorTime = now()
+            </set>
+            where
+            ProjectClueId = #{item.projectClueId}
+        </foreach>
+    </update>
+
+    <!--查询案场公共池线索-->
+    <select id="getClueIdList" parameterType="java.lang.String" resultType="java.lang.String">
+        select ProjectClueId from b_customerpublicpool where ProjectClueId in
+        <foreach collection="list" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

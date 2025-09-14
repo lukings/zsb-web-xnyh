@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.channel.dao.TaskDao">
+
+	<insert id="saveZsMapTask">
+		INSERT INTO b_task (id,taskName,taskTypeId,taskTypeName,projectId,startTime,endTime,taskArea,longitude,latitude,reportNum,visitNum,createBy,taskDesc,threeOneNum,teamId,teamName,orgId,dealNum,firstVisitNum,repeatVisitNum,parentId,tagNum) VALUES
+		    (#{id},#{taskName},#{taskTypeId},#{taskTypeName},#{projectId},#{startTime},#{endTime},#{taskArea},#{longitude},#{latitude},#{reportNum},#{visitNum},#{createBy},#{taskDesc},#{threeOneNum},#{teamId},#{teamName},#{orgId},#{dealNum},#{firstVisitNum},#{repeatVisitNum},#{parentId},#{tagNum})
+	</insert>
+	<insert id="saveTaskMembers">
+		INSERT INTO b_task_member (id,taskId,memberId,createBy,modifyBy) VALUES
+		<foreach collection="taskMemberList" item="item" index="index" separator=",">
+			(#{item.id},#{item.taskId},#{item.memberId},#{item.createBy},#{item.modifyBy})
+		</foreach>
+	</insert>
+	<update id="updateTaskMember">
+		UPDATE b_task_member SET
+			reportCount = #{reportCount},
+			visitCount = #{visitCount},
+			arriveCount = #{arriveCount},
+			dealCount = #{dealCount},
+			threeOneCount = #{threeOneCount},
+			firstVisitCount = #{firstVisitCount},
+			repeatVisitCount = #{firstVisitCount},
+			tagCount = #{tagCount}
+		WHERE
+			id = #{id}
+	</update>
+	<select id="selectMothTask" resultType="cn.visolink.system.channel.model.vo.TaskVo">
+		SELECT
+			id,
+			taskName,
+			taskTypeId,
+			projectId,
+			taskTypeName,
+			startTime,
+			endTime,
+			taskArea,
+			longitude,
+			latitude,
+			reportNum,
+			visitNum,
+			isDel,
+			createBy,
+			createTime,
+			modifyBy,
+			modifyTime,
+			taskDesc,
+			threeOneNum,
+			firstVisitNum,
+			repeatVisitNum,
+			parentId
+		FROM
+			b_task bt
+		WHERE
+			bt.taskTypeId = 1
+			and bt.isDel=0
+			and exists (select 1 from b_task_member btm where bt.id=btm.taskId and btm.reportCount is null and btm.isDel=0)
+	</select>
+  <select id="getListByIds" resultType="cn.visolink.system.channel.model.vo.TaskVo">
+		SELECT
+			id,
+			taskName,
+			taskArea,
+			firstVisitNum,
+			repeatVisitNum,
+			parentId
+		FROM
+			b_task bt
+		WHERE
+			bt.isDel=0
+			<if test="drawIds != null and drawIds.size() > 0">
+				and bt.taskArea in
+				<foreach collection="drawIds" item="item" index="index" separator="," open="(" close=")">
+					#{item}
+				</foreach>
+			</if>
+	</select>
+	<select id="getUserIsOk" resultType="java.lang.Integer">
+		select count(1) from b_task ta
+		INNER JOIN b_task_member me on ta.id = me.taskId
+		where me.memberId in (
+		<foreach collection="memberIds" item="item" separator=",">
+			#{item}
+		</foreach>
+		)
+		  and ta.taskTypeId = #{taskTypeId}
+		<if test="teamId != null and teamId != ''">
+				and ta.teamId = #{teamId}
+		</if>
+		and ta.isDel = 0 and ifnull(ta.status,99) != 4
+		and
+		((#{startTime} BETWEEN ta.startTime and ta.endTime)
+		or (#{endTime} BETWEEN ta.startTime and ta.endTime)
+		or (ta.startTime &lt; #{startTime} and ta.endTime &gt; #{endTime}))
+		<if test="id != null and id != ''">
+				and ta.id != #{id}
+			  </if>
+	</select>
+
+	<select id="getTaskAreaIsOk" resultType="java.lang.Integer">
+		select count(1) from b_task ta
+		where 1=1
+		and ta.taskArea=#{taskArea}
+		and ta.taskTypeId = #{taskTypeId}
+		and ta.isDel = 0 and ifnull(ta.status,99) != 4
+		and
+		((#{startTime} BETWEEN ta.startTime and ta.endTime)
+		or (#{endTime} BETWEEN ta.startTime and ta.endTime)
+		or (ta.startTime &lt; #{startTime} and ta.endTime &gt; #{endTime}))
+	</select>
+	<select id="getTeamIsOk" resultType="java.lang.Integer">
+		select count(1) from b_task
+		where teamId = #{teamId} and isDel = 0 and ifnull(status,99) != 4 and taskTypeId = #{taskTypeId} and
+			((#{startTime} BETWEEN startTime and endTime)
+				or (#{endTime} BETWEEN startTime and endTime)
+				or (startTime &lt; #{startTime} and endTime &gt; #{endTime}))
+				<if test="id != null and id != ''">
+				and id != #{id}
+			  </if>
+	</select>
+
+
+	<!-- 新增任务客户关系表的插入操作 -->
+	<insert id="saveTaskCustomers">
+		INSERT INTO b_task_customer (id, taskId, customerId, customerType, customerName,customerMobile,createBy, modifyBy) VALUES
+		<foreach collection="taskCustomerList" item="item" index="index" separator=",">
+			(#{item.id}, #{item.taskId}, #{item.customerId}, #{item.customerType}, #{item.customerName}, #{item.customerMobile}, #{item.createBy}, #{item.modifyBy})
+		</foreach>
+	</insert>
+
+	<update id="updateMapClueStatus">
+		<foreach collection="taskCustomerList" item="item" index="index" separator=";">
+			UPDATE b_project_clues
+			SET ClueStatus = 11
+			WHERE ProjectClueId = #{item.customerId}
+		</foreach>
+	</update>
+	
+	<!-- 新增单个任务客户关系的插入操作 -->
+	<insert id="saveTaskCustomer">
+		INSERT INTO b_task_customer (id, taskId, customerId, customerType, createBy, modifyBy)
+		VALUES (#{id}, #{taskId}, #{customerId}, #{customerType}, #{createBy}, #{modifyBy})
+	</insert>
+	
+	<!-- 新增任务客户关系表的删除操作 -->
+	<delete id="deleteTaskCustomer">
+		UPDATE b_task_customer SET isDel = 1, modifyBy = #{modifyBy}, modifyTime = NOW()
+		WHERE id = #{id}
+	</delete>
+	
+	<!-- 根据任务ID删除所有关联的客户 -->
+	<delete id="deleteTaskCustomersByTaskId">
+		UPDATE b_task_customer SET isDel = 1, modifyBy = #{modifyBy}, modifyTime = NOW()
+		WHERE taskId = #{taskId}
+	</delete>
+	
+	<!-- 根据客户ID删除关联关系 -->
+	<delete id="deleteTaskCustomersByCustomerId">
+		UPDATE b_task_customer SET isDel = 1, modifyBy = #{modifyBy}, modifyTime = NOW()
+		WHERE customerId = #{customerId}
+	</delete>
+	
+	  <update id="updateTask">
+    UPDATE b_task
+    <set>
+      <if test="reportNum != null">
+        reportNum = #{reportNum},
+      </if>
+      <if test="visitNum != null">
+        visitNum = #{visitNum},
+      </if>
+      <if test="arriveNum != null">
+        arriveNum = #{arriveNum},
+      </if>
+      <if test="dealNum != null">
+        dealNum = #{dealNum},
+      </if>
+      <if test="threeOneNum != null">
+        threeOneNum = #{threeOneNum},
+      </if>
+      <if test="firstVisitNum != null">
+        firstVisitNum = #{firstVisitNum},
+      </if>
+      <if test="repeatVisitNum != null">
+        repeatVisitNum = #{repeatVisitNum},
+      </if>
+		<if test="tagNum != null">
+			tagNum = #{tagNum},
+		</if>
+      <if test="endTime != null">
+        endTime = #{endTime},
+      </if>
+      modifyBy = #{modifyBy},
+      modifyTime = NOW()
+    </set>
+    WHERE id = #{id}
+  </update>
+  
+   <!-- 终止任务 -->
+	<update id="stopTask">
+		<!-- 停用任务 -->
+		UPDATE b_task
+		SET status = 4, modifyBy = #{modifyBy}, modifyTime = NOW()
+		WHERE id = #{id};
+
+		<!-- 重置关联线索的归属信息 -->
+		UPDATE b_project_clues pc
+		JOIN b_task_customer tc ON pc.ProjectClueId = tc.customerId
+		SET pc.ClueStatus = 0,
+		pc.SalesAttributionId = pc.ReportUserID,
+		pc.SalesAttributionName = pc.ReportUserName,
+		pc.SalesAttributionGroupId = pc.ReportTeamID,
+		pc.SalesAttributionGroupName = pc.ReportTeamName,
+		pc.SalesAttributionTeamId = pc.ReportTeamID,
+		pc.SalesAttributionTeamName = pc.ReportTeamName,
+		pc.EditorTime = now(),
+		pc.EditUserId = #{modifyBy}
+		WHERE tc.taskId = #{id};
+
+		<!-- 标记任务成员为已删除 -->
+		UPDATE b_task_member
+		SET isDel = 1, modifyBy = #{modifyBy}, modifyTime = NOW()
+		WHERE taskId = #{id};
+
+		<!-- 标记任务客户为已删除 -->
+		UPDATE b_task_customer
+		SET isDel = 1, modifyBy = #{modifyBy}, modifyTime = NOW()
+		WHERE taskId = #{id};
+	</update>
+
+	<delete id="deleteTask">
+		UPDATE b_task SET isDel = 1, modifyBy = #{modifyBy}, modifyTime = NOW() WHERE id = #{id};
+		UPDATE b_task_member SET isDel = 1, modifyBy = #{modifyBy}, modifyTime = NOW() WHERE taskId = #{id};
+		UPDATE b_task_customer SET isDel = 1, modifyBy = #{modifyBy}, modifyTime = NOW() WHERE taskId = #{id};
+	</delete>
+
+	<select id="getTeamXsjl" resultType="java.util.Map">
+		select concat(bp.ProjectName, '-', jobs.JobName, '-', ba.EmployeeName) name,
+			   concat(bp.ID, '!', com.JobCode, '!', ba.ID,'!', ba.UserName)  id,
+				ba.ID as userId,
+		        ba.UserName as userName
+		from b_account ba
+				 INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and IsDel = 0
+				 INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+				 INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+				 INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+				 INNER JOIN b_project bp on bp.ID = org.ProjectID and bp.IsDel = 0
+		where com.JobCode in ('xsjl')
+		  and bp.ID =#{projectId}
+		  and org.id=#{teamId}
+		  and rel.is_post = 0
+		  and ba.Status=1 and ba.IsDel = 0
+	</select>
+
+	<select id="getProjectYxjlAndZszj" resultType="java.lang.String">
+		select
+		ba.ID as userId
+		from b_account ba
+		INNER JOIN s_jobsuserrel rel on ba.id = rel.AccountID and IsDel = 0
+		INNER JOIN s_jobs jobs on rel.JobID = jobs.ID and jobs.isIdm = 0
+		INNER JOIN s_commonjobs com on jobs.CommonJobID = com.ID and com.isIdm = 0
+		INNER JOIN s_organization org on org.id = jobs.JobOrgID and org.IsDel = 0
+		INNER JOIN b_project bp on bp.ID = org.ProjectID and bp.IsDel = 0
+		where com.JobCode in ('yxjl','zszj')
+		and bp.ID  in
+		<foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+			#{projectId}
+		</foreach>
+		and rel.is_post = 0
+		and ba.Status=1 and ba.IsDel = 0
+	</select>
+
+	<update id="updateProjectCule" parameterType="java.util.Map">
+		UPDATE b_project_clues
+		SET
+<!--		ReportUserRole = #{reportUserRole},-->
+<!--		ReportUserID = #{reportUserId},-->
+<!--		ReportUserName = #{reportUserName},-->
+<!--		ReportTeamID = #{reportTeamID},-->
+<!--		ReportTeamName = #{reportTeamName},-->
+<!--		ReportCreateTime = #{reportCreateTime},-->
+		SalesAttributionId = #{salesAttributionId},
+		SalesAttributionName = #{salesAttributionName},
+		SalesAttributionGroupId = #{salesAttributionGroupId},
+		SalesAttributionGroupName = #{salesAttributionGroupName},
+		SalesAttributionTeamId = #{salesAttributionTeamId},
+		SalesAttributionTeamName = #{salesAttributionTeamName},
+		SalesAttributionTime = #{salesAttributionTime}
+		WHERE ProjectClueId IN
+		<foreach collection="customerIds" item="customerId" open="(" separator="," close=")">
+			#{customerId}
+		</foreach>
+	</update>
+
+	<update id="updateTaskStatusByTime">
+		<![CDATA[
+        UPDATE b_task bt
+        SET bt.status = (
+            CASE
+                WHEN IFNULL(bt.status, 99) = 4 THEN 4
+                WHEN bt.startTime <= NOW() AND bt.endTime >= NOW() AND IFNULL(bt.status, 99) != 4 THEN 2
+                WHEN bt.startTime > NOW() AND IFNULL(bt.status, 99) != 4 THEN 1
+                ELSE 3
+            END
+        )
+        WHERE bt.isDel = 0
+    ]]>
+	</update>
+
+	<update id="recycleTaskCustomerByTaskStatusAndNotReported">
+		UPDATE b_task_customer tc
+		SET isDel = 1,modifyTime=now(),modifyBy='recycleTask'
+		WHERE tc.taskId IN (SELECT id FROM b_task WHERE status = 3 AND isDel = 0)
+		AND tc.isDel = 0
+		AND EXISTS (
+		SELECT 1 FROM b_project_clues pc
+		WHERE pc.ProjectClueId = tc.customerId
+		AND pc.ClueStatus IN (0, 11, 13)
+		and LEFT(pc.flag, 3) = 'map'
+		)
+	</update>
+
+	<select id="selectTaskCustomerToRecycle" resultType="map">
+	  SELECT tc.customerId, tc.createBy
+	  FROM b_task_customer tc
+	  WHERE tc.taskId IN (SELECT id FROM b_task WHERE status = 3 AND isDel = 0)
+	    AND tc.isDel = 0
+	    AND EXISTS (
+	      SELECT 1 FROM b_project_clues pc
+	      WHERE pc.ProjectClueId = tc.customerId
+	        AND pc.ClueStatus IN (0, 11, 13)
+			and LEFT(flag, 3) = 'map'
+	    )
+	</select>
+	<select id="selectTaskCustomerByTaskId" resultType="map">
+		SELECT tc.*
+		FROM b_task_customer tc
+		WHERE tc.taskId =#{taskId} and tc.isDel=0
+
+	</select>
+
+	<update id="batchUpdateByProjectClueIds">
+		UPDATE b_project_clues
+		<set>
+			<if test="updateMap != null and updateMap.ClueStatus != null">
+				ClueStatus = #{updateMap.ClueStatus},
+			</if>
+			<!-- 其它字段... -->
+			SalesAttributionId = ReportUserID,
+			SalesAttributionName = ReportUserName,
+			SalesAttributionGroupId = ReportTeamID,
+			SalesAttributionGroupName = ReportTeamName,
+			SalesAttributionTeamId = ReportTeamID,
+			SalesAttributionTeamName = ReportTeamName,
+			EditorTime = now(),
+			EditUserId = 'recycleTask'
+		</set>
+		WHERE ProjectClueId IN
+		<foreach collection="projectClueIds" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</update>
+
+	<update id="updateTaskBjl">
+		UPDATE b_task_member
+		SET arriveCount = #{arriveCount}, modifyTime = NOW()
+		WHERE taskId = #{taskId} AND isDel = 0
+	</update>
+
+	<select id="selectTaskByTaskId" resultType="map">
+		SELECT t.*
+		FROM b_task t
+		WHERE t.id =#{taskId} and t.isDel=0
+
+	</select>
+
+	<!-- 批量逻辑删除项目线索 -->
+	<update id="batchDeleteProjectClues">
+		UPDATE b_project_clues 
+		SET IsDel = 1, 
+			EditorTime = NOW(), 
+			EditUserId = #{operatorId}
+		WHERE ProjectClueId IN
+		<foreach collection="customerIds" item="customerId" open="(" separator="," close=")">
+			#{customerId}
+		</foreach>
+	</update>
+
+	<!-- 批量逻辑删除跟进记录 -->
+	<update id="batchDeleteFollowupRecords">
+		UPDATE b_followup_record 
+		SET IsDel = 1, 
+			EditorTime = NOW(), 
+			Editor = #{operatorId}
+		WHERE ProjectClueId IN
+		<foreach collection="customerIds" item="customerId" open="(" separator="," close=")">
+			#{customerId}
+		</foreach>
+	</update>
+
+</mapper>

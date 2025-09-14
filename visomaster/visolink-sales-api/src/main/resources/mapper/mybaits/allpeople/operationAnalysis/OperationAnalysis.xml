@@ -1,0 +1,592 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.allpeople.operationAnalysis.dao.OperationAnalysisDao">
+
+    <!--运营分析查询-->
+    <select id="getOperationAnalysisList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.operationAnalysis.model.OperationAnalysis">
+		SELECT
+			@rownum := @rownum + 1 AS num,
+			t.*
+		FROM
+			( SELECT @rownum := 0 ) r,
+			(
+			SELECT
+			p.id ProjectId,
+			p.AreaName,
+			p.ProjectName,
+		    p.ProjectNum,
+			ct.CityName,
+			IFNULL( sum( b.OnlookersNum ), 0 ) BookAllVisitsCount,
+			IFNULL( t.PRegCstCount, 0 ) PRegCstCount,
+			IFNULL( t.YRegCstCount, 0 ) YRegCstCount,
+			IFNULL( t.GRegCstCount, 0 ) GRegCstCount,
+			IFNULL( t.HRegCstCount, 0 ) HRegCstCount,
+			IFNULL( t.SectionRegCstCount, 0 ) SectionRegCstCount,
+			IFNULL( t.SectionPRegCstCount, 0 ) SectionPRegCstCount,
+			IFNULL( t.SectionYRegCstCount, 0 ) SectionYRegCstCount,
+			IFNULL( t.SectionGRegCstCount, 0 ) SectionGRegCstCount,
+			IFNULL( t.SectionHRegCstCount, 0 ) SectionHRegCstCount,
+			IFNULL( t.RegCstCount, 0 ) RegCstCount
+		FROM
+			b_project p
+			LEFT JOIN a_build_book b ON p.id = b.ProjectID
+			INNER JOIN a_city_project c ON p.id = c.ProjectID
+			INNER JOIN a_city ct ON c.CityID = ct.id
+			INNER JOIN (
+			SELECT
+			count( 1 ) RegCstCount,
+			sum(case when a.CurrentRole = '普通经纪人' then 1 else 0 end) PRegCstCount,
+			sum(case when a.CurrentRole = '业主' then 1 else 0 end) YRegCstCount,
+			sum(case when a.CurrentRole = '公司员工' then 1 else 0 end) GRegCstCount,
+			sum(case when a.CurrentRole = '合作方' then 1 else 0 end) HRegCstCount,
+			<if test="beginTime!=null and beginTime !='' and endTime !=null and endTime !=''">
+				sum(case  when a.RegistTime &gt; #{beginTime} and a.RegistTime &lt; #{endTime} then 1 else 0 end ) SectionRegCstCount,
+				sum(case when a.RegistTime &gt; #{beginTime} and a.RegistTime &lt; #{endTime} and a.CurrentRole = '普通经纪人' then 1 else 0 end) SectionPRegCstCount,
+				sum(case when a.RegistTime &gt; #{beginTime} and a.RegistTime &lt; #{endTime} and a.CurrentRole = '业主' then 1 else 0 end) SectionYRegCstCount,
+				sum(case when a.RegistTime &gt; #{beginTime} and a.RegistTime &lt; #{endTime} and a.CurrentRole = '公司员工' then 1 else 0 end) SectionGRegCstCount,
+				sum(case when a.RegistTime &gt; #{beginTime} and a.RegistTime &lt; #{endTime} and a.CurrentRole = '合作方' then 1 else 0 end) SectionHRegCstCount,
+			</if>
+			<if test="beginTime==null or beginTime =='' or endTime ==null or endTime ==''">
+				count( 1 ) SectionRegCstCount,
+				sum(case when a.CurrentRole = '普通经纪人' then 1 else 0 end) SectionPRegCstCount,
+				sum(case when a.CurrentRole = '业主' then 1 else 0 end) SectionYRegCstCount,
+				sum(case when a.CurrentRole = '公司员工' then 1 else 0 end) SectionGRegCstCount,
+				sum(case when a.CurrentRole = '合作方' then 1 else 0 end) SectionHRegCstCount,
+			</if>
+			p.id
+			FROM
+			b_project p
+			INNER JOIN a_broker_user a ON a.RegistProject = p.id and a.CurrentRole is not null
+			GROUP BY
+			p.id
+			) t ON p.id = t.id
+			where p.isDel = 0 and p.Status = 1
+			and p.pid is null
+			and p.orgId is not null
+			and p.id in (${proIds})
+			<if test="cityIds!=null and cityIds!=''">
+				and ct.id in (${cityIds})
+			</if>
+			and p.orgId != ''
+			GROUP BY
+			p.id
+			ORDER BY
+			BookAllVisitsCount DESC,
+			RegCstCount DESC
+			) t
+	</select>
+	<!--运营分析查询数量-->
+	<select id="getOperationAnalysisList_COUNT" parameterType="java.util.Map" resultType="Long">
+		SELECT
+		count(1)
+		FROM
+		b_project p
+		INNER JOIN a_city_project c ON p.id = c.ProjectID
+		INNER JOIN a_city ct ON c.CityID = ct.id
+		INNER JOIN (
+		SELECT
+		count( 1 ) RegCstCount,p.id
+		FROM
+		b_project p
+		INNER JOIN a_broker_user a ON a.RegistProject = p.id and a.CurrentRole is not null
+		GROUP BY
+		p.id
+		) t ON p.id = t.id
+		where p.isDel = 0 and p.Status = 1
+		and p.pid is null
+		and p.orgId is not null
+		and p.id in (${proIds})
+		<if test="cityIds!=null and cityIds!=''">
+			and ct.id in (${cityIds})
+		</if>
+		and p.orgId != ''
+	</select>
+
+	<select id="getAdminOperationAnalysisList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.operationAnalysis.model.OperationAnalysis">
+		SELECT
+		@rownum := @rownum + 1 AS num,
+		t.*
+		FROM
+		( SELECT @rownum := 0 ) r,
+		(
+		SELECT
+		p.id ProjectId,
+		p.AreaName,
+		p.ProjectName,
+		ct.CityName,
+		IFNULL( sum( b.OnlookersNum ), 0 ) BookAllVisitsCount,
+		IFNULL( t1.count, 0 ) SectionRegCstCount,
+		IFNULL( t.count, 0 ) RegCstCount
+		FROM
+		b_project p
+		LEFT JOIN a_build_book b ON p.id = b.ProjectID
+		INNER JOIN a_city_project c ON p.id = c.ProjectID
+		INNER JOIN a_city ct ON c.CityID = ct.id
+		LEFT JOIN (
+		SELECT
+		count( 1 ) count,
+		p.id
+		FROM
+		b_project p
+		INNER JOIN a_broker_user a ON a.RelationProjectIds LIKE CONCAT( '%', p.id, '%' ) and a.CurrentRole is not null
+		GROUP BY
+		p.id
+		) t ON p.id = t.id
+		LEFT JOIN (
+		SELECT
+		count( 1 ) count,
+		p.id
+		FROM
+		b_project p
+		INNER JOIN a_broker_user a ON a.RelationProjectIds LIKE CONCAT( '%', p.id, '%' )
+		INNER JOIN (select min(CreateTime) CreateTime,BrokerId from a_user_role GROUP BY BrokerId ) m on a.id = m.BrokerId
+		where 1 = 1 and a.CurrentRole is not null
+		<if test="beginTime!=null and beginTime !='' and endTime !=null and endTime !=''">
+			and m.CreateTime BETWEEN #{beginTime} and #{endTime}
+		</if>
+		GROUP BY
+		p.id
+		) t1 ON p.id = t1.id
+		where p.isDel = 0 and p.Status = 1
+		and p.pid is null
+		and p.orgId is not null
+		and p.orgId != ''
+		GROUP BY
+		p.id
+		ORDER BY
+		BookAllVisitsCount DESC,
+		RegCstCount DESC
+		) t
+	</select>
+	<!--根据项目ID获取合并项目ID-->
+	<select id="getMergeProjectID" parameterType="java.lang.String" resultType="java.util.Map">
+		select id,ProjectName,KindeeProjectID from b_project where KindeeProjectID in (select KindeeProjectID from b_project where pid = #{projectId} GROUP BY KindeeProjectID) and pid is null and IsDel = 0
+	</select>
+	<select id="getOperationAnalysisDetailList" resultType="cn.visolink.system.allpeople.operationAnalysis.model.OperationAnalysisDetail" parameterType="java.util.Map">
+		SELECT
+			@rownum := @rownum + 1 AS num,
+			t.*
+		FROM
+			( SELECT @rownum := 0 ) r,
+			(
+			SELECT
+			DISTINCT
+			p.id ProjectId,
+			p.AreaName,
+			p.ProjectName,
+			p.ProjectNum,
+			ct.CityName
+			FROM
+			b_project p
+			INNER JOIN a_city_project c ON p.id = c.ProjectID
+			INNER JOIN a_city ct ON c.CityID = ct.id
+			INNER JOIN a_broker_user a ON a.RegistProject = p.id
+			WHERE
+			p.isDel = 0 and a.CurrentRole is not null
+			and p.id in (${proIds})
+			<if test="cityIds!=null and cityIds!=''">
+				and ct.id in (${cityIds})
+			</if>
+		<if test="AuthCompanyID!=null and AuthCompanyID!=''">
+			And p.AuthCompanyID=#{AuthCompanyID}
+		</if>
+
+		AND p.STATUS = 1
+			AND p.pid IS NULL
+			AND p.orgId IS NOT NULL
+			) t
+	</select>
+
+	<!--获取城市数据-->
+	<select id="getCityStatement" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.operationAnalysis.model.CityStatement">
+		select ci.ID CityID,ci.CityName,pp.AreaName,ifnull(book.count,0) BuildCount,ifnull(photo.count,0) PhotoCount,ifnull(photo.jCount,0) PhotoJumpCount,ifnull(rphoto.count,0) RangePhotoCount,
+		ifnull(news.count,0) NewsCount, ifnull(news.rCount,0) RangeNewsCount,ifnull(ac.count,0) ActivityCount,ifnull(ac1.count,0) RangeActivityCount
+		from a_city ci
+		LEFT JOIN (select ap.CityID,bp.AreaName from a_city_project ap INNER JOIN b_project bp on ap.ProjectID = bp.id
+		where ap.IsDel = 0 and bp.isdel = 0 and bp.IsSyn = 1
+		group by ap.CityID) pp on ci.id = pp.CityID
+		LEFT JOIN (select count(1) count,CityID from a_build_book where isdel= 0 and Status = 1 and IsShowHeadImg= 1
+		GROUP BY CityID) book on book.CityID = ci.id
+		LEFT JOIN (select count(1) count,sum(case when JumpType != '3' then 1 else 0 end) jCount,CityID from a_build_book_photo where isdel= 0
+		and Status = 1 and ((ShowBeginTime is null and ShowEndTime is null) or (now() BETWEEN ShowBeginTime and ShowEndTime)) and TypeName = 4
+		GROUP BY CityID) photo on photo.CityID = ci.id
+		LEFT JOIN (select count(1) count,CityID from a_build_book_photo where isdel= 0
+		and TypeName = 4
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and CreateTime BETWEEN #{beginTime} and #{endTime}
+		</if>
+		GROUP BY CityID) rphoto on rphoto.CityID = ci.id
+		LEFT JOIN (select count(1) count,
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			sum(case when PublishTime BETWEEN #{beginTime} and #{endTime} then 1 else 0 end) rCount,
+		</if>
+		<if test="beginTime==null or beginTime=='' or endTime==null or endTime==''">
+			count(1) rCount,
+		</if>
+		CityID from a_news where isdel= 0
+		and Status = 1 and IsPublish = 1
+		GROUP BY CityID) news on news.CityID = ci.id
+		LEFT JOIN (select count(1) count,t.city_id from (
+		select ap.city_id,ap.actity_id from a_activity_projects ap
+		where ap.isdel = 0
+		GROUP BY ap.city_id,ap.actity_id) t
+		INNER JOIN a_activity_info info on info.id = t.actity_id
+		where info.is_del = 0 and info.`status` = 1 and info.act_status = 2
+		group by t.city_id) ac on ac.city_id = ci.id
+		LEFT JOIN (select count(1) count,t.city_id from (
+		select ap.city_id,ap.actity_id from a_activity_projects ap
+		INNER JOIN a_activity_info info on info.id = ap.actity_id
+		where info.is_del = 0 and info.`status` = 1 and info.act_status = 2 and ap.isdel = 0
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and info.release_time BETWEEN #{beginTime} and #{endTime}
+		</if>
+		GROUP BY ap.city_id,ap.actity_id) t group by t.city_id) ac1 on ac1.city_id = ci.id
+		where ci.ID != '00000000-0000-0000-0000-000000000000' and ci.IsDel = 0
+		<if test="cityList != null and cityList.size() > 0">
+			and ci.ID in
+			<foreach collection="cityList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+
+		order by ci.CreateTime
+	</select>
+	<!--获取活动数据-->
+	<select id="getActivityStatement" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.operationAnalysis.model.ActivityStatement">
+		select info.id ActivityID,info.activity_name ActivityName,ppp.AreaNames,info.activity_projectnames ProjectName,ppp1.ProjectNums,info.activity_begintime ActivityBeginTime,
+		info.activity_endtime ActivityEndTime,info.createtime CreateTime,info.release_time ReleaseTime,
+		(case when info.`status` = 0 then '已禁用'
+		when info.activity_endtime &lt;= now() and info.act_status = 2  and info.`status` = 1 then '已结束'
+		when info.activity_begintime &lt;= now() and info.activity_endtime &gt; now() and info.act_status = 2  and info.`status` = 1 then '已开始'
+		when info.act_status = 2 and info.release_time &lt;= now() and info.`status` = 1 then '已发布'
+		when info.act_status = 2 and info.release_time &gt; now() and info.`status` = 1 then '未发布'
+		when info.act_status = 1 then '草稿'
+		else '' end
+		) Status,
+		info.activity_type ActivityType,
+		ifnull(s.count,0) CouponCollected,
+		ifnull(sup.count,0) SignUpCount,
+		ifnull(sin.count,0) SignInCount,
+		ifnull(he.count,0) NeedHelpCount,
+		ifnull(hedetail.count,0) HelpCount,
+		ifnull(avd.count,0) vowCount
+		from a_activity_info info
+		LEFT JOIN (select sum(coupon_collected) count,activity_id from a_coupon_info GROUP BY activity_id) s on s.activity_id = info.id
+		LEFT JOIN (select count(1) count,activity_id from a_activity_signup  GROUP BY activity_id) sup on info.id = sup.activity_id
+		LEFT JOIN (select count(1) count,cc.activity_id from (
+		select activity_id,signin_id from a_activity_signin  GROUP BY activity_id,signin_id) cc group by cc.activity_id) sin on info.id = sin.activity_id
+		LEFT JOIN (select count(1) count,activity_id from a_activity_help  GROUP BY activity_id) he on info.id = he.activity_id
+		LEFT JOIN (select count(1) count,activity_id from a_activity_vow_detail GROUP BY activity_id ) avd on avd.activity_id=info.id
+		LEFT JOIN (select count(1) count,sss.activity_id from (
+		select activity_id,friend_id from a_activity_helpdetail  GROUP BY activity_id,friend_id) sss group by sss.activity_id) hedetail on info.id = hedetail.activity_id
+		INNER JOIN (select GROUP_CONCAT(t.AreaName) AreaNames,t.actity_id activityId from (select DISTINCT ap.actity_id,bp.AreaName from a_activity_projects ap INNER JOIN b_project bp on ap.project_id = bp.id
+		where ap.isdel = 0) t GROUP BY t.actity_id ) ppp on ppp.activityId = info.id
+		INNER JOIN (select GROUP_CONCAT(t.ProjectNum) ProjectNums,t.actity_id activityId from (select DISTINCT ap.actity_id,bp.ProjectNum from a_activity_projects ap INNER JOIN b_project bp on ap.project_id = bp.id
+		where ap.isdel = 0) t GROUP BY t.actity_id ) ppp1 on ppp1.activityId = info.id
+		where info.is_del = 0
+		<if test="projectList != null and projectList.size() > 0">
+			and info.id in (select DISTINCT actity_id from a_activity_projects where isdel = 0 and project_id in
+			<foreach collection="projectList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+			)
+		</if>
+		<if test="reportTime==1 and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and info.release_time BETWEEN #{beginTime} AND #{endTime}
+		</if>
+		<if test="reportTime==2  and beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and info.activity_begintime BETWEEN #{beginTime} AND #{endTime}
+		</if>
+		order by info.createtime desc
+	</select>
+
+	<select id="getVisitCount" parameterType="java.util.Map" resultType="java.lang.String">
+		select count(1) as count from b_project_opportunity
+		where TheFirstVisitDate BETWEEN #{beginTime} AND #{endTime}
+		and projectId IN
+		<foreach collection="proIds" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+		union all
+		select count(1) as count from b_re_visit_record
+		where reVisitRecordTime BETWEEN #{beginTime} AND #{endTime}
+		and projectId IN
+		<foreach collection="proIds" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+		union all
+		select count(1) as count from b_project_opportunity opp
+		INNER JOIN b_clue_opportunity_extend eoc on opp.ProjectClueId = eoc.ProjectClueId
+		where eoc.activity_id = #{activityId}
+		and opp.projectId IN
+		<foreach collection="proIds" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	<!--获取项目数据-->
+	<select id="getProjectStatement" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.operationAnalysis.model.ProjectStatement">
+		select bp.AreaName,bp.ProjectName,bp.ProjectNum,bp.id ProjectId,
+		ifnull(ab.PhotoCount,0) PhotoCount,ifnull(ab.VideoCount,0) VideoCount,
+		ifnull(ab.VrCount,0) VrCount,ifnull(ab.HouseImgCount,0) HouseImgCount,
+		ifnull(ap.PosterCount,0) PosterCount,ifnull(ap.CreatePosterCount,0) CreatePosterCount,
+		ifnull(ap1.RangePosterCount,0) RangePosterCount,
+		ifnull(c.ConsultingCount,0) ConsultingCount,
+		ifnull(c1.ConsultingCstCount,0) ConsultingCstCount,
+		ifnull(cc.CallCount,0) CallCount,
+		ifnull(c2.CallCstCount,0) CallCstCount,
+		ifnull(tt.releaseCnt,0) dynamicReleaseCnt,
+		ifnull(tt.allCnt,0) dynamicAllCnt
+		from b_project bp
+		LEFT JOIN (
+		select a.ProjectID,sum(ifnull(t.PhotoCount,0)) PhotoCount,sum(ifnull(t.VideoCount,0)) VideoCount,
+		sum(ifnull(t1.VrCount,0))+sum(ifnull(t.BookVRCount,0)) VrCount,sum(ifnull(t1.HouseImgCount,0)) HouseImgCount
+		from a_build_book a
+		left JOIN (
+		select sum(case when TypeName = '2' then 1 else 0 end) PhotoCount,
+		sum(case when TypeName = '1' then 1 else 0 end) BookVRCount,
+		sum(case when TypeName = '3' then 1 else 0 end) VideoCount,BuildBookID
+		from a_build_book_photo where TypeName in ('1','2','3') and IsDel = 0 and `Status` = 1
+		GROUP BY BuildBookID) t
+		on a.id = t.BuildBookID
+		left join (
+		select BuildBookID,sum(case when IsHaveVR = 1 and VRLookRoom is not null then 1 else 0 end) VrCount,
+		count(1) HouseImgCount from a_build_book_warehouse
+		where IsDel = 0 and `Status` = 1
+		GROUP BY BuildBookID
+		) t1 on a.id = t1.BuildBookID
+		where a.IsDel = 0 and a.`Status` = 1
+		GROUP BY a.ProjectID
+		) ab on bp.id = ab.ProjectID
+
+		LEFT JOIN (
+		select bb.ProjectId,count(1) PosterCount,sum(abp.CreatePosterCount) CreatePosterCount from b_build_poster bb
+		LEFT JOIN (
+		select count(1) CreatePosterCount,PosterId from a_book_poster
+		where PosterId is not null GROUP BY PosterId
+		) abp on abp.PosterId = bb.id
+		where bb.IsDel = 0 and bb.`Status` = 1
+		GROUP BY bb.ProjectId
+		) ap on bp.id = ap.ProjectID
+
+		LEFT JOIN (
+		select bb.ProjectId,count(1) RangePosterCount from b_build_poster bb
+		where bb.IsDel = 0
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and CreateTime BETWEEN #{beginTime} and #{endTime}
+		</if>
+		GROUP BY bb.ProjectId
+		) ap1 on bp.id = ap1.ProjectID
+
+		LEFT JOIN (
+		select count(1) ConsultingCount,pp.project_id from (
+		select project_id,open_id,create_date from c_project_consult_records
+		where is_del = 0
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and create_time BETWEEN #{beginTime} and #{endTime}
+		</if>
+		GROUP BY project_id,open_id,create_date) pp group by pp.project_id
+		) c on bp.id = c.project_id
+
+		LEFT JOIN (
+		select count(1) CallCount,pp1.project_id from (
+		select project_id,open_id,create_date from c_project_consult_records
+		where is_del = 0 and consult_type = 1
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and create_time BETWEEN #{beginTime} and #{endTime}
+		</if>
+		GROUP BY project_id,open_id,create_date) pp1 group by pp1.project_id
+		) cc on bp.id = cc.project_id
+
+		LEFT JOIN (
+		select count(1) ConsultingCstCount,project_id from (
+		select project_id,open_id from c_project_consult_records
+		where is_del = 0
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and create_time BETWEEN #{beginTime} and #{endTime}
+		</if>
+		GROUP BY project_id,open_id) cc
+		GROUP BY cc.project_id
+		) c1 on bp.id = c1.project_id
+
+		LEFT JOIN (
+		select count(1) CallCstCount,project_id from (
+		select project_id,open_id from c_project_consult_records
+		where is_del = 0 and consult_type = 1
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and create_time BETWEEN #{beginTime} and #{endTime}
+		</if>
+		GROUP BY project_id,open_id) cc GROUP BY cc.project_id
+		) c2 on bp.id = c2.project_id
+		left join (
+			SELECT
+				project_id,
+			<if test="beginTime!=null and beginTime !='' and endTime !=null and endTime !=''">
+				sum(case  when release_time &gt;  #{beginTime} and release_time &lt; #{endTime} then 1 else 0 end ) releaseCnt,
+			</if>
+			<if test="beginTime==null or beginTime =='' or endTime ==null or endTime ==''">
+				count(1) as releaseCnt,
+			</if>
+				count(1) as allCnt
+		FROM
+			a_build_book_dynamic
+		GROUP BY
+		project_id
+		) tt on tt.project_id = bp.id
+		where bp.IsSyn = 1 and bp.IsDel = 0
+		and bp.id IN
+		<foreach collection="projectList" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<!--获取项目数据-->
+	<select id="getProjectStatement_COUNT" parameterType="java.util.Map" resultType="Long">
+		select count(1)
+		from b_project bp
+		where bp.IsSyn = 1 and bp.IsDel = 0
+		<if test="AuthCompanyID!=null and AuthCompanyID!=''">
+			And bp.AuthCompanyID=#{AuthCompanyID}
+		</if>
+		and bp.id IN
+		<foreach collection="projectList" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	<!--获取置业顾问-->
+	<select id="getSales" resultType="java.util.Map">
+		select saleId,saleName,projectId
+		from v_tel_sales
+	</select>
+	<!--获取关注信息-->
+	<select id="getGZdesc" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT
+			sum( t.CardCollectCount ) CardCollectCount,
+			sum( t.CardCollectCstCount ) CardCollectCstCount,
+			sum( t.CardCancelCollectCount ) CardCancelCollectCount,
+			sum( t.CardCancelCollectCstCount ) CardCancelCollectCstCount ,
+			count(1) CardCount
+		FROM
+			(
+				SELECT
+					ifnull( cut.CardCollectCount, 0 ) CardCollectCount,
+					ifnull( cut.CardCancelCollectCount, 0 ) CardCancelCollectCount,
+					ifnull( cr1.count, 0 ) CardCollectCstCount,
+					ifnull( cr2.count, 0 ) CardCancelCollectCstCount
+				FROM
+					c_user_card cc
+						LEFT JOIN (
+						SELECT
+							card_id,
+							sum( CASE operation_status WHEN 1 THEN 1 ELSE 0 END ) CardCollectCount,
+							sum( CASE operation_status WHEN 0 THEN 1 ELSE 0 END ) CardCancelCollectCount
+						FROM
+							c_card_attention_records
+						WHERE
+							is_del = 0
+						  <if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+							  and create_time BETWEEN #{beginTime} and #{endTime}
+						  </if>
+						GROUP BY
+							card_id
+					) cut ON cc.id = cut.card_id
+						LEFT JOIN (
+						SELECT
+							card_id,
+							count( 1 ) count
+						FROM
+							( SELECT card_id, open_id FROM c_card_attention_records
+							  WHERE operation_status = 1
+								<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+									and create_time BETWEEN #{beginTime} and #{endTime}
+								</if>
+							  GROUP BY card_id, open_id ) t
+						GROUP BY
+							card_id
+					) cr1 ON cc.id = cr1.card_id
+						LEFT JOIN (
+						SELECT
+							card_id,
+							count( 1 ) count
+						FROM
+							( SELECT card_id, open_id FROM c_card_attention_records
+							  WHERE operation_status = 0
+								<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+									and create_time BETWEEN #{beginTime} and #{endTime}
+								</if>
+							  GROUP BY card_id, open_id ) t
+						GROUP BY
+							card_id
+					) cr2 ON cc.id = cr2.card_id
+				WHERE
+						cc.account_id IN
+						<foreach collection="salesId" index="index" item="item" open="("
+								 separator="," close=")">
+							#{item}
+						</foreach>
+					  AND cc.mobile IS NOT NULL
+					  AND cc.mobile != ''
+					  AND cc.signature IS NOT NULL
+					  AND cc.signature != ''
+					  AND cc.img_url IS NOT NULL
+					  AND cc.img_url != ''
+			) t
+	</select>
+	<!--获取自动报备来访数量-->
+	<select id="getConsultingVisitCount" parameterType="java.util.Map" resultType="_int">
+		SELECT
+		count( 1 ) ConsultingVisitCount
+		FROM
+		b_project_clues bc
+		left JOIN b_clue_opportunity_extend be ON bc.ProjectClueId = be.ProjectClueId
+		WHERE
+		be.ReportSource = '2'
+		AND bc.SourceTypeOld = 3
+		AND bc.ClueStatus &gt; 1 and bc.ClueStatus &lt; 9
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and bc.TheFirstVisitDate BETWEEN #{beginTime} and #{endTime}
+		</if>
+		and bc.projectId = #{projectId}
+	</select>
+	<select id="getJDproId" parameterType="java.lang.String" resultType="java.lang.String">
+		select KindeeProjectID	from b_project
+		where id = #{proId} and isdel=0
+	</select>
+	<select id="getNewsAddTimes" parameterType="java.util.Map" resultType="java.lang.String">
+		select PublishTime from  a_news
+		where CityId = #{cityId}
+		  and isdel = 0 and `Status` = 1 and IsPublish = 1
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and PublishTime BETWEEN #{beginTime} and #{endTime}
+		</if>
+		order by PublishTime limit 11
+	</select>
+
+	<select id="getActivityAddTimes" parameterType="java.util.Map" resultType="java.lang.String">
+		SELECT t.release_time from (
+		select DISTINCT info.release_time,info.ID from a_activity_projects ap
+		INNER JOIN a_activity_info info on info.id = ap.actity_id
+		where ap.city_id = #{cityId}
+		and info.is_del = 0 and info.`status` = 1 and info.act_status = 2 and ap.isdel = 0
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and info.release_time BETWEEN #{beginTime} and #{endTime}
+		</if>) t
+		order by t.release_time limit 6
+	</select>
+
+	<select id="getDynamicAddTimes" parameterType="java.util.Map" resultType="java.lang.String">
+		select release_time from a_build_book_dynamic
+		where project_id = #{projectId}
+		and is_del = 0 and `status` = 1 and release_status = 2
+		<if test="beginTime!=null and beginTime!='' and endTime!=null and endTime!=''">
+			and release_time BETWEEN #{beginTime} and #{endTime}
+		</if>
+		order by release_time limit 11
+	</select>
+</mapper>

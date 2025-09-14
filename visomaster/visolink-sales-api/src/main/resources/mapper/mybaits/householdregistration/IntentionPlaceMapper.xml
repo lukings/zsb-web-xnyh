@@ -1,0 +1,1332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.householdregistration.dao.IntentionPlaceDao">
+
+        <!-- 通用查询映射结果 -->
+        <resultMap id="BaseResultMap" type="cn.visolink.system.householdregistration.model.IntentionPlace">
+                    <id column="ID" property="id" />
+                    <result column="city_id" property="cityId" />
+                    <result column="city_name" property="cityName" />
+                    <result column="activity_name" property="activityName" />
+                    <result column="projectid" property="projectid" />
+                    <result column="projectname" property="projectname" />
+                    <result column="buildbook_id" property="buildbookId" />
+                    <result column="buildbook_name" property="buildbookName" />
+                    <result column="activity_sharecont" property="activitySharecont" />
+                    <result column="release_time" property="releaseTime" />
+                    <result column="activity_begintime" property="activityBegintime" />
+                    <result column="activity_endtime" property="activityEndtime" />
+                    <result column="activity_note" property="activityNote" />
+                    <result column="customer_type" property="customerType" />
+                    <result column="batch_no" property="batchNo" />
+                    <result column="place_no" property="placeNo" />
+                    <result column="intention_count" property="intentionCount" />
+                    <result column="showprice_type" property="showpriceType" />
+                    <result column="status" property="status" />
+                    <result column="act_status" property="actStatus" />
+                    <result column="ispublish2cst" property="ispublish2cst" />
+                    <result column="ispublish2gw" property="ispublish2gw" />
+                    <result column="isdel" property="isdel" />
+                    <result column="createtime" property="createtime" />
+                    <result column="creator" property="creator" />
+                    <result column="edittime" property="edittime" />
+                    <result column="editor" property="editor" />
+        </resultMap>
+        <!--查询分期项目-->
+        <select id="getFProject" parameterType="java.lang.String" resultType="java.util.Map">
+            select ID id,ProjectName projectName from b_project where pid = #{projectId} and isdel = 0 ORDER BY ProjectNum
+        </select>
+        <!--保存装户活动-->
+        <insert id="addIntentionPlace" parameterType="cn.visolink.system.householdregistration.model.form.IntentionPlaceForm">
+            insert into a_intention_place (ID,city_id,city_name,activity_name,projectid,projectname,buildbook_id,buildbook_name,activity_sharecont,release_time,activity_begintime,activity_endtime,activity_note,
+                                           customer_type,card_type,place_no,intention_count,showprice_type,status,act_status,ispublish2cst,ispublish2gw,isdel,createtime,creator,is_time_show,is_range_show,loading_type)
+            values(#{id},#{cityId},#{cityName},#{activityName},#{projectid},#{projectname},#{buildbookId},#{buildbookName},#{activitySharecont},#{releaseTime},#{activityBegintime},#{activityEndtime},#{activityNote},
+                   #{customerType},#{cardType},#{placeNo},#{intentionCount},#{showpriceType},1,#{actStatus},0,0,0,now(),#{creator},#{isTimeShow},#{isRangeShow},#{loadingType})
+        </insert>
+        <!--查询装户活动详情-->
+        <select id="getIntentionPlaceDetail" parameterType="java.lang.String" resultType="cn.visolink.system.householdregistration.model.form.IntentionPlaceForm">
+            select ap.ID id,ap.city_id cityId,ap.city_name cityName,ap.activity_name activityName,ap.projectid,ap.projectname,ap.buildbook_id buildbookId,ap.buildbook_name buildbookName,ap.activity_sharecont activitySharecont,ap.release_time releaseTime,ap.activity_begintime activityBegintime,ap.activity_endtime activityEndtime,ap.activity_note activityNote,
+                   ap.customer_type customerType,ap.card_type cardType,ap.place_no placeNo,ap.intention_count intentionCount,ap.showprice_type showpriceType,ap.status,ap.act_status actStatus,ap.ispublish2cst,ap.ispublish2gw,ap.is_time_show isTimeShow,ap.is_range_show isRangeShow,ap.loading_type loadingType,
+                   ifnull(room.count,0)+ifnull(room1.count,0) placeCount
+            from a_intention_place ap
+                     LEFT JOIN (select count(DISTINCT card_id) count,activity_id from a_intention_place_result where card_id is not null and card_id !='' and is_available = 1 group by activity_id) room on room.activity_id = ap.ID
+                     LEFT JOIN (select count(DISTINCT OpportunityClueId) count,activity_id from a_intention_place_result where card_id is null or card_id ='' and is_available = 1 group by activity_id) room1 on room1.activity_id = ap.ID
+            where ap.id = #{id}
+        </select>
+        <!--更新装户活动-->
+        <update id="updateIntentionPlace" parameterType="cn.visolink.system.householdregistration.model.form.IntentionPlaceForm">
+            update a_intention_place
+              set activity_name = #{activityName},projectid = #{projectid},projectname = #{projectname},buildbook_id = #{buildbookId},
+                  buildbook_name = #{buildbookName},activity_sharecont = #{activitySharecont},
+                <if test="cityId!=null and cityId!=''">
+                    city_id = #{cityId},
+                </if>
+                <if test="cityName!=null and cityName!=''">
+                    city_name = #{cityName},
+                </if>
+                  <if test="releaseTime!=null and releaseTime!=''">
+                      release_time = #{releaseTime},
+                  </if>
+                <if test="activityBegintime!=null and activityBegintime!=''">
+                    activity_begintime = #{activityBegintime},
+                </if>
+                <if test="activityEndtime!=null and activityEndtime!=''">
+                    activity_endtime = #{activityEndtime},
+                </if>
+                  activity_note = #{activityNote},customer_type = #{customerType},card_type = #{cardType},place_no = #{placeNo},intention_count = #{intentionCount},
+                  showprice_type = #{showpriceType},act_status = #{actStatus},
+                <if test="ispublish2cst!=null and ispublish2cst!=''">
+                    ispublish2cst = #{ispublish2cst},
+                </if>
+                <if test="ispublish2gw!=null and ispublish2gw!=''">
+                    ispublish2gw = #{ispublish2gw},
+                </if>
+            <if test="isTimeShow!=null and isTimeShow!=''">
+                is_time_show = #{isTimeShow},
+            </if>
+            <if test="isRangeShow!=null and isRangeShow!=''">
+                is_range_show = #{isRangeShow},
+            </if>
+
+            editor = #{editor},edittime = now()
+              where id = #{id}
+        </update>
+        <!--查询装户活动素材详情-->
+        <select id="getIntentionPlaceMaterial" parameterType="java.lang.String" resultType="cn.visolink.system.householdregistration.model.IntentionPlaceMaterial">
+            select ID id,material_type materialType,material_address materialAddress
+            from a_intention_place_material
+            where activity_id = #{id} and isdel = 0
+        </select>
+        <!--保存装户素材-->
+        <insert id="addIntentionPlaceMaterial" parameterType="java.util.List">
+            insert into a_intention_place_material (ID,activity_id,material_type,material_address,orderby,status,isdel,createtime,creator)
+            values
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                #{item.id},#{item.activityId},#{item.materialType},#{item.materialAddress},#{item.orderby},0,0,now(),#{item.creator}
+                )
+            </foreach>
+        </insert>
+        <!--更新装户素材-->
+        <update id="updateIntentionPlaceMaterial" parameterType="java.util.List">
+            <foreach collection="list" item="item" index="index" separator=";">
+              update a_intention_place_material
+              set material_address = #{item.materialAddress},
+                end_photo_url = null,
+                  editor = #{item.editor},edittime = now()
+              where ID = #{item.id}
+            </foreach>
+        </update>
+        <!--保存开盘批次，排卡分组-->
+        <insert id="addIntentionPlaceCardGroup" parameterType="java.util.List">
+            insert into a_intention_place_card_group (projectid,activity_id,project_fid,project_fname,card_type,opening_batch,opening_batch_name,card_grouping,card_grouping_name,isdel,createtime,creator)
+            values
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                #{item.projectid},#{item.activityId},#{item.projectFid},#{item.projectFname},#{item.cardType},#{item.openingBatch},#{item.openingBatchName},#{item.cardGrouping},#{item.cardGroupingName},0,now(),#{item.creator}
+                )
+            </foreach>
+        </insert>
+        <!--查询排小卡选择分期项目-->
+        <select id="getIntentionPlaceCardGroupX" parameterType="java.lang.String" resultType="java.lang.String">
+           select project_fid projectFid
+           from  a_intention_place_card_group where activity_id = #{id} and card_type = 1
+        </select>
+        <!--查询排大卡选择分期-->
+        <select id="getIntentionPlaceCardGroupDF" parameterType="java.lang.String" resultType="cn.visolink.system.householdregistration.model.ProBatchVO">
+            select project_fid value,project_fname lable,'1' isChecked
+            from  a_intention_place_card_group where activity_id = #{id} and card_type = 2
+        </select>
+        <!--查询排大卡选择分期中的开盘批次-->
+        <select id="getIntentionPlaceCardGroupDP" parameterType="java.lang.String" resultType="cn.visolink.system.householdregistration.model.ProBatchVO">
+            select opening_batch value,opening_batch_name lable,'1' isChecked
+            from  a_intention_place_card_group where activity_id = #{id} and project_fid = #{projectFid} and card_type = 2
+        </select>
+        <!--查询排大卡选择分期中的开盘批次下的排卡分组-->
+        <select id="getIntentionPlaceCardGroupDZ" parameterType="java.lang.String" resultType="cn.visolink.system.householdregistration.model.ProBatchVO">
+            select card_grouping value,card_grouping_name lable,'1' isChecked
+            from  a_intention_place_card_group where activity_id = #{id} and project_fid = #{projectFid} and opening_batch = #{openingBatch} and card_type = 2
+        </select>
+        <!--删除排卡分组-->
+        <delete id="deleteIntentionPlaceCardGroup" parameterType="java.lang.String">
+            delete from a_intention_place_card_group where activity_id = #{id}
+        </delete>
+        <!--保存装户楼栋-->
+        <insert id="addIntentionPlaceBuild" parameterType="java.util.List">
+            insert into a_intention_place_build (ID,activity_id,projectid,projectname,projectid_fq,projectname_fq,buildguid,buildname,buildprice,orderby,status,isdel,createtime,creator)
+            values
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                #{item.id},#{item.activityId},#{item.projectid},#{item.projectname},#{item.projectidFq},#{item.projectnameFq},#{item.buildguid},#{item.buildname},#{item.buildprice},#{item.orderby},0,0,now(),#{item.creator}
+                )
+            </foreach>
+        </insert>
+        <!--删除装户楼栋单元房间-->
+        <delete id="deleteIntentionPlaceBuildAll" parameterType="java.lang.String">
+            delete from a_intention_place_build where activity_id = #{id};
+            delete from a_intention_place_unit where activity_id = #{id};
+            delete from a_intention_place_room where activity_id = #{id};
+        </delete>
+        <!--删除装户楼栋单元房间-->
+        <delete id="deleteIntentionPlaceBuild" parameterType="java.util.Map">
+            delete from a_intention_place_build where activity_id = #{id} and buildguid = #{buildguid};
+            delete from a_intention_place_unit where activity_id = #{id} and buildguid = #{buildguid};
+            delete from a_intention_place_room where activity_id = #{id} and buildguid = #{buildguid};
+        </delete>
+        <!--查询装户活动楼栋-->
+        <select id="getIntentionPlaceBuild" parameterType="java.lang.String" resultType="cn.visolink.system.householdregistration.model.IntentionPlaceBuild">
+            select ID,activity_id activityId,projectid,projectname,
+                   projectid_fq projectidFq,projectname_fq projectnameFq,
+                   buildguid,buildname,buildprice
+            from a_intention_place_build
+            where activity_id = #{id}
+           <if test="buildguid!=null and buildguid!=''">
+               and buildguid = #{buildguid}
+           </if>
+           and isdel = 0 order by orderby
+        </select>
+
+        <!--查询装户活动楼栋-->
+        <select id="getIntentionPlaceBuilds" parameterType="java.util.Map" resultType="cn.visolink.system.householdregistration.model.IntentionPlaceBuild">
+            select ID,activity_id activityId,projectid,projectname,
+            projectid_fq projectidFq,projectname_fq projectnameFq,
+            buildguid,buildname,buildprice
+            from a_intention_place_build
+            where activity_id = #{id}
+            <if test="buildguid!=null and buildguid!=''">
+                and buildguid = #{buildguid}
+            </if>
+            <if test="list!=null and list.size()>0">
+                and buildguid in (
+                <foreach collection="list" item="item" index="index" separator=",">
+                    #{item}
+                </foreach>
+                  )
+            </if>
+            and isdel = 0 order by orderby
+        </select>
+
+        <!--查询装户活动楼栋单元-->
+        <select id="getIntentionPlaceUnit" parameterType="java.util.Map" resultType="cn.visolink.system.householdregistration.model.BldUnit">
+            select ID,activity_id activityId,projectid,buildguid,bldunitguid,unitno,unitname,maxroomcount
+            from a_intention_place_unit where activity_id = #{id}
+                                        <if test="buildguid!=null and buildguid!=''">
+                                            and buildguid = #{buildguid}
+                                        </if>
+                                        <if test="list!=null and list.size()>0">
+                                            and buildguid in (
+                                            <foreach collection="list" item="item" index="index" separator=",">
+                                                #{item}
+                                            </foreach>
+                                            )
+                                        </if>
+                                          and isdel = 0 order by unitno
+        </select>
+
+
+        <!--查询装户活动楼栋房间-->
+        <select id="getIntentionPlaceRoom" parameterType="java.lang.String" resultType="cn.visolink.system.householdregistration.model.IntentionPlaceRoom">
+            select room.ID,room.activity_id activityId,room.projectid,room.projectname,room.projectid_fq projectidFq,room.projectname_fq projectnameFq,
+                   room.placebuild_id placebuildId,room.buildguid,room.buildname,room.roomguid,room.roomname,room.roominfo,room.roomno,room.unitno,room.floor,
+                   room.floorno,room.sale_status saleStatus,room.room_type roomType,room.exposure,room.exposure_img exposureImg,room.house_type houseType,
+                   room.house_type_id houseTypeId,room.floor_area floorArea,room.inside_area insideArea,room.floor_price floorPrice,room.inside_price insidePrice,
+                   room.total_price totalPrice,room.configure_total_price configureTotalPrice,room.orderby,room.status,(case when room.status = 0 then true else false end) isChecked,ifnull(ar.count1,0) as totalCount
+            from a_intention_place_room room
+            LEFT JOIN (select count(1) count1,roomguid from a_intention_place_result
+            where activity_id = #{id}
+            <if test="buildguid!=null and buildguid!=''">
+                and buildguid = #{buildguid}
+            </if>
+            GROUP BY roomguid) ar on room.roomguid = ar.roomguid
+            where room.activity_id = #{id}
+            <if test="buildguid!=null and buildguid!=''">
+                and room.buildguid = #{buildguid}
+            </if>
+            and room.isdel = 0 order by room.unitno,room.floorno desc,room.roomno
+        </select>
+        <!--保存装户单元-->
+        <insert id="addIntentionPlaceUnit" parameterType="java.util.List">
+            insert into a_intention_place_unit (ID,projectid,activity_id,buildguid,bldunitguid,unitno,unitname,maxroomcount,isdel,createtime,creator)
+            values
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                uuid(),#{item.projectid},#{item.activityId},#{item.buildguid},#{item.bldunitguid},#{item.unitno},#{item.unitname},#{item.maxroomcount},0,now(),#{item.creator}
+                )
+            </foreach>
+        </insert>
+        <!--保存装户房间-->
+        <insert id="addIntentionPlaceRoom" parameterType="java.util.List">
+            insert into a_intention_place_room (ID,activity_id,projectid,projectname,projectid_fq,projectname_fq,placebuild_id,buildguid,buildname,
+                                                roomguid,roomname,roominfo,roomno,unitno,floor,floorno,sale_status,room_type,exposure_img,house_type,house_type_id,
+                                                floor_area,inside_area,floor_price,inside_price,total_price,configure_total_price,orderby,status,isdel,createtime,creator)
+            values
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                uuid(),#{item.activityId},#{item.projectid},#{item.projectname},#{item.projectidFq},#{item.projectnameFq},#{item.placebuildId},
+                 #{item.buildguid},#{item.buildname},#{item.roomguid},#{item.roomname},#{item.roominfo},#{item.roomno},#{item.unitno},#{item.floor},
+                #{item.floorno},#{item.saleStatus},#{item.roomType},#{item.exposureImg},#{item.houseType},#{item.houseTypeId},#{item.floorArea},#{item.insideArea},#{item.floorPrice},
+                #{item.insidePrice},#{item.totalPrice},#{item.configureTotalPrice},#{item.orderby},#{item.status},0,now(),#{item.creator}
+                )
+            </foreach>
+        </insert>
+        <insert id="addBuildSite" parameterType="java.util.List">
+            insert into a_intention_place_buildsite(ID,activity_id,materialid,projectid,projectname,buildname,buildguid,buildsite_x,buildsite_y)
+            values
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                uuid(),#{item.activityId},#{item.materialid},#{item.projectid},#{item.projectname},#{item.buildname},#{item.buildguid},#{item.buildsiteX},
+                #{item.buildsiteY})
+            </foreach>
+        </insert>
+        <select id="getBuildSite" parameterType="java.lang.String" resultType="java.util.Map">
+            select ID id,activity_id activityId,materialid,projectid,projectname,buildname,buildguid,buildsite_x buildsiteX,buildsite_y buildsiteY
+            from a_intention_place_buildsite
+            where activity_id = #{id}
+        </select>
+        <delete id="delBuildSite" parameterType="java.lang.String">
+            delete from a_intention_place_buildsite where activity_id = #{id}
+        </delete>
+        <!--初始化装户房间结果-->
+        <insert id="addResultEdit" parameterType="java.util.List">
+            insert into a_intention_place_editresult (ID,activity_id,activity_name,projectid,projectname,projectid_fq,projectname_fq,buildguid,buildname,
+            roomguid,roomname,roomno,sale_status,room_type,house_type,
+            floor_area,inside_area,floor_price,inside_price,total_price,total_count,total_diff_count,one_count,one_diff_count,two_count,two_diff_count,three_count,three_diff_count,four_count,four_diff_count,five_count,five_diff_count)
+            values
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                uuid(),#{item.activityId},#{item.activityName},#{item.projectid},#{item.projectname},#{item.projectidFq},#{item.projectnameFq},
+                #{item.buildguid},#{item.buildname},#{item.roomguid},#{item.roomname},#{item.roomno},
+                #{item.saleStatus},#{item.roomType},#{item.houseType},#{item.floorArea},#{item.insideArea},#{item.floorPrice},
+                #{item.insidePrice},#{item.totalPrice},0,0,0,0,0,0,0,0,0,0,0,0
+                )
+            </foreach>
+        </insert>
+
+        <!--获取原有楼栋ID-->
+        <select id="getOldIntentionPlaceBuildID" parameterType="java.lang.String" resultType="java.lang.String">
+            select distinct buildguid from a_intention_place_editresult where activity_id = #{id}
+        </select>
+        <!--获取原有楼栋ID-->
+        <delete id="deleteEditResult" parameterType="java.lang.String">
+            delete from a_intention_place_editresult where activity_id = #{activityId} and buildguid = #{buildguid}
+        </delete>
+        <!--更新装户房间-->
+        <update id="updateIntentionPlaceRoom" parameterType="java.util.List">
+            <foreach collection="list" item="item" index="index" separator=";">
+            update a_intention_place_room
+              set status = #{item.status},
+                  editor = #{item.editor},
+                edittime = now()
+                  where ID = #{item.id}
+            </foreach>
+        </update>
+        <select id="getCityByPro" parameterType="java.lang.String" resultType="java.util.Map">
+            select ac.ID,ac.CityName from a_city_project ap
+                                              INNER JOIN a_city ac on ap.CityID = ac.ID
+            where ap.ProjectID = #{projectId}
+        </select>
+        <!--更新装户活动状态-->
+        <update id="updateIntentionPlaceStatus" parameterType="java.util.Map">
+            <choose>
+                <when test="status != null and status !=''">
+                    update a_intention_place set status = #{status},editor = #{editor},
+                    edittime = now(),disabletime = now(),ispublish2cst = 0,ispublish2gw = 0 where id = #{id};
+                    update a_intention_place_editresult
+                    set ispublish2cst = 0,ispublish2gw = 0,edit_time = now(),editor = #{editor}
+                    where activity_id = #{id};
+                </when>
+                <otherwise>
+                    update a_intention_place
+                    <set>
+                        <if test="isDel!=null and isDel!=''">
+                            isdel = #{isDel},
+                        </if>
+                        <if test="actStatus!=null and actStatus!=''">
+                            act_status = #{actStatus},
+                            release_time = now(),
+                        </if>
+                        editor = #{editor},
+                        edittime = now()
+                    </set>
+                    where id = #{id}
+                </otherwise>
+            </choose>
+        </update>
+        <!--获取活动分页数据-->
+        <select id="getIntentionPlacePage" parameterType="cn.visolink.system.householdregistration.model.form.IntentionPlaceForm" resultType="cn.visolink.system.householdregistration.model.vo.IntentionPlaceVO">
+            select bp.AreaName areaName,ap.ID id,ap.activity_name activityName,ap.projectid,ap.projectname,ap.buildbook_id buildbookId,ap.buildbook_name buildbookName,
+            ap.activity_begintime activityBegintime,ap.activity_endtime activityEndtime,ba.EmployeeName creator,ap.createtime,ap.release_time releaseTime,ifnull(ap.disabletime,'/') disabletime,
+                  ap.customer_type customerType,ap.card_type cardType, (case when ap.act_status = 1 then '草稿'
+                         when ap.`status`= 0 then '已禁用'
+                         when ap.act_status = 2 and ap.`status` = 1 and ((now()&lt; ap.release_time and ap.loading_type = 1) or (now()&lt;ap.activity_begintime and ap.loading_type = 2)) then '未发布'
+                         when ap.act_status = 2 and ap.`status` = 1 and now()&gt;= ap.release_time and now()&lt; ap.activity_begintime then '已发布'
+                         when ap.act_status = 2 and ap.`status` = 1 and now()&gt;= ap.activity_begintime and now()&lt;ap.activity_endtime then '已开始'
+                         when ap.act_status = 2 and ap.`status` = 1 and now()&gt;= ap.activity_endtime then '已结束'
+                       end) actStatus,
+                   (case when ap.ispublish2cst = 1 then '是' else '否' end) ispublish2cst,
+                   (case when ap.ispublish2gw = 1 then '是' else '否' end) ispublish2gw,
+                    (case when ap.loading_type = 1 then '聚客家装户' else '置业顾问装户' end) loadingType,
+                   ap.`status`,
+                   ap.intention_count intentionCount,
+                  ifnull(room.count,0)+ifnull(room1.count,0) placeCount
+            from a_intention_place ap
+            INNER JOIN b_account ba on ap.creator = ba.id
+            INNER JOIN b_project bp on ap.projectid = bp.ID
+            LEFT JOIN (select count(DISTINCT card_id) count,activity_id from a_intention_place_result where card_id is not null and card_id !='' and is_available = 1 group by activity_id) room on room.activity_id = ap.ID
+            LEFT JOIN (select count(DISTINCT OpportunityClueId) count,activity_id from a_intention_place_result where card_id is null or card_id ='' and is_available = 1 group by activity_id) room1 on room1.activity_id = ap.ID
+            where ap.isdel = 0
+            <if test="activityName!=null and activityName!=''">
+                and ap.activity_name like concat('%',#{activityName},'%')
+            </if>
+            <if test="loadingType!=null and loadingType!=''">
+                and ap.loading_type = #{loadingType}
+            </if>
+            <if test="projectList != null and projectList.size() > 0">
+                and bp.id in
+                <foreach collection="projectList" index="index" item="item" open="("
+                         separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="ispublish2cst!=null and ispublish2cst!=''">
+                and ap.ispublish2cst = #{ispublish2cst}
+            </if>
+            <if test="ispublish2gw!=null and ispublish2gw!=''">
+                and ap.ispublish2gw = #{ispublish2gw}
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '1'.toString()">
+                and ap.act_status = #{actStatus}
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+                and ap.act_status = 2 and ap.release_time &lt;= now() and ap.activity_begintime &gt; now() and
+                ap.`status` = 1
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+                and ap.`status` = 0
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+                and ap.activity_begintime &lt;= now() and ap.activity_endtime &gt; now() and ap.act_status = 2 and
+                ap.`status` = 1
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+                and ap.activity_endtime &lt;= now() and ap.act_status = 2 and ap.`status` = 1
+            </if>
+            <if test="actStatus!=null and actStatus!='' and actStatus == '5'.toString()">
+                and ((now()&lt; ap.release_time and ap.loading_type = 1) or (now()&lt;ap.activity_begintime and ap.loading_type = 2)) and ap.act_status = 2 and ap.`status` = 1
+            </if>
+            <if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+                and ap.release_time BETWEEN #{date1} AND #{date2}
+            </if>
+            <if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+                and ap.activity_begintime BETWEEN #{date1} AND #{date2}
+            </if>
+            <if test="reportTime==3  and date1!=null and date1!='' and date2!=null and date2!=''">
+                and ap.activity_endtime BETWEEN #{date1} AND #{date2}
+            </if>
+            <if test="reportTime==4  and date1!=null and date1!='' and date2!=null and date2!=''">
+                and ap.createtime BETWEEN #{date1} AND #{date2}
+            </if>
+            order by ap.createtime desc
+        </select>
+    <!--获取活动分页数据-->
+    <select id="getIntentionPlacePage_COUNT" parameterType="cn.visolink.system.householdregistration.model.form.IntentionPlaceForm" resultType="Long">
+        select count(1)
+        from a_intention_place ap
+        INNER JOIN b_project bp on ap.projectid = bp.ID
+        where ap.isdel = 0
+        <if test="activityName!=null and activityName!=''">
+            and ap.activity_name like concat('%',#{activityName},'%')
+        </if>
+        <if test="projectList != null and projectList.size() > 0">
+            and bp.id in
+            <foreach collection="projectList" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="ispublish2cst!=null and ispublish2cst!=''">
+            and ap.ispublish2cst = #{ispublish2cst}
+        </if>
+        <if test="ispublish2gw!=null and ispublish2gw!=''">
+            and ap.ispublish2gw = #{ispublish2gw}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '1'.toString()">
+            and ap.act_status = #{actStatus}
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '2'.toString()">
+            and ap.act_status = 2 and ap.release_time &lt;= now() and ap.activity_begintime &gt; now() and
+            ap.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '0'.toString()">
+            and ap.`status` = 0
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '3'.toString()">
+            and ap.activity_begintime &lt;= now() and ap.activity_endtime &gt; now() and ap.act_status = 2 and
+            ap.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '4'.toString()">
+            and ap.activity_endtime &lt;= now() and ap.act_status = 2 and ap.`status` = 1
+        </if>
+        <if test="actStatus!=null and actStatus!='' and actStatus == '5'.toString()">
+            and ((now()&lt; ap.release_time and ap.loading_type = 1) or (now()&lt;ap.activity_begintime and ap.loading_type = 2)) and ap.act_status = 2 and ap.`status` = 1
+        </if>
+        <if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+            and ap.release_time BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and ap.activity_begintime BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==3  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and ap.activity_endtime BETWEEN #{date1} AND #{date2}
+        </if>
+        <if test="reportTime==4  and date1!=null and date1!='' and date2!=null and date2!=''">
+            and ap.createtime BETWEEN #{date1} AND #{date2}
+        </if>
+    </select>
+    <!--分页查询装户结果-->
+    <select id="getIntentionPlaceResultPage" parameterType="cn.visolink.system.householdregistration.model.IntentionPlaceResult" resultType="cn.visolink.system.householdregistration.model.IntentionPlaceResult">
+        select ap.customer_name customerName,ap.customer_mobile customerMobileAll,
+                bp.ProjectName projectname,bp.AreaName areaname,
+               concat(Left(ap.customer_mobile,3),'****',right(ap.customer_mobile,4)) customerMobile,
+        ap.sales_name salesName,ap.activity_name activityName,ap.buildbook_name buildbookName,
+               (case when ap.intention_level = 1 then '首选'
+                     when ap.intention_level = 2 then '二选'
+                     when ap.intention_level = 3 then '三选'
+                     when ap.intention_level = 4 then '四选'
+                     when ap.intention_level = 5 then '五选' end
+                   ) intentionLevel,
+        ap.roomname,ap.floor_price floorPrice,ap.inside_price insidePrice,ap.house_type houseType,ap.room_type roomType,ap.card_name cardName,ap.batch_no_name batchNoName,ap.card_grouping_name cardGroupingName,
+        ap.floor_area floorArea,ap.inside_area insideArea,ap.create_time createTime,ap.buildname,
+        ap.UnitName
+        from a_intention_place_result ap
+        inner join b_project bp on ap.projectid = bp.id
+        where 1=1 and is_available = 1
+        <!--<if test="projectList != null and projectList.size() > 0">-->
+            <!--and ap.projectid in-->
+            <!--<foreach collection="projectList" index="index" item="item" open="("-->
+                     <!--separator="," close=")">-->
+                <!--#{item}-->
+            <!--</foreach>-->
+        <!--</if>-->
+        <if test="buildbookName!=null and buildbookName!=''">
+            and ap.buildbook_name like concat('%',#{buildbookName},'%')
+        </if>
+        <if test="roomname!=null and roomname!=''">
+            and ap.roomname like concat('%',#{roomname},'%')
+        </if>
+        <if test="activityId!=null and activityId!=''">
+            and ap.activity_id = #{activityId}
+        </if>
+        <if test="customerName!=null and customerName!=''">
+            and ap.customer_name like concat('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile!=null and customerMobile!=''">
+            and ap.customer_mobile like concat('%',#{customerMobile},'%')
+        </if>
+        <if test="salesName!=null and salesName!=''">
+            and ap.sales_name like concat('%',#{salesName},'%')
+        </if>
+    </select>
+    <select id="getIntentionPlaceResultPage_COUNT" parameterType="cn.visolink.system.householdregistration.model.IntentionPlaceResult" resultType="Long">
+        select count(1) from a_intention_place_result
+        where 1=1 and is_available = 1
+        <!--<if test="projectList != null and projectList.size() > 0">-->
+            <!--and projectid in-->
+            <!--<foreach collection="projectList" index="index" item="item" open="("-->
+                     <!--separator="," close=")">-->
+                <!--#{item}-->
+            <!--</foreach>-->
+        <!--</if>-->
+        <if test="buildbookName!=null and buildbookName!=''">
+            and buildbook_name like concat('%',#{buildbookName},'%')
+        </if>
+        <if test="roomname!=null and roomname!=''">
+            and roomname like concat('%',#{roomname},'%')
+        </if>
+        <if test="activityId!=null and activityId!=''">
+            and activity_id = #{activityId}
+        </if>
+        <if test="customerName!=null and customerName!=''">
+            and customer_name like concat('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile!=null and customerMobile!=''">
+            and customer_mobile like concat('%',#{customerMobile},'%')
+        </if>
+        <if test="salesName!=null and salesName!=''">
+            and sales_name like concat('%',#{salesName},'%')
+        </if>
+    </select>
+
+    <select id="getIntentionPlaceResultPage2" parameterType="cn.visolink.system.householdregistration.model.IntentionPlaceResult" resultType="cn.visolink.system.householdregistration.model.IntentionPlaceResult">
+        select ap.customer_name customerName,ap.customer_mobile customerMobileAll,
+        bp.ProjectName projectname,bp.AreaName areaname,
+        concat(Left(ap.customer_mobile,3),'****',right(ap.customer_mobile,4)) customerMobile,
+        ap.sales_name salesName,ap.activity_name activityName,ap.buildbook_name buildbookName,
+        <if test="edition!=null and edition=='1'.toString()">
+            (case when ap.intention_level_first = 1 then '首选'
+            when ap.intention_level_first = 2 then '二选'
+            when ap.intention_level_first = 3 then '三选'
+            when ap.intention_level_first = 4 then '四选'
+            when ap.intention_level_first = 5 then '五选' end
+            ) intentionLevel,
+        </if>
+        <if test="edition!=null and edition=='2'.toString()">
+            (case when ap.intention_level_edit = 1 then '首选'
+            when ap.intention_level_edit = 2 then '二选'
+            when ap.intention_level_edit = 3 then '三选'
+            when ap.intention_level_edit = 4 then '四选'
+            when ap.intention_level_edit = 5 then '五选' end
+            ) intentionLevel,
+        </if>
+        <if test="edition!=null and edition=='3'.toString()">
+            (case when ap.intention_level = 1 then '首选'
+            when ap.intention_level = 2 then '二选'
+            when ap.intention_level = 3 then '三选'
+            when ap.intention_level = 4 then '四选'
+            when ap.intention_level = 5 then '五选' end
+            ) intentionLevel,
+        </if>
+        room.roomname,
+        room.floor_price floorPrice,
+        room.inside_price insidePrice,
+        room.house_type houseType,
+        room.room_type roomType,ap.card_name cardName,ap.batch_no_name batchNoName,ap.card_grouping_name cardGroupingName,
+        room.floor_area floorArea,
+        room.inside_area insideArea,ap.create_time createTime,room.buildname,
+        un.unitname
+        from a_intention_place_result ap
+        inner join b_project bp on ap.projectid = bp.id
+        <if test="edition!=null and edition=='1'.toString()">
+            inner join a_intention_place_room room on room.roomguid = ap.roomguid_first and room.activity_id =ap.activity_id
+        </if>
+        <if test="edition!=null and edition=='2'.toString()">
+            inner join a_intention_place_room room on room.roomguid = ap.roomguid_edit and room.activity_id =ap.activity_id
+        </if>
+        <if test="edition!=null and edition=='3'.toString()">
+            inner join a_intention_place_room room on room.roomguid = ap.roomguid and room.activity_id =ap.activity_id
+        </if>
+        inner join a_intention_place_unit un on room.unitno = un.unitno and room.buildguid = un.buildguid and room.activity_id =un.activity_id
+        where 1=1
+        <if test="buildbookName!=null and buildbookName!=''">
+            and ap.buildbook_name like concat('%',#{buildbookName},'%')
+        </if>
+        <if test="roomname!=null and roomname!=''">
+            and room.roominfo like concat('%',#{roomname},'%')
+        </if>
+        <if test="activityId!=null and activityId!=''">
+            and ap.activity_id = #{activityId}
+        </if>
+        <if test="customerName!=null and customerName!=''">
+            and ap.customer_name like concat('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile!=null and customerMobile!=''">
+            and ap.customer_mobile like concat('%',#{customerMobile},'%')
+        </if>
+        <if test="salesName!=null and salesName!=''">
+            and ap.sales_name like concat('%',#{salesName},'%')
+        </if>
+    </select>
+    <select id="getBldList" parameterType="java.lang.String" resultType="java.util.Map">
+        select ap.buildguid BldGUID,ap.buildname BldName,ap.buildprice,ifnull(re.count,0) count
+        from a_intention_place_build ap
+             left join (select count(1) count,buildguid from a_intention_place_result where activity_id = #{activityId} GROUP BY buildguid) re on ap.buildguid = re.buildguid
+        where ap.activity_id = #{activityId} and ap.isdel = 0;
+    </select>
+    <!--更新装户房间发布状态-->
+    <update id="updateIntentionPlaceResult" parameterType="java.util.Map">
+        update a_intention_place_editresult
+        <set>
+            <if test="type!=null and type=='1'.toString()">
+                ispublish2cst = #{isPublish},
+            </if>
+            <if test="type!=null and type=='2'.toString()">
+                ispublish2gw = #{isPublish},
+            </if>
+            edit_time = now(),
+            editor = #{editor}
+        </set>
+        where activity_id = #{id};
+        update a_intention_place
+        <set>
+            <if test="type!=null and type=='1'.toString()">
+                ispublish2cst = #{isPublish},
+            </if>
+            <if test="type!=null and type=='2'.toString()">
+                ispublish2gw = #{isPublish},
+            </if>
+            edittime = now(),
+            editor = #{editor}
+        </set>
+        where ID = #{id};
+    </update>
+    <!--查询移动装户结果-->
+    <select id="selectMoveRoomResult" parameterType="java.util.Map" resultType="cn.visolink.system.householdregistration.model.IntentionPlaceRoom">
+        select room.activity_id activityId,room.projectid,room.projectname,room.projectid_fq projectidFq,room.projectname_fq projectnameFq,
+        room.placebuild_id placebuildId,room.buildguid,room.buildname,room.roomguid,room.roomname,room.roominfo,room.roomno,room.unitno,room.floor,
+        room.floorno,room.sale_status saleStatus,room.room_type roomType,room.exposure,room.exposure_img exposureImg,room.house_type houseType,
+        room.house_type_id houseTypeId,room.floor_area floorArea,room.inside_area insideArea,room.floor_price floorPrice,room.inside_price insidePrice,
+        room.total_price totalPrice,room.configure_total_price configureTotalPrice,room.orderby,room.status,t.totalCount,t.oneCount,t.twoCount,t.threeCount,
+               t.fourCount,t.fiveCount,t.isEdit
+        from a_intention_place_room room
+        LEFT JOIN (
+        <if test="edition == '1'.toString()">
+            select sum(case when intention_level_first = 1 then 1 else 0 end) oneCount,
+            sum(case when intention_level_first = 2 then 1 else 0 end) twoCount,
+            sum(case when intention_level_first = 3 then 1 else 0 end) threeCount,
+            sum(case when intention_level_first = 4 then 1 else 0 end) fourCount,
+            sum(case when intention_level_first = 5 then 1 else 0 end) fiveCount,
+            count(1) totalCount,roomguid_first roomguid,'2' isEdit
+            from a_intention_place_result
+            where activity_id = #{id} and is_available = 1
+            <if test="list!=null and list.size()>0">
+                and buildguid in (
+                <foreach collection="list" item="item" index="index" separator=",">
+                    #{item}
+                </foreach>
+                )
+            </if>
+            GROUP BY roomguid_first
+        </if>
+        <if test="edition == '2'.toString()">
+            select sum(case when intention_level_edit = 1 then 1 else 0 end) oneCount,
+            sum(case when intention_level_edit = 2 then 1 else 0 end) twoCount,
+            sum(case when intention_level_edit = 3 then 1 else 0 end) threeCount,
+            sum(case when intention_level_edit = 4 then 1 else 0 end) fourCount,
+            sum(case when intention_level_edit = 5 then 1 else 0 end) fiveCount,
+            count(1) totalCount,roomguid_edit roomguid,
+            (case when intention_level_edit != intention_level_first or roomguid_edit!=roomguid_first then '1' else '2' end) isEdit
+            from a_intention_place_result
+            where activity_id = #{id} and is_available = 1
+            <if test="list!=null and list.size()>0">
+                and buildguid in (
+                <foreach collection="list" item="item" index="index" separator=",">
+                    #{item}
+                </foreach>
+                )
+            </if>
+            GROUP BY roomguid_edit
+        </if>
+        <if test="edition == '3'.toString()">
+            select sum(case when intention_level = 1 then 1 else 0 end) oneCount,
+            sum(case when intention_level = 2 then 1 else 0 end) twoCount,
+            sum(case when intention_level = 3 then 1 else 0 end) threeCount,
+            sum(case when intention_level = 4 then 1 else 0 end) fourCount,
+            sum(case when intention_level = 5 then 1 else 0 end) fiveCount,
+            count(1) totalCount,roomguid,'2' isEdit
+            from a_intention_place_result
+            where activity_id = #{id} and is_available = 1
+            <if test="list!=null and list.size()>0">
+                and buildguid in (
+                <foreach collection="list" item="item" index="index" separator=",">
+                    #{item}
+                </foreach>
+                )
+            </if>
+            GROUP BY roomguid
+        </if>
+        ) t on t.roomguid = room.roomguid
+        where room.activity_id = #{id}
+        <if test="list!=null and list.size()>0">
+            and room.buildguid in (
+            <foreach collection="list" item="item" index="index" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        and room.isdel = 0 order by room.unitno,room.floorno desc,room.roomno
+    </select>
+    <!--查询装户结果-->
+    <select id="selectRoomResult" parameterType="java.lang.String" resultType="cn.visolink.system.householdregistration.model.IntentionPlaceRoom">
+        select room.ID,room.activity_id activityId,room.projectid,room.projectname,room.projectid_fq projectidFq,
+               room.projectname_fq projectnameFq,room.placebuild_id placebuildId,room.buildguid,room.buildname,room.roomguid,
+               room.roomname,room.roominfo,room.roomno,room.unitno,room.floor,room.floorno,room.sale_status saleStatus,
+               room.room_type roomType,room.exposure,room.exposure_img exposureImg,room.house_type houseType,room.house_type_id houseTypeId,
+               room.floor_area floorArea,room.inside_area insideArea,room.floor_price floorPrice,room.inside_price insidePrice,
+               room.total_price totalPrice,room.configure_total_price configureTotalPrice,room.orderby,room.status,ifnull(re.totalCount,0) totalCount,ifnull(re.oneCount,0) oneCount,
+               ifnull(re.twoCount,0) twoCount,ifnull(re.threeCount,0) threeCount,ifnull(re.fourCount,0) fourCount,ifnull(re.fiveCount,0) fiveCount,ifnull(re.totalDiffCount,0) totalDiffCount,ifnull(re.oneDiffCount,0) oneDiffCount,ifnull(re.twoDiffCount,0) twoDiffCount,ifnull(re.threeDiffCount,0) threeDiffCount,ifnull(re.fourDiffCount,0) fourDiffCount,
+               ifnull(re.fiveDiffCount,0) fiveDiffCount,ifnull(re.totalEditCount,0) totalEditCount,ifnull(re.oneEditCount,0) oneEditCount,ifnull(re.twoEditCount,0) twoEditCount,ifnull(re.threeEditCount,0) threeEditCount,ifnull(re.fourEditCount,0) fourEditCount,ifnull(re.fiveEditCount,0) fiveEditCount
+        from a_intention_place_room room
+                 LEFT JOIN (
+                select ifnull(t.totalCount,0) totalCount,ifnull(t.oneCount,0) oneCount,ifnull(t.twoCount,0) twoCount,ifnull(t.threeCount,0) threeCount,ifnull(t.fourCount,0) fourCount,ifnull(t.fiveCount,0) fiveCount,
+                       t1.total_diff_count totalDiffCount,t1.one_diff_count oneDiffCount,t1.two_diff_count twoDiffCount,t1.three_diff_count threeDiffCount,t1.four_diff_count fourDiffCount,
+                       t1.five_diff_count fiveDiffCount,
+                        (case when (ifnull(t.totalCount,0)+t1.total_diff_count) &lt; 0 then 0 else
+                          (ifnull(t.totalCount,0)+t1.total_diff_count) end) totalEditCount,
+                        (case when (ifnull(t.oneCount,0)+t1.one_diff_count) &lt; 0 then 0 else
+                        (ifnull(t.oneCount,0)+t1.one_diff_count) end) oneEditCount,
+                        (case when (ifnull(t.twoCount,0)+t1.two_diff_count) &lt; 0 then 0 else
+                        (ifnull(t.twoCount,0)+t1.two_diff_count) end) twoEditCount,
+                        (case when (ifnull(t.threeCount,0)+t1.three_diff_count) &lt; 0 then 0 else
+                        (ifnull(t.threeCount,0)+t1.three_diff_count) end) threeEditCount,
+                        (case when (ifnull(t.fourCount,0)+t1.four_diff_count) &lt; 0 then 0 else
+                        (ifnull(t.fourCount,0)+t1.four_diff_count) end) fourEditCount,
+                        (case when (ifnull(t.fiveCount,0)+t1.five_diff_count) &lt; 0 then 0 else
+                        (ifnull(t.fiveCount,0)+t1.five_diff_count) end) fiveEditCount,
+                       t1.roomguid
+                from (select roomguid,total_diff_count,one_diff_count,two_diff_count,
+                             three_diff_count,four_diff_count,five_diff_count
+                      from a_intention_place_editresult where activity_id = #{id}
+                    <if test="buildguid!=null and buildguid!=''">
+                        and buildguid = #{buildguid}
+                    </if>
+                     ) t1
+                    left join
+                    (
+                         select sum(case when intention_level = 1 then 1 else 0 end) oneCount,
+                                sum(case when intention_level = 2 then 1 else 0 end) twoCount,
+                                sum(case when intention_level = 3 then 1 else 0 end) threeCount,
+                                sum(case when intention_level = 4 then 1 else 0 end) fourCount,
+                                sum(case when intention_level = 5 then 1 else 0 end) fiveCount,
+                                count(1) totalCount,roomguid
+                         from a_intention_place_result where activity_id = #{id}
+                        <if test="buildguid!=null and buildguid!=''">
+                            and buildguid = #{buildguid}
+                        </if>
+                         GROUP BY roomguid) t
+                         on t.roomguid = t1.roomguid
+            ) re on re.roomguid = room.roomguid
+        where room.activity_id = #{id}
+        <if test="buildguid!=null and buildguid!=''">
+            and room.buildguid = #{buildguid}
+        </if>
+          and room.isdel = 0 order by room.unitno,room.floorno desc,room.roomno
+    </select>
+    <!--保存调整单个-->
+    <update id="updateEditResult" parameterType="java.util.Map">
+        update a_intention_place_editresult
+        set total_diff_count = #{totalDiffCount},
+            one_diff_count = #{oneDiffCount},
+            two_diff_count = #{twoDiffCount},
+            three_diff_count = #{threeDiffCount},
+            four_diff_count = #{fourDiffCount},
+            five_diff_count = #{fiveDiffCount},
+            editor = #{editor},
+            edit_time = now()
+        where activity_id = #{activityId} and roomguid = #{roomguid}
+    </update>
+
+    <!--保存调整批量-->
+    <update id="updateEditResultSome" parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" separator=";">
+            update a_intention_place_editresult
+            set total_diff_count = #{item.totalDiffCount},
+            one_diff_count = #{item.oneDiffCount},
+            two_diff_count = #{item.twoDiffCount},
+            three_diff_count = #{item.threeDiffCount},
+            four_diff_count = #{item.fourDiffCount},
+            five_diff_count = #{item.fiveDiffCount},
+            editor = #{item.editor},
+            edit_time = now()
+            where activity_id = #{item.activityId}
+            and roomguid = #{item.roomguid}
+        </foreach>
+    </update>
+    <select id="getRoomResultDetail" parameterType="java.util.Map" resultType="java.util.Map">
+        select customer_name customerName,
+               concat(Left(customer_mobile,3),'****',right(customer_mobile,4)) customerMobile,
+               sales_name salesName,
+               (case when intention_level = 1 then '首选'
+                     when intention_level = 2 then '二选'
+                     when intention_level = 3 then '三选'
+                     when intention_level = 4 then '四选'
+                     when intention_level = 5 then '五选' end
+                   ) intentionLevel
+        from a_intention_place_result
+        where activity_id = #{id} and roomguid = #{roomguid}
+              <if test="intentionLevel!=null and intentionLevel!=''">
+                and intention_level = #{intentionLevel}
+              </if>
+    </select>
+
+    <!--获取到访机会数-->
+    <select id="getAllCount" parameterType="cn.visolink.system.householdregistration.model.vo.IntentionPlaceVO" resultType="_int">
+        select count(1) from b_project_opportunity
+        where projectId = #{projectid} and TheFirstVisitDate &lt; #{activityEndtime}
+          and ClueStatus &gt; 1 and ClueStatus &lt; 9;
+    </select>
+    <!--获取排卡机会数-->
+    <select id="getCardOpp" parameterType="cn.visolink.system.householdregistration.model.form.CardOppID" resultType="_int">
+        select count(1)
+        from b_project_opportunity
+        where projectId = #{projectId}
+        and IntentionID in
+        <foreach collection="intentionIDs" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getSmallCard" parameterType="java.lang.String" resultType="java.lang.String">
+        select project_fid from a_intention_place_card_group
+        where activity_id = #{activityId}
+          and projectid = #{projectId} and card_type = '1';
+    </select>
+
+    <select id="getBigCard" parameterType="java.lang.String" resultType="java.util.Map">
+        select project_fid fid,opening_batch openingBatch,card_grouping cardGrouping
+        from a_intention_place_card_group
+        where activity_id = #{activityId}
+          and projectid = #{projectId} and card_type = '2';
+    </select>
+    <!--获取装户楼栋-->
+    <select id="getActivityBuild" parameterType="java.lang.String" resultType="java.util.Map">
+        select buildguid,buildname
+        from a_intention_place_build
+        where activity_id = #{id}
+        and isdel = 0 order by orderby
+    </select>
+    <!--获取装户结果楼栋-->
+    <select id="getActivityBuildResult" parameterType="java.lang.String" resultType="java.util.Map">
+        select abu.buildguid,(case when site.buildname is not null then site.buildname else abu.buildname end) buildname
+        from a_intention_place_build abu
+                 LEFT JOIN a_intention_place_buildsite  site on abu.activity_id = site.activity_id and abu.buildguid = site.buildguid
+        where abu.activity_id = #{id}
+          and abu.isdel = 0 order by abu.orderby
+    </select>
+    <select id="selectActivityPhoto" parameterType="java.lang.String" resultType="java.lang.String">
+        select material_address from a_intention_place_material
+        where activity_id = #{id} and material_type = 2 and isdel = 0
+    </select>
+
+        <!-- 通用查询结果列 -->
+        <sql id="Base_Column_List">
+        ID, city_id, city_name, activity_name, projectid, projectname, buildbook_id, buildbook_name, activity_sharecont, release_time, activity_begintime, activity_endtime, activity_note, customer_type, batch_no, place_no, intention_count, showprice_type, status, act_status, ispublish2cst, ispublish2gw, isdel, createtime, creator, edittime, editor
+    </sql>
+
+    <!--查询项目下的所有分期-->
+    <select id="getFqIdByProId" parameterType="java.lang.String" resultType="java.lang.String">
+        select id from b_project where pid = #{projectId} and `Status` = 1 and IsDel = 0;
+    </select>
+
+    <!--查询调整记录-->
+    <select id="getEditList" parameterType="java.util.Map" resultType="cn.visolink.system.householdregistration.model.EditRecord">
+        select re.customer_name customerName,re.customer_mobile customerMobileAll,
+        concat(left(re.customer_mobile,3),'****',right(re.customer_mobile,4)) as customerMobile,
+        re.sales_name salesName,re.card_name cardName,re.batch_no_name batchNoName,re.card_grouping_name cardGroupingName,
+        re.activity_name activityName,bp.AreaName areaName,re.projectname projectName,
+        re.intention_level_old intentionLevelOld,re.intention_level_edit intentionLevel,
+        re.roomname_old roomNameOld,re.roomname_edit roomName,
+        (case when re.edit_status = 1 then '未处理'
+        when re.edit_status = 2 then '通过'
+        when re.edit_status = 3 then '拒绝' end) editStatus
+        from a_intention_place_move_edit_record re
+        inner join b_project bp on re.projectid = bp.id
+        where re.is_del = 0 and re.activity_id = #{activityId}
+        <if test="editStatus!=null and editStatus!=''">
+            and re.edit_status = #{editStatus}
+        </if>
+        <if test="customerName!=null and customerName!=''">
+            and re.customer_name like concat('%',#{customerName},'%')
+        </if>
+        <if test="customerMobile!=null and customerMobile!=''">
+            and re.customer_mobile like concat('%',#{customerMobile},'%')
+        </if>
+        <if test="salesName!=null and salesName!=''">
+            and re.sales_name like concat('%',#{salesName},'%')
+        </if>
+        ORDER BY re.create_time desc
+    </select>
+    <!--获取项目下装户活动-->
+    <select id="getProActivitys" parameterType="java.util.Map" resultType="java.util.Map">
+        select ID activityId,
+        activity_name activityName,
+        loading_type loadingType
+        from a_intention_place
+        where isdel = 0 and status = 1 and act_status = 2
+          <if test="type!=null and type=='2'.toString()">
+              and loading_type = 2
+          </if>
+        and projectid in
+        <foreach collection="projectList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRoomResultCst" parameterType="java.util.Map" resultType="java.util.Map">
+        select id,customer_name customerName,activity_id activityId,activity_name activityName,
+        projectid,projectname,ProjectClueId projectClueId,customer_mobile customerMobile,sales_id salesId,
+        batch_no batchNo,batch_no_name batchNoName,card_grouping cardGrouping,card_grouping_name cardGroupingName,
+              OpportunityClueId opportunityClueId,card_id cardId,card_name cardName,card_type cardType,
+              place_no placeNo,
+               <if test="edition!=null and edition=='1'.toString()">
+                   (case when card_name!=null and card_name!='' then concat(card_name,'-',
+                   (case when intention_level_first = 1 then '首选'
+                   when intention_level_first = 2 then '二选'
+                   when intention_level_first = 3 then '三选'
+                   when intention_level_first = 4 then '四选'
+                   when intention_level_first = 5 then '五选' end))
+                   else (case when intention_level_first = 1 then '首选'
+                   when intention_level_first = 2 then '二选'
+                   when intention_level_first = 3 then '三选'
+                   when intention_level_first = 4 then '四选'
+                   when intention_level_first = 5 then '五选' end) end) intentionLevelDesc,
+                   intention_level_first intentionLevelOld,
+                   roomguid_first roomguidOld,
+                   roomname_first roomnameOld,
+               </if>
+                <if test="edition!=null and edition=='2'.toString()">
+                    (case when card_name!=null and card_name!='' then concat(card_name,'-',
+                    (case when intention_level_edit = 1 then '首选'
+                    when intention_level_edit = 2 then '二选'
+                    when intention_level_edit = 3 then '三选'
+                    when intention_level_edit = 4 then '四选'
+                    when intention_level_edit = 5 then '五选' end))
+                    else (case when intention_level_edit = 1 then '首选'
+                    when intention_level_edit = 2 then '二选'
+                    when intention_level_edit = 3 then '三选'
+                    when intention_level_edit = 4 then '四选'
+                    when intention_level_edit = 5 then '五选' end) end) intentionLevelDesc,
+                    intention_level_edit intentionLevelOld,
+                    roomguid_edit roomguidOld,
+                    roomname_edit roomnameOld,
+                </if>
+                <if test="edition!=null and edition=='3'.toString()">
+                    (case when card_name!=null and card_name!='' then concat(card_name,'-',
+                    (case when intention_level = 1 then '首选'
+                    when intention_level = 2 then '二选'
+                    when intention_level = 3 then '三选'
+                    when intention_level = 4 then '四选'
+                    when intention_level = 5 then '五选' end))
+                    else (case when intention_level = 1 then '首选'
+                    when intention_level = 2 then '二选'
+                    when intention_level = 3 then '三选'
+                    when intention_level = 4 then '四选'
+                    when intention_level = 5 then '五选' end) end) intentionLevelDesc,
+                    intention_level intentionLevelOld,
+                    roomguid roomguidOld,
+                    roomname roomnameOld,
+                </if>
+               sales_name salesName
+        from a_intention_place_result
+        where activity_id = #{activityId}
+              <if test="edition!=null and edition=='1'.toString() and roomId!=null and roomId!=''">
+                  and roomguid_first = #{roomId}
+              </if>
+            <if test="edition!=null and edition=='2'.toString() and roomId!=null and roomId!=''">
+                and roomguid_edit = #{roomId}
+            </if>
+            <if test="edition!=null and edition=='3'.toString() and roomId!=null and roomId!=''">
+                and roomguid = #{roomId}
+            </if>
+            <if test="opportunityClueId!=null and opportunityClueId!=''">
+                and OpportunityClueId = #{opportunityClueId}
+            </if>
+            <if test="salesId!=null and salesId!='' and salesId!='1'.toString()">
+                and sales_id = #{salesId}
+            </if>
+            <if test="salesId!=null and salesId!='' and salesId=='1'.toString()">
+                and (sales_id is null or sales_id = '')
+            </if>
+
+    </select>
+    <!--删除调整装户信息-->
+    <update id="delRoomResult" parameterType="java.lang.String">
+      update a_intention_place_result set roomguid_edit = null,roomname_edit = null,
+                                          intention_level_edit = null,edit_status = 1,edittime = now(),
+                                          edit_record_id = #{editId}
+      where id = #{id}
+    </update>
+    <update id="updateRoomResult" parameterType="java.util.Map">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update a_intention_place_result
+            set
+            <if test="item.roomguidEdit!=null">
+                roomguid_edit = #{item.roomguidEdit},
+            </if>
+            <if test="item.intentionLevelEdit!=null">
+                intention_level_edit = #{item.intentionLevelEdit},
+            </if>
+            <if test="item.roomnameEdit!=null">
+                roomname_edit = #{item.roomnameEdit},
+            </if>
+            edit_record_id = #{item.id},
+            edit_status = 1,
+            edittime = now()
+            where OpportunityClueId = #{item.opportunityClueId}
+                  and activity_id = #{item.activityId}
+                  <if test="item.roomguidOld!=null">
+                      and roomguid_edit = #{item.roomguidOld}
+                  </if>
+                  <if test="item.cardId!=null">
+                        and card_id = #{item.cardId}
+                  </if>
+                <if test="item.intentionLevel!=null">
+                    and intention_level = #{item.intentionLevel}
+                </if>
+        </foreach>
+    </update>
+    <!--查询装户结果是否存在-->
+    <select id="queryIsResultExit" parameterType="java.util.Map" resultType="_int">
+        select count(1) from a_intention_place_result
+        where OpportunityClueId = #{opportunityClueId}
+        and activity_id = #{activityId}
+        and intention_level = #{intentionLevelEdit}
+        <if test="cardId!=null">
+            and card_id = #{cardId}
+        </if>
+    </select>
+
+    <insert id="addEditRecords" parameterType="java.util.Map">
+        insert into a_intention_place_move_edit_record(ID,activity_id,activity_name,projectid,projectname,roomguid_old,
+        roomname_old,roomguid_edit,roomname_edit,OpportunityClueId,ProjectClueId,customer_name,customer_mobile,sales_id,
+        sales_name,batch_no,batch_no_name,card_grouping,card_grouping_name,card_id,card_name,card_type,place_no,
+        intention_level_old,intention_level_edit,create_time,creator,edit_status)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id},#{item.activityId},#{item.activityName},#{item.projectid},#{item.projectname},#{item.roomguidOld},
+            #{item.roomnameOld},#{item.roomguidEdit},#{item.roomnameEdit},#{item.opportunityClueId},#{item.projectClueId},
+            #{item.customerName},#{item.customerMobile},#{item.salesId},#{item.salesName},
+            #{item.batchNo},#{item.batchNoName},#{item.cardGrouping},#{item.cardGroupingName},#{item.cardId},#{item.cardName},
+            #{item.cardType},#{item.placeNo},#{item.intentionLevelOld},#{item.intentionLevelEdit},NOW(),#{item.creator},1)
+        </foreach>
+    </insert>
+    <!--根据ID查询装户记录-->
+    <select id="getDelIntentionDesc" parameterType="java.util.Map" resultType="java.util.Map">
+        select id,customer_name customerName,activity_id activityId,activity_name activityName,
+        projectid,projectname,ProjectClueId projectClueId,customer_mobile customerMobile,sales_id salesId,
+        batch_no batchNo,batch_no_name batchNoName,card_grouping cardGrouping,card_grouping_name cardGroupingName,
+        OpportunityClueId opportunityClueId,card_id cardId,card_name cardName,card_type cardType,
+        place_no placeNo,
+       (case when card_name!=null and card_name!='' then concat(card_name,'-',
+           (case when intention_level_edit = 1 then '首选'
+           when intention_level_edit = 2 then '二选'
+           when intention_level_edit = 3 then '三选'
+           when intention_level_edit = 4 then '四选'
+           when intention_level_edit = 5 then '五选' end))
+           else (case when intention_level_edit = 1 then '首选'
+           when intention_level_edit = 2 then '二选'
+           when intention_level_edit = 3 then '三选'
+           when intention_level_edit = 4 then '四选'
+           when intention_level_edit = 5 then '五选' end) end) intentionLevelDesc,
+       intention_level_edit intentionLevelOld,
+       roomguid_edit roomguidOld,
+       roomname_edit roomnameOld,
+        sales_name salesName
+        from a_intention_place_result
+        where id = #{id}
+    </select>
+
+    <insert id="addRoomResultList" parameterType="java.util.Map">
+        insert into a_intention_place_result(ID,activity_id,activity_name,projectid,projectname,projectid_fq,projectname_fq,
+        buildguid,buildname,OpportunityClueId,ProjectClueId,customer_name,customer_mobile,sales_id,
+        sales_name,batch_no,batch_no_name,card_grouping,card_grouping_name,card_id,card_name,card_type,place_no,
+        intention_level_edit,roomguid_edit,roomname_edit,create_time,creator,edit_record_id)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (uuid(),#{item.activityId},#{item.activityName},#{item.projectid},#{item.projectname},#{item.projectidFq},
+            #{item.projectnameFq},#{item.buildguid},#{item.buildname},#{item.opportunityClueId},#{item.projectClueId},
+            #{item.customerName},#{item.customerMobile},#{item.salesId},#{item.salesName},
+            #{item.batchNo},#{item.batchNoName},#{item.cardGrouping},#{item.cardGroupingName},#{item.cardId},#{item.cardName},
+            #{item.cardType},#{item.placeNo},#{item.intentionLevelEdit},#{item.roomguidEdit},#{item.roomnameEdit},NOW(),#{item.creator},#{item.id})
+        </foreach>
+    </insert>
+
+    <!--查询装户客户集合-->
+    <select id="getIntentionPlaceUserList" parameterType="java.util.Map"
+            resultType="cn.visolink.system.householdregistration.model.IntentionCst">
+        select
+        OpportunityClueId as opportunityClueId,
+        ProjectClueId as projectClueId,
+        IntentionID as intentionId,
+        CustomerMobile as customerMobile,
+        CustomerName as customerName,
+        SalesAttributionId as salesId,
+        SalesAttributionName as salesName,
+        bpo.projectId as projectid,
+        bpo.ProjectName as projectname
+        from b_project_opportunity bpo
+        where
+        bpo.projectId = #{projectId}
+        and bpo.ClueStatus > 1
+        and bpo.TheFirstVisitDate &lt; #{activityEndTime}
+        <if test="userName != null and userName != '' and type == '1'.toString()">
+            and bpo.CustomerName like CONCAT('%',#{userName},'%')
+        </if>
+        <if test="userName != null and userName != '' and type == '2'.toString()">
+            and (bpo.CustomerName like CONCAT('%',#{userName},'%') or bpo.SalesAttributionName like CONCAT('%',#{userName},'%'))
+        </if>
+        <if test="customerMobile != null and customerMobile != '' ">
+            <if test="customerMobile.toString().length==11">
+                and bpo.CustomerMobile = #{customerMobile}
+            </if>
+            <if test="customerMobile.toString().length!=11">
+                and bpo.CustomerMobile like CONCAT('%',#{customerMobile},'%')
+            </if>
+        </if>
+        <if test="salesId!=null and salesId!='' and salesId!='1'.toString()">
+            and SalesAttributionId = #{salesId}
+        </if>
+        <if test="salesId!=null and salesId!='' and salesId =='1'.toString()">
+            and (SalesAttributionId is null or SalesAttributionId = '')
+        </if>
+    </select>
+
+    <!--查询装户客户详情-->
+    <select id="getIntentionPlaceUser" parameterType="java.util.Map"
+            resultType="cn.visolink.system.householdregistration.model.IntentionCst">
+        select
+        OpportunityClueId as opportunityClueId,
+        ProjectClueId as projectClueId,
+        IntentionID as intentionId,
+        CustomerMobile as customerMobile,
+        CustomerName as customerName,
+        SalesAttributionId as salesId,
+        SalesAttributionName as salesName,
+        bpo.projectId as projectid,
+        bpo.ProjectName as projectname
+        from b_project_opportunity bpo
+        where
+        bpo.OpportunityClueId = #{opportunityClueId}
+    </select>
+    <!--查询项目下置业顾问-->
+    <select id="getProSales" parameterType="java.util.Map" resultType="java.util.Map">
+        select ba.id salesId,ba.EmployeeName salesName from s_jobs job
+                                              INNER JOIN s_commonjobs com on job.CommonJobID = com.id and com.isIdm = 0
+                                              INNER JOIN s_jobsuserrel rel on rel.JobID = job.id
+                                              INNER JOIN s_organization org on org.id = job.JobOrgID
+                                              INNER JOIN b_account ba on ba.id = rel.AccountID and ba.isIdm = 0
+        where org.ProjectID = #{projectId} and com.JobCode = 'zygw' and job.isIdm = 0
+    </select>
+    <!--查询装户范围-->
+    <select id="getIntentionPlaceCstList" parameterType="java.util.Map" resultType="cn.visolink.system.householdregistration.model.IntentionCst">
+        select
+        OpportunityClueId as opportunityClueId,
+        ProjectClueId as projectClueId,
+        customer_mobile as customerMobile,
+        customer_name as customerName,
+        sales_id as salesId,
+        sales_name as salesName,
+        projectid as projectid,
+        projectname as projectname,
+        activity_id as activityId,
+        activity_name as activityName,
+        batch_no as batchNo,
+        batch_no_name as batchNoName,
+        card_grouping as cardGrouping,
+        card_grouping_name as cardGroupingName,
+        project_fid as projectidFq,
+        project_fname as projectnameFq,
+        card_type as cardType,
+        card_id as cardId,
+        card_name as cardName,
+        place_no as placeNo
+        from a_intention_place_cst
+        where
+        activity_id = #{id} and is_del = 0
+        <if test="userName != null and userName != '' and type == '1'.toString()">
+            and customer_name like CONCAT('%',#{userName},'%')
+        </if>
+        <if test="userName != null and userName != '' and type == '2'.toString()">
+            and (customer_name like CONCAT('%',#{userName},'%') or sales_name like CONCAT('%',#{userName},'%'))
+        </if>
+        <if test="customerMobile != null and customerMobile != '' ">
+            <if test="customerMobile.toString().length==11">
+                and customer_mobile = #{customerMobile}
+            </if>
+            <if test="customerMobile.toString().length!=11">
+                and customer_mobile like CONCAT('%',#{customerMobile},'%')
+            </if>
+        </if>
+        <if test="salesId!=null and salesId!='' and salesId!='1'.toString()">
+            and sales_id = #{salesId}
+        </if>
+        <if test="salesId!=null and salesId!='' and salesId=='1'.toString()">
+            and (sales_id is null or sales_id = '')
+        </if>
+    </select>
+    <!--查询装户待装户-->
+    <select id="getIntentionPlaceCstOne" parameterType="java.util.Map" resultType="cn.visolink.system.householdregistration.model.IntentionCst">
+        select
+        OpportunityClueId as opportunityClueId,
+        ProjectClueId as projectClueId,
+        customer_mobile as customerMobile,
+        customer_name as customerName,
+        sales_id as salesId,
+        sales_name as salesName,
+        projectid as projectid,
+        projectname as projectname,
+        activity_id as activityId,
+        activity_name as activityName,
+        count(OpportunityClueId) as needPlaceCount
+        from a_intention_place_cst
+        where
+        activity_id = #{id} and is_del = 0
+        <if test="userName != null and userName != '' and type == '1'.toString()">
+            and customer_name like CONCAT('%',#{userName},'%')
+        </if>
+        <if test="userName != null and userName != '' and type == '2'.toString()">
+            and (customer_name like CONCAT('%',#{userName},'%') or sales_name like CONCAT('%',#{userName},'%'))
+        </if>
+        <if test="customerMobile != null and customerMobile != '' ">
+            <if test="customerMobile.toString().length==11">
+                and customer_mobile = #{customerMobile}
+            </if>
+            <if test="customerMobile.toString().length!=11">
+                and customer_mobile like CONCAT('%',#{customerMobile},'%')
+            </if>
+        </if>
+        <if test="salesId!=null and salesId!='' and salesId!='1'.toString()">
+            and sales_id = #{salesId}
+        </if>
+        <if test="salesId!=null and salesId!='' and salesId=='1'.toString()">
+            and (sales_id is null or sales_id = '')
+        </if>
+        group by OpportunityClueId
+    </select>
+    <!--查询排卡的装户客户-->
+    <select id="getCstCardList" parameterType="java.util.Map" resultType="cn.visolink.system.householdregistration.model.IntentionCst">
+        select
+        OpportunityClueId as opportunityClueId,
+        ProjectClueId as projectClueId,
+        customer_mobile as customerMobile,
+        customer_name as customerName,
+        sales_id as salesId,
+        sales_name as salesName,
+        projectid as projectid,
+        projectname as projectname,
+        activity_id as activityId,
+        activity_name as activityName,
+        batch_no as batchNo,
+        batch_no_name as batchNoName,
+        card_grouping as cardGrouping,
+        card_grouping_name as cardGroupingName,
+        project_fid as projectidFq,
+        project_fname as projectnameFq,
+        card_type as cardType,
+        card_id as cardId,
+        card_name as cardName,
+        place_no as placeNo
+        from a_intention_place_cst
+        where
+        activity_id = #{id} and is_del = 0
+        and OpportunityClueId = #{opportunityClueId} and card_id is not null and card_id !='' and card_id !='null'
+    </select>
+    <!--查询配置了调整通知的置业顾问-->
+    <select id="getEditMessageSales" parameterType="java.lang.String" resultType="java.lang.String">
+        select user_id from b_user_template_config
+        where project_id = #{projectId} and job_code = 'zygw' and type = 2 and group_value = '31111';
+    </select>
+
+    <!--查询需要发送消息的置业顾问-->
+    <select id="getEditRecord" parameterType="java.util.Map" resultType="java.lang.String">
+        select DISTINCT sales_id from a_intention_place_result
+        where projectid = #{projectId}
+          and activity_id = #{activityId}
+          and ((roomguid!=roomguid_edit) or
+               (roomguid is null and roomguid_edit is not null) or
+               (roomguid is not null and roomguid_edit is null) or
+               (intention_level!=intention_level_edit) or
+               (intention_level is not null and intention_level_edit is null) or
+               (intention_level is not null and intention_level_edit is null))
+          and sales_id in
+        <foreach collection="salesIds" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <!--更新为已调整-->
+    <update id="updateActivityEdit" parameterType="java.lang.String">
+        update a_intention_place set is_edit= 1 where ID = #{activityId}
+    </update>
+</mapper>

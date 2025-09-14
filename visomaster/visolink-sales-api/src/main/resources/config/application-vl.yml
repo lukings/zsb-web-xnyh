@@ -1,0 +1,354 @@
+server:
+  port: 8001
+#配置数据源
+spring:
+  # 关闭定时任务
+  task:
+    scheduling:
+      enabled: false
+  datasource:
+    druid:
+      url: jdbc:mysql://124.223.75.64:13306/testwy_prod?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&useCursorFetch=true&defaultFetchSize=500&allowMultiQueries=true
+      username: root
+      password: root123321
+      driverClassName: com.mysql.cj.jdbc.Driver
+      type: com.alibaba.druid.pool.DruidDataSource
+      # 初始化配置
+      initial-size: 3
+      # 最小连接数
+      min-idle: 3
+      # 最大连接数
+      max-active: 50
+      # 获取连接超时时间
+      max-wait: 60000
+      # 连接有效性检测时间
+      time-between-eviction-runs-millis: 90000
+      # 最大空闲时间
+      min-evictable-idle-time-millis: 1800000
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      validation-query: select 1
+      # 配置监控统计拦截的filters
+      filters: stat,wall,slf4j
+      stat-view-servlet:
+        url-pattern: /druid/*
+        reset-enable: false
+        login-username: admin
+        login-password: 123456
+      web-stat-filter:
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*"
+      # 增强SQL日志配置
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+          slow-sql-millis: 3000        # 慢 SQL 阈值设为 3 秒
+          merge-sql: true             # 合并重复 SQL 日志
+          slow-sql-log-period: 30000   # 每 30 秒统计一次慢 SQL
+        wall:
+          enabled: false               # 开启防火墙
+          config:
+            multi-statement-allow: true
+            drop-table-allow: false
+        slf4j:
+          enabled: true
+          statement-executable-sql-log-enable: true
+          statement-parameter-set-log-enabled: true   # 输出原始参数列表
+          connection-log-enabled: false              # 关闭连接日志
+          result-set-log-enabled: false              # 关闭结果集日志
+  #配置 Jpa
+  jpa:
+    hibernate:
+      # 生产环境设置成 none，避免程序运行时自动更新数据库结构
+      ddl-auto: none
+
+  redis:
+    host: 124.223.75.64
+    port: 6380
+    database: 1
+    lettuce:
+      pool:
+        max-active: 500
+        max-idle: 10
+        max-wait: -1
+        min-idle: 0
+    timeout: 20000
+    password: vs123321
+
+# MyBatis配置
+mybatis:
+  configuration:
+    # 开启SQL日志
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    # 开启驼峰命名转换
+    map-underscore-to-camel-case: true
+
+# 日志配置
+logging:
+  level:
+    # MyBatis SQL日志
+    cn.visolink: DEBUG
+    org.apache.ibatis: DEBUG
+    # Druid SQL日志
+    druid.sql: DEBUG
+    # Spring JDBC日志
+    org.springframework.jdbc: DEBUG
+
+#jwt
+jwt:
+  header: Authorization
+  secret: mySecret
+  refresh:
+    secret: mySecret-refresh
+    # token 1440 小时   一个月
+    expiration: 1440000
+  # token 3600 秒   1小时
+  expiration: 2592000
+  auth:
+    # 授权路径
+    path: /login
+    # 获取用户信息
+    account: /info
+  backLogin:
+    path: /backLogin
+
+#是否允许生成代码，生产环境设置为false
+generator:
+  enabled: false
+
+#是否开启 swagger-ui
+swagger:
+  enabled: true
+
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=cswagger-starterountSql
+
+
+# 日志配置  为空为项目跟目录下的logs  或者指定已经存在的目录
+log:
+  path: /vs/visoDemoProject/zhyx/app/tomcat-web-9002/logs/
+
+sso:
+  appUser: AUTH_SCRM
+  privateKey: u2f0vknodebvsfd8
+  url: https://sso-uat.cifi.com.cn/siam/api/v2/token/tgt/auth
+  tempTokenUrl: https://sso-uat.cifi.com.cn/siam/oauth2.0/accessTokenByJson?client_id=AUTH_SCRM&client_secret=u2f0vknodebvsfd8&response_type=code&redirect_uri=https%3A%2F%2Fscrm-uat.cifi.com.cn%2F%23%2Fdashboard&code=
+  accessUrl: https://sso-uat.cifi.com.cn/siam/oauth2.0/profileByJson?access_token=
+
+RedistributioinURL: https://scrm-api-uat.cifi.com.cn/applet/service/updateMyOppZygw
+
+MediaTypeURL: https://scrm-api-uat.cifi.com.cn/applet/service/mediaTypeSyn
+
+#文件路径
+FTP_BASEPATH: /app/netdata/webFile
+IMAGE_END_URL: https://scrm-uat.cifi.com.cn/image/brokerWeb/
+UPLOAD_URL: https://scrm-api-uat.cifi.com.cn/applet/FileUpload/uploadFiles
+#IMAGE_BASE_URL: https://scrm-sit.cifi.com.cn/app/netdata/brokerWeb/
+IMAGE_BASE_URL: /app/netdata/webFile
+IMAGE_BASE_URL_W: /app/netdata/brokerWeb/
+IMAGE_BASE_URL_QW: /app/netdata/qw/
+
+#活动上传路径
+IMAGE_ACTIVITY_URL: /app/netdata/activity/
+IMAGE_ACTIVITY_URL_LOOK: https://scrm-uat.cifi.com.cn/image/activity/
+
+#新闻路径修改
+IMAGE_TAG: https://scrm-uat.cifi.com.cn/
+
+appid: wxe4bf124e97c87ebd
+appKey: 0b8b12722ab75a1d5ce899db9afa5d74
+
+mapAppKey: 7FGBZ-KHBKF-PW3J6-N4HU5-7T3NQ-ZOBGS
+mapUrl: https://apis.map.qq.com/ws/place/v1/search
+
+#连接中台，获取全民经纪人运营分析
+ZTJUrl: https://biboardmgt-test.cifi.com.cn/datacollector/load/prcFactAgentProjXk
+#连接中台，获取经纪人交易数据
+ZTJJRURL: https://biboardmgt-test.cifi.com.cn/datacollector/load/prcFactTradPfmcXk
+#连接中台，获取活动交易数据
+ZTACURL: https://biboardmgt-test.cifi.com.cn/datacollector/load/prcFactActyTradXk
+#连接中台，经纪人活动数据
+ZTJJRHDURL: https://biboardmgt-test.cifi.com.cn/datacollector/load/prcFactBrokerTradXk
+#连接中台，大客户经理数据
+ZTDKHURL: https://biboardmgt-test.cifi.com.cn/datacollector/load/prcFactAcctTradXk
+
+#更新redis数据
+BROKERURL: https://sales.visolink.com/activity/RedisController/updateRedis
+UPDATEREDISURL: https://sales.visolink.com/activity/RedisController/updateAwardInfo
+
+#区分微信获取token 生产和测试
+WeChatType: dev
+WeChatTypeUrl: https://scrm-api.cifi.com.cn/man/system/weChatToken/getWeChatAccessToken
+
+#sqlserver 数据库配置
+DBDurl: jdbc:sqlserver://10.129.37.147:1433;DatabaseName=dotnet_erp60
+DBXurl: jdbc:sqlserver://10.129.37.147:1433;DatabaseName=dotnet_erp60
+DBuser: myerp
+DBpassword: myerp@123
+
+XZSurl: jdbc:mysql://192.168.103.26:3306/erp_pro?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&useCursorFetch=true&defaultFetchSize=500&allowMultiQueries=true
+XZSuser: acUser
+XZSpassword: 2GH0D3x6
+
+#定时任务数据源配置
+druidDataSource:
+  Url: jdbc:mysql://118.190.56.178:3306/{}?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&useCursorFetch=true&defaultFetchSize=500&allowMultiQueries=true
+  Username: root
+  Password: root
+# 旺小宝接电说辞
+WXBUrl: https://phone-test.cifi.com.cn/fileserver/file/playaudio/
+#销管系统数据源
+xg:
+  url: jdbc:mysql://10.129.37.103:3306/saleman
+  username: xukeview
+  password: XUKEView_123
+
+PerformanceURL: https://scrm-api-uat.cifi.com.cn/applet/service/performanceSyn
+
+#公共对外接口路径
+FOREIGNURL: https://scrm-api-uat.cifi.com.cn/applet/service/
+#同步置业顾问
+ConsultantSyncURL: https://scrm-api-uat.cifi.com.cn/applet/openTo/consultantSync
+
+#获取公司数据库
+CompanyDataUrl: https://sales.visolink.com/auth/customer/queryCompanyData
+#获取聚客汇菜单
+AppMenuUrl: https://sales.visolink.com/auth/customer/getAllAppMenus
+#验证码请求接口
+CODE_PATH: https://sales.visolink.com/auth/sms/sendQrSms
+
+#企微token获取路径
+WX_TOKEN_PATH: https://sales.visolink.com/auth/comwx/selectToken
+
+#推送明源丢失客户
+ISTOMYURL: https://gkt.zhongnangroup.cn/applet-uat/service/addMyCst
+
+#推送明源公共池更新
+SENDMYPOOLURL: http://172.10.10.181:19066/flowengine/CommonOpportunityPoolU
+
+#短信模板
+YJCODE: 000012
+GBCODE: 000011
+
+#审批回调：
+SystemUrl: https://ydacuat.vanyang.com.cn/web-uat/#/
+#审批接口路径
+StartProcess: http://esbuat.vanyang.com.cn/oa/sendOAWorkFlow
+
+#移动案场推送OA消息接口
+YDACSENDOAMESSAGEURL: http://esbuat.vanyang.com.cn/oa/sendOAMessage
+YDACSENDOAMESSAGEAPPCODE: 3001
+#移动案场跟进审批待办
+YDACFOLLOWUPPENDINGURL: https://ydacuat.vanyang.com.cn/web-uat/#/PendingfollowWhite
+#移动案场转介审批待办
+YDACREFERRALPENDINGURL: https://ydacuat.vanyang.com.cn/web-uat/#/referralProcessedWhite
+#移动案场公客池客户获取审批待办
+YDACOBTAINCSTPENDINGURL: https://ydacuat.vanyang.com.cn/web-uat/#/pendingReferralWhite
+
+#Excel Url
+ExcelUrl: /app/netdata/excel/
+#Excel DownLoadUrl
+DownLoadUrl: https://ydacuat.vanyang.com.cn/image/excel/
+
+#外呼打通登录鉴权的密钥
+outbound:
+  secret: TkIEJwtmM8mhPcE8J3IofVfcMM72pOsU
+  channelId: 545
+  urlOp: https://ydacuat.vanyang.com.cn/call/api/auth.Login/auth
+  addUserOp: https://ydacuat.vanyang.com.cn/call/api/seats.Seats/add
+  updateUserOp: https://ydacuat.vanyang.com.cn/call/api/seats.Seats/edit
+  deleteUserOp: https://ydacuat.vanyang.com.cn/call/api/seats.Seats/dele
+  addOrgOp:  https://ydacuat.vanyang.com.cn/call/api/seats.CrmStructure/add
+  updateOrgOp:  https://ydacuat.vanyang.com.cn/call/api/seats.CrmStructure/edi
+  addRoleOp: https://ydacuat.vanyang.com.cn/call/api/seats.CrmGroups/add
+  updateRoleOp: https://ydacuat.vanyang.com.cn/call/api/seats.CrmGroups/edit
+  deleteHD: https://ydacuat.vanyang.com.cn/call/api/crm.Leads/dele
+  addRobot: https://ydacuat.vanyang.com.cn/call/api/crm.Leads/addRobot
+  addTheCall: https://ydacuat.vanyang.com.cn/call/api/crm.Leads/addAll
+  uid: 62011e0e-be4a-4d32-b73c-3fb0172643b6
+  did: 0F053C4C-7B92-3969-EE40-39BFBA06E8C9
+  sid: f8207974-64b5-48ed-a025-12f54b1faac3
+  isCall: 0
+
+# es服务器
+elasticsearch:
+  host: 192.168.103.62
+  port: 9200
+
+ed:
+  # 公司名称
+  commonFieldId: '43688bd0-c486-43b1-985f-6b0c465f5cf3'
+  # 行业
+  industryFieldId: '9c21b560-827f-4d8b-9245-72b70475756b'
+  industryTwoFieldId: '8d6608a8-a8fd-465e-ad03-660b9475a18c'
+  industryThreeFieldId: 'fd872e54-e344-418d-abe7-44924d8509d3'
+  industryFourFieldId: 'd29784ba-282b-4716-8b3a-2d8937cf8141'
+  # 地址
+  provinceFieldId: 'b67557aa-7f1f-4f35-bfd8-5f1dfe2f9129'
+  # 公司规模
+  companyScaleFieldId: 'a551140e-5c0f-4ff5-988d-e782a188c165'
+  # 成立日期
+  establishYearsFieldId: '61feb2dc-75a2-46e4-b3bf-7808a31c48cf'
+  # 营业状态
+  registrationStatusFieldId: '09d70acb-72fa-4b00-9b52-ea8a7a6f195d'
+  # 注册资本
+  registeredCapitalFieldId: '0f76e534-ddfa-419c-8d71-c6d540f5add9'
+  # 电话
+  phoneFieldId: '10e8f620-9acc-498b-9756-2a356a4901e2'
+  # 更多电话
+  phoneFieldId2: 'e2601a0a-a284-429c-aa62-ff3f51d9cb13'
+  # 法人
+  legalPersonFieldId: 'a624d827-fad3-4487-92f3-ed2138afb8a6'
+  # 企业类型
+  companyTypeFieldId: '72858482-a461-477e-9a4a-4a2dbe3a4442'
+  # 邮箱
+  emailFieldId: '58efec6e-5d74-47be-87d1-59d2b8cdbf8f'
+  # 邮编
+  postCodeFieldId: '81632c61-6d3e-49d4-aba9-8d29aff848e2'
+  # 网址
+  webAddressFieldId: 'ac8e557c-6e49-422b-a779-717e5b764100'
+  # 参保人数
+  insuredPersonFieldId: '33d48b92-1a77-4103-8ded-f371aa70024e'
+  # 年营业额
+  annualRevenueFieldId: '9f8b0778-6664-491a-8c72-e06488c41566'
+  # 人员规模
+  staffSizeFieldId: 'dcbbf859-cf3e-4910-8a6f-518de63e8a86'
+
+# 权限拦截器配置
+permission:
+  interceptor:
+    enabled: false
+  check:
+    enabled: true
+    cache-enabled: true
+    cache-expire: 300
+
+# 数据加密配置
+encrypt:
+  enabled: false
+  algorithm: aes
+  aes:
+    key: visolink2024key!
+    use-custom-key: false
+  # 加密排除配置
+  exclude:
+    paths:
+      - /login
+      - /logout
+      - /error
+      - /swagger-ui/**
+      - /static/**
+    # 白名单类和方法配置
+    whitelist:
+      classes:
+      methods:
+        - "cn.visolink.system.channel.controller.ProjectCluesController#getGlAllocationPropertyConsultantZygwCall"
+        - "cn.visolink.system.channel.controller.ProjectCluesController#isRobotPermissions"
+        - "cn.visolink.system.channel.controller.ProjectCluesController#getCallProjectRule"
+        - "cn.visolink.system.channel.controller.ProjectCluesController#callTurnTheClue"
+        - "cn.visolink.common.security.rest.AuthenticationController#authentication"

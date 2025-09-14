@@ -1,0 +1,1848 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.excel.mapper.ExcelImportMapper">
+
+    <!--校验项目-->
+    <select id="checkProjectName" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(*) from b_project where ProjectName=#{projectName}
+    </select>
+
+    <!--校验员工账号-->
+    <select id="checkUserName" resultType="java.lang.Integer" parameterType="java.lang.String">
+        select count(*) from b_account where UserName=#{userName} and IsDel=0
+    </select>
+
+    <!--校验中介公司-->
+    <select id="checkCompany" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(*) from s_company_info where companyName=#{companyName}
+    </select>
+
+    <!--保存数据-->
+    <insert id="saveImportData" parameterType="java.util.Map">
+        INSERT INTO t_vist_customer (
+sourceTypeDesc,
+customerName,
+customerGender,
+customerMobile,
+projectName,
+userName,
+reportCreateTime,
+visitDate,
+reportUserName,
+companyName,
+mainMediaName,
+subMediaName,
+ageGroup,
+workAreaDesc,
+belongIndustriseDesc,
+lifeAreaDesc,
+familyStructureDesc,
+familyIncomeDesc,
+purchasePurposeDesc,
+homeNumDesc,
+currentHouseTypeDesc,
+intentionalAreaDesc,
+intentionalFloorDesc,
+acceptPriceDesc,
+acceptTotalPriceDesc,
+qualifications,
+remarks,
+createtime,
+fileName,
+cardTypeDesc,
+cardNum,
+buyPointDesc,
+resistanceDesc
+)
+VALUES
+	(
+#{sourceTypeDesc},#{customerName},#{customerGender},#{customerMobile},
+#{projectName},#{userName},#{reportCreateTime},#{visitDate},#{reportUserName},
+#{companyName},#{mainMediaName},#{subMediaName},#{ageGroup},#{workAreaDesc},
+#{belongIndustriseDesc},#{lifeAreaDesc},#{familyStructureDesc},#{familyIncomeDesc},
+#{purchasePurposeDesc},#{homeNumDesc},#{currentHouseTypeDesc},#{intentionalAreaDesc},
+#{intentionalFloorDesc},#{acceptPriceDesc},#{acceptTotalPriceDesc},#{qualifications},
+#{remarks},now(),#{fileName},#{cardTypeDesc},#{cardNum},#{buyPointDesc},#{resistanceDesc})
+    </insert>
+
+    <delete id="delImportData">
+        truncate table t_vist_customer;
+    </delete>
+    <!--插入错误记录-->
+    <insert id="saveError" parameterType="java.util.Map">
+        insert into t_vist_customer_log(sourceTypeDesc,customerName,customerGender,customerMobile,projectName,userName,reportCreateTime,visitDate,reportUserName,companyName,mainMediaName,
+        subMediaName,ageGroup,workAreaDesc,belongIndustriseDesc,lifeAreaDesc,familyStructureDesc,familyIncomeDesc,purchasePurposeDesc,homeNumDesc,currentHouseTypeDesc,intentionalAreaDesc,
+        intentionalFloorDesc,acceptPriceDesc,acceptTotalPriceDesc,qualifications,remarks,createtime,error,row,fileName,cardTypeDesc,cardNum,buyPointDesc,resistanceDesc)
+        values (#{sourceTypeDesc},#{customerName},#{customerGender},#{customerMobile},#{projectName},#{userName},#{reportCreateTime},#{visitDate},#{reportUserName},#{companyName},#{mainMediaName},
+        #{subMediaName},#{ageGroup},#{workAreaDesc},#{belongIndustriseDesc},#{lifeAreaDesc},#{familyStructureDesc},#{familyIncomeDesc},#{purchasePurposeDesc},#{homeNumDesc},#{currentHouseTypeDesc},#{intentionalAreaDesc},
+        #{intentionalFloorDesc},#{acceptPriceDesc},#{acceptTotalPriceDesc},#{qualifications},#{remarks},now(),#{error},#{row},#{fileName},#{cardTypeDesc},#{cardNum},#{buyPointDesc},#{resistanceDesc})
+    </insert>
+
+    <!--获取导入数据-->
+    <select id="getAllImportData" resultType="java.util.Map">
+        select * from t_vist_customer
+    </select>
+
+    <!--校验在线索表是否存在数据-->
+	<select id="checkProjectClue" parameterType="java.lang.String" resultType="java.util.Map">
+        	select ProjectClueId,ReportUserID,ReportTeamID,IsReportExpire,SourceType,ClueStatus from b_project_clues where CustomerMobile=#{mobile} and ProjectName=#{projectName} and ClueStatus!=9 limit 0,1
+    </select>
+
+
+	<!--获取项目ID-->
+    <select id="getProjectId" parameterType="java.lang.String" resultType="java.lang.String">
+        select ID from b_project where ProjectName=#{projectName}
+    </select>
+
+    <!--新增客户表-->
+    <insert id="insertCustomerBasic"
+            parameterType="java.util.Map">
+            insert into b_customer_basic(ID,Name,Gender,Mobile,Creator,CreateTime,Status,projectId,ProjectName,flag,CardType,CardNum,AreaCode)
+            values(#{customerUuid},#{customerName},#{customerGender},#{customerMobile},(select ID from b_account where UserName=#{userName}),now(),1,#{projectId},#{projectName},'Excel导入',
+            (select DictCode from s_dictionary where DictName=#{cardTypeDesc} limit 0,1),#{cardNum},'86')
+    </insert>
+
+    <!--获取用户信息-->
+    <select id="getUserInfo" parameterType="java.lang.String" resultType="java.util.Map">
+        	select  bc.ID,bc.EmployeeName,so.ID OrgId,so.OrgName
+        	from b_account bc join s_jobsuserrel sj on bc.ID=sj.AccountID
+        	join s_jobs job on sj.JobID=job.ID and job.isIdm = 0
+        	join s_organization so on job.JobOrgID=so.ID
+        	where bc.UserName=#{userName} and bc.IsDel=0 and job.IsDel=0 and so.IsDel=0 limit 0,1
+
+    </select>
+    <!--获取中介登录人信息-->
+    <select id="getForUserInfo" parameterType="java.lang.String" resultType="java.util.Map">
+      SELECT
+	bc.ID,
+	bc.EmployeeName,
+	so.ID teamId,
+	so.orgName teamName,
+	sci.ID companyID
+FROM
+	b_account bc
+	JOIN s_company_info sci ON bc.SubordCompanyID = sci.ID
+	join s_organization so on so.OrgCompanyID=sci.ID where userName=#{userName} and bc.IsDel=0 and so.IsDel=0
+    </select>
+    <!--新增线索扩展表-->
+	<insert id="insertCluesExc" parameterType="java.util.Map">
+		INSERT INTO b_clue_opportunity_extend (ID,ProjectClueId,ReportSource,ReportSourceDesc,CreateTime)
+		values(uuid(),#{projectClueUuid},1,'正常报备',now())
+	</insert>
+    <!--新增线索-->
+    <insert id="insertClue" parameterType="java.util.Map">
+        INSERT INTO b_project_clues (ProjectClueId,BasicCustomerId,CustomerLevel,TradeLevel,Level,CustomerName,
+CustomerMobile,CustomerGender,ExpectedVisitDate,IsFollow,SourceType,SourceTypeDesc,
+MainMediaGUID,MainMediaName,SubMediaGUID,SubMediaName,PerformanceAttributorID,PerformanceAttributor,SourceTypeOld,
+SourceTypeOldDesc,PerformanceAttributorOldID,PerformanceAttributorOld,ClueStatus,IsFirstTable,projectId,ProjectName,
+ReportUserID,ReportUserName,ReportTeamID,ReportCreateTime,ReportTeamName,SalesAttributionId,
+SalesAttributionName,SalesAttributionTeamId,SalesAttributionTeamName,ReportExpireDate,ReportExpireWarningDate,
+TokerVisitExpireDate,TokerVisitExpireWarningDate,SalesVisitExpireDate,SalesVisitExpireWarningDate,IsDel,CreateTime,CreateUserId,flag,CustomerCardType,CustomerCardTypeDesc,CustomerCardNum,TheFirstVisitDate,VisitDate,AreaCode)
+VALUES
+	(#{projectClueUuid},#{customerUuid},#{customerLevel},#{tradeLevel},#{level},#{customerName},#{customerMobile},#{customerGender},
+	#{ExpectedVisitDate},0,#{sourceType},#{sourceTypeDesc},(select DictCode from s_dictionary where IsDel = 0 and DictName=#{mainMediaName} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=1 limit 0,1),#{mainMediaName},(select DictCode from s_dictionary where IsDel = 0 and DictName=#{subMediaName} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{subMediaName},
+	#{performanceAttributorID},#{performanceAttributor},#{sourceType},#{sourceTypeDesc},#{performanceAttributorOldID},#{performanceAttributorOld},#{clueStatus},1,#{projectId},#{projectName},#{reportUserId},#{reportUserName},#{reportTeamId},#{reportCreateTime},#{reportTeamName},#{salesAttributionId},#{salesAttributionName},
+	#{salesAttributionGroupId},#{salesAttributionGroupName},#{reportExpireDate},#{reportExpireWarningDate},#{tokerVisitExpireDate},#{tokerVisitExpireWarningDate},#{salesVisitExpireDate},#{salesVisitExpireWarningDate},0,
+	now(),#{reportUserId},'Excel导入',(select DictCode from s_dictionary where DictName=#{cardTypeDesc} limit 0,1),#{cardTypeDesc},#{cardNum},#{visitDate},#{visitDate},'86')
+    </insert>
+	<!--覆盖线索-->
+	<update id="overiedClues" parameterType="java.util.Map">
+update b_project_clues set
+PerformanceAttributorID=#{performanceAttributorID},
+PerformanceAttributor=#{performanceAttributor},
+PerformanceAttributorOldID=#{performanceAttributorID},
+PerformanceAttributorOld=#{performanceAttributor},
+SourceType=#{sourceType},
+SourceTypeDesc=#{sourceTypeDesc},
+SourceTypeOld=#{sourceType},
+SourceTypeOldDesc=#{sourceTypeDesc},
+ReportUserID=#{reportUserId},
+ReportUserName=#{reportUserName},
+ReportTeamID=#{reportTeamId},
+ReportTeamName=#{reportTeamName},
+ReportCreateTime=#{reportCreateTime},
+ReportExpireDate=#{reportExpireDate},
+ReportExpireWarningDate=#{reportExpireWarningDate},
+flag='渠道覆盖数据'
+where ProjectClueId=#{projectClueId}
+	</update>
+	<!--覆盖机会-->
+	<update id="overiedOpp" parameterType="java.util.Map">
+update b_project_opportunity set
+PerformanceAttributorID=#{performanceAttributorID},
+PerformanceAttributor=#{performanceAttributor},
+PerformanceAttributorOldID=#{performanceAttributorID},
+PerformanceAttributorOld=#{performanceAttributor},
+SourceType=#{sourceType},
+SourceTypeDesc=#{sourceTypeDesc},
+SourceTypeOld=#{sourceType},
+SourceTypeOldDesc=#{sourceTypeDesc},
+ReportUserID=#{reportUserId},
+ReportUserName=#{reportUserName},
+ReportTeamID=#{reportTeamId},
+ReportCreateTime=#{reportCreateTime},
+ReportTeamName=#{reportTeamName},
+ReportExpireDate=#{reportExpireDate},
+ReportExpireWarningDate=#{reportExpireWarningDate},
+flag='渠道覆盖数据'
+where ProjectClueId=#{projectClueId}
+	</update>
+    <!--新增机会-->
+    <insert id="insertOpp" parameterType="java.util.Map">
+        INSERT INTO b_project_opportunity (OpportunityClueId,ProjectClueId,BasicCustomerId,CustomerLevel,TradeLevel,Level,CustomerName,
+CustomerMobile,CustomerGender,ExpectedVisitDate,IsFollow,SourceType,SourceTypeDesc,
+MainMediaGUID,MainMediaName,SubMediaGUID,SubMediaName,PerformanceAttributorID,PerformanceAttributor,SourceTypeOld,
+SourceTypeOldDesc,PerformanceAttributorOldID,PerformanceAttributorOld,ClueStatus,IsFirstTable,projectId,ProjectName,
+ReportUserID,ReportUserName,ReportTeamID,ReportCreateTime,ReportTeamName,SalesAttributionId,
+SalesAttributionName,SalesAttributionTeamId,SalesAttributionTeamName,ReportExpireDate,ReportExpireWarningDate,
+TokerVisitExpireDate,TokerVisitExpireWarningDate,SalesVisitExpireDate,SalesVisitExpireWarningDate,IsDel,CreateTime,CreateUserId,flag,CustomerCardType,CustomerCardTypeDesc,CustomerCardNum,TheFirstVisitDate,VisitDate,AreaCode)
+VALUES
+	(#{projectOppUuid},#{projectClueUuid},#{customerUuid},#{customerLevel},#{tradeLevel},#{level},#{customerName},#{customerMobile},#{customerGender},
+	#{ExpectedVisitDate},0,#{sourceType},#{sourceTypeDesc},(select DictCode from s_dictionary where IsDel = 0 and DictName=#{mainMediaName} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=1 limit 0,1),#{mainMediaName},(select DictCode from s_dictionary where IsDel = 0 and DictName=#{subMediaName} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{subMediaName},
+	#{performanceAttributorID},#{performanceAttributor},#{sourceType},#{sourceTypeDesc},#{performanceAttributorOldID},#{performanceAttributorOld},#{clueStatus},1,#{projectId},#{projectName},#{reportUserId},#{reportUserName},#{reportTeamId},#{reportCreateTime},#{reportTeamName},#{salesAttributionId},#{salesAttributionName},
+	#{salesAttributionGroupId},#{salesAttributionGroupName},#{reportExpireDate},#{reportExpireWarningDate},#{tokerVisitExpireDate},#{tokerVisitExpireWarningDate},#{salesVisitExpireDate},#{salesVisitExpireWarningDate},0,
+	now(),#{reportUserId},'Excel导入',(select DictCode from s_dictionary where DictName=#{cardTypeDesc} limit 0,1),#{cardTypeDesc},#{cardNum},#{visitDate},#{visitDate},'86')
+    </insert>
+
+    <!--填写首访信息-->
+    <insert id="saveInformation" parameterType="java.util.Map">
+		insert into b_information(id,OpportunityClueId,ProjectClueId,projectId,CustomerName,
+		CustomerMobile,CustomerGender,MainMediaGUID,MainMediaName,SubMediaGUID,SubMediaName,
+		WorkArea,WorkAreaDesc,BelongIndustrise,BelongIndustriseDesc,LifeArea,LifeAreaDesc,AgeGroup,AgeGroupDesc,FamilyStructure,FamilyStructureDesc,
+		FamilyIncome,FamilyIncomeDesc,PurchasePurpose,PurchasePurposeDesc,HomeNum,HomeNumDesc,CurrentHouseType,CurrentHouseTypeDesc,IntentionalArea,IntentionalAreaDesc,
+		IntentionalFloor,IntentionalFloorDesc,AcceptPrice,AcceptPriceDesc,AcceptTotalPrice,AcceptTotalPriceDesc,Qualifications,
+		SalesName,Description,CreateTime,CreateUserId,IsDel,BuyPoint,BuyPointDesc,Resistance,ResistanceDesc)
+		values(uuid(),#{projectOppUuid},#{projectClueUuid},#{projectId},#{customerName},
+		#{customerMobile},#{customerGender},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{mainMediaName} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{mainMediaName},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{subMediaName} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{subMediaName},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{workArea} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{workAreaDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{belongIndustrise} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{belongIndustriseDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{lifeArea} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{lifeAreaDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{ageGroup} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{ageGroupDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{familyStructure} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{familyStructureDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{familyIncome} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{familyIncomeDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{purchasePurpose} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{purchasePurposeDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{homeNum} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{homeNumDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{currentHouseType} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{currentHouseTypeDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{intentionalArea} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{intentionalAreaDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{intentionalFloor} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{intentionalFloorDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{acceptPrice} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{acceptPriceDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{acceptTotalPrice} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{acceptTotalPriceDesc},#{qualifications},
+		#{salesAttributionName},#{remarks},now(),#{salesAttributionId},0,
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{buyPointDesc} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{buyPointDesc},
+		(select DictCode from s_dictionary where IsDel = 0 and DictName=#{resistanceDesc} and (DictionaryLevel = 1 or (DictionaryLevel = 2 and projectId = #{projectId})) and Levels=2 limit 0,1),#{resistanceDesc})
+	</insert>
+
+
+    <!--获取中介保护规则-->
+    <select id="getZjProjectProtect" parameterType="java.lang.String" resultType="java.util.Map">
+	select * from b_project_protect_rule where ProjectID = #{projectId} and SourceType = 1 and ProjectOrgCategory = 2 and ProjectOrgID = #{companyId} limit 0,1
+	</select>
+    <!--获取自渠保护规则-->
+    <select id="getZqProjectProtect" parameterType="java.lang.String" resultType="java.util.Map">
+		select * from b_project_protect_rule where ProjectID =#{projectId} and SourceType = 1 and ProjectOrgCategory = 1 limit 0,1
+	</select>
+    <!--获取案场保护规则-->
+    <select id="getAcProjectProtect" parameterType="java.lang.String" resultType="java.util.Map">
+		select * from b_project_protect_rule where ProjectID = #{projectId} and SourceType = 2 limit 0,1
+	</select>
+    <!--删除临时表-->
+    <delete id="delTempData" parameterType="java.lang.String">
+       delete from t_vist_customer where id=#{id}
+    </delete>
+
+	<!--导入组织数据-->
+	<insert id="saveOrgData" parameterType="java.util.Map">
+INSERT INTO `s_organization` (
+	`ID`,
+	`PID`,
+	`OrgName`,
+	`OrgShortName`,
+	`OrgCategory`,
+	`ListIndex`,
+	`Levels`,
+	`FullPath`,
+	`Creator`,
+	`CreateTime`,
+	`Editor`,
+	`EditTime`,
+	`Status`,
+	`IsDel`,
+	`CurrentPoint`,
+	`ProjectID`,
+	`OrgCompanyID`,
+	`OrgType`
+)
+VALUES
+		<foreach collection="list" item="list" separator=",">
+	(
+		#{list.orgId},
+		#{list.pid},
+		#{list.orgName},
+		#{list.orgName},
+		#{list.OrgCategory},
+		1,
+		1,
+		#{list.fullPath},
+		'',
+		now(),
+		NULL,
+		now(),
+		1,
+		0,
+		NULL,
+		NULL,
+		NULL,
+NULL
+	)
+		</foreach>
+	</insert>
+
+	<!--导入岗位数据-->
+	<insert id="saveJobData" parameterType="java.util.Map">
+		INSERT INTO `s_jobs` (
+		`ID`,
+		`JobCode`,
+		`JobName`,
+		`JobDesc`,
+		`CommonJobID`,
+		`JobOrgID`,
+		`Creator`,
+		`CreateTime`,
+		`Editor`,
+		`EditTime`,
+		`Status`,
+		`IsDel`
+		)
+		VALUES
+		<foreach collection="list" item="list" separator=",">
+			(
+			#{list.jobId},
+			#{list.jobName},
+			#{list.jobName},
+			#{list.jobName},
+			#{list.comjobId},
+			#{list.orgId},
+			'',
+			now(),
+			NULL,
+			now(),
+			1,
+			0
+			)
+		</foreach>
+	</insert>
+
+	<!--导入项目数据-->
+	<insert id="saveProjectData" parameterType="java.util.Map">
+		INSERT INTO `b_project` (
+		`ID`,
+		`PID`,
+		IsStages,
+		ProjectName,
+		CreateTime,
+		Status,
+		IsDel,
+		UpdateOrInsertFlag,
+		TokerReportStatus,
+		IsChoseSaler
+		)
+		VALUES
+		<foreach collection="list" item="list" separator=",">
+			(
+			#{list.projectId},
+			#{list.pid},
+			0,
+			#{list.projectName},
+			now(),
+			1,
+			0,
+			0,
+			1,
+			0
+			)
+		</foreach>
+	</insert>
+	<!--保存账号信息-->
+	<insert id="saveUserData" parameterType="java.util.Map">
+		INSERT INTO `t_sys_user` (
+		alias,
+		mail,
+		usercn,
+		userstatus,
+		mobile,
+		genderId,
+		createUser,
+		createTime
+		)
+		VALUES
+		<foreach collection="list" item="list" separator=",">
+			(
+			#{list.alias},
+			#{list.mail},
+			#{list.usercn},
+			#{list.userstatus},
+			#{list.mobile},
+			#{list.genderId},
+			'admin',
+			now()
+			)
+		</foreach>
+	</insert>
+
+	<insert id="saveHxData" parameterType="java.util.Map">
+		INSERT INTO `t_mm_build_hx` (
+		id,
+		hx_name,
+		project_id,
+		project_fid,
+		remark,
+		tn_area,
+		bld_area,
+		x_hx_other_name,
+		x_area_section,
+		x_staircase_proportion,
+		x_wide_number,
+		creator,
+		created_time
+		)
+		VALUES
+		<foreach collection="list" item="list" separator=",">
+			(
+			#{list.id},
+			#{list.hx_name},
+			#{list.project_id},
+			#{list.project_fid},
+			#{list.remark},
+			#{list.tn_area},
+			#{list.bld_area},
+			#{list.x_hx_other_name},
+			#{list.x_area_section},
+			#{list.x_staircase_proportion},
+			#{list.x_wide_number},
+			'admin',
+			now()
+			)
+		</foreach>
+	</insert>
+
+	<insert id="saveBuildData" parameterType="java.util.Map">
+		INSERT INTO `t_mm_designbuild` (
+		build_id,
+		product_build_name,
+		product_code,
+		product_name,
+		floors,
+		unit_num,
+		room_num,
+		project_id,
+		project_name,
+		stage_id,
+		stage_name,
+		order_code,
+		bld_type,
+		permit_num,
+		create_user,
+		create_time,
+		is_delete,
+		status,
+		start_time,
+		end_time
+		)
+		VALUES
+		<foreach collection="list" item="list" separator=",">
+			(
+			#{list.build_id},
+			#{list.product_build_name},
+			#{list.product_code},
+			#{list.product_name},
+			#{list.floors},
+			#{list.unit_num},
+			#{list.room_num},
+			#{list.project_id},
+			#{list.project_name},
+			#{list.stage_id},
+			#{list.stage_name},
+			#{list.order_code},
+			#{list.bld_type},
+			#{list.permit_num},
+			'admin',
+			now(),
+			'0',
+			'1',
+			#{list.start_time},
+			#{list.end_time}
+			)
+		</foreach>
+	</insert>
+
+	<insert id="saveUnitData" parameterType="java.util.Map">
+		INSERT INTO `t_mm_build_unit` (
+		unit_id,
+		unit_name,
+		unit_no,
+		build_id,
+		project_id,
+		project_name,
+		stage_id,
+		stage_name,
+		create_user,
+		create_time
+		)
+		VALUES
+		<foreach collection="list" item="list" separator=",">
+			(
+			#{list.unit_id},
+			#{list.unit_name},
+			#{list.unit_no},
+			#{list.build_id},
+			#{list.project_id},
+			#{list.project_name},
+			#{list.stage_id},
+			#{list.stage_name},
+			'admin',
+			now()
+			)
+		</foreach>
+	</insert>
+
+	<insert id="saveRoomData" parameterType="java.util.Map">
+		INSERT INTO `t_mm_build_room` (
+		room_id,
+		room_info,
+		room_name,
+		room_no,
+		no,
+		floor_name,
+		floor_no,
+		unit_id,
+		unit_name,
+		unit_no,
+		build_id,
+		product_build_name,
+		status_enum,
+		project_id,
+		project_name,
+		stage_id,
+		stage_name,
+		dj_bld_price,
+		dj_tn_price,
+		dj_total,
+		bld_price,
+		bld_area,
+		hx_id,
+		hx_name,
+		tn_price,
+		tn_area,
+		total,
+		ys_bld_area,
+		ys_tn_area,
+		sc_bld_area,
+		sc_tn_area,
+		room_stru,
+		cal_mode,
+		area_status,
+		create_user,
+		create_time
+		)
+		VALUES
+		<foreach collection="list" item="list" separator=",">
+			(
+			#{list.room_id},
+			#{list.room_info},
+			#{list.room_name},
+			#{list.room_no},
+			#{list.no},
+			#{list.floor_name},
+			#{list.floor_no},
+			#{list.unit_id},
+			#{list.unit_name},
+			#{list.unit_no},
+			#{list.build_id},
+			#{list.product_build_name},
+			#{list.status_enum},
+			#{list.project_id},
+			#{list.project_name},
+			#{list.stage_id},
+			#{list.stage_name},
+			#{list.dj_bld_price},
+			#{list.dj_tn_price},
+			#{list.dj_total},
+			#{list.bld_price},
+			#{list.bld_area},
+			#{list.hx_id},
+			#{list.hx_name},
+			#{list.tn_price},
+			#{list.tn_area},
+			#{list.total},
+			#{list.ys_bld_area},
+			#{list.ys_tn_area},
+			#{list.sc_bld_area},
+			#{list.sc_tn_area},
+			#{list.room_stru},
+			#{list.cal_mode},
+			#{list.area_status},
+			'admin',
+			now()
+			)
+		</foreach>
+	</insert>
+
+	<select id="getAlias" parameterType="java.lang.String" resultType="_int">
+		select count(1) from t_sys_user where alias = #{alias}
+	</select>
+	<select id="getAreaNameAndProNames" parameterType="java.util.List" resultType="java.util.Map">
+		select GROUP_CONCAT(distinct org.OrgName) areaName,GROUP_CONCAT(distinct bp.ProjectName) projectName,
+		GROUP_CONCAT(distinct bp.id) projectId
+		from b_project bp
+		left JOIN s_organization org on org.id = bp.ComGUID
+		where bp.IsDel = 0 and bp.id in
+			<foreach collection="list" index="index" item="item" open="("
+						   separator="," close=")">
+				#{item}
+			</foreach>
+	</select>
+
+	<select id="getAreaNames" parameterType="java.util.List" resultType="java.lang.String">
+		select GROUP_CONCAT(distinct org.OrgName) areaName from b_project bp
+		INNER JOIN s_organization org on org.id = bp.ComGUID
+		where bp.IsDel = 0 and bp.ComGUID in
+		<foreach collection="list" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<insert id="addExcelExportLog" parameterType="cn.visolink.system.excel.model.ExcelExportLog">
+		insert into s_excel_export_log(id,area_name,project_id,project_name,main_type,main_type_desc,sub_type,sub_type_desc,
+		                               export_type,file_name,create_time,creator,do_sql,export_status,is_del,is_asyn,down_load_time,is_down,wait_time,export_time,exception_message)
+		values(#{id},#{areaName},#{projectId},#{projectName},#{mainType},#{mainTypeDesc},#{subType},#{subTypeDesc},#{exportType},#{fileName},
+		       now(),#{creator},#{doSql},#{exportStatus},0,#{isAsyn},#{downLoadTime},#{isDown},#{waitTime},#{exportTime},#{exceptionMessage})
+	</insert>
+
+	<!--更新使用次数-->
+	<update id="updateDiyCode" parameterType="java.lang.String">
+         update b_project_diy_code set code_config_num=code_config_num+1 where ID = #{codeId}
+	</update>
+
+	<select id="getExcelExportLog" parameterType="cn.visolink.system.excel.model.ExcelExportLog" resultType="cn.visolink.system.excel.model.ExcelExportLog">
+		select log.id,log.area_name areaName,log.project_name projectName,log.main_type_desc mainTypeDesc,log.sub_type_desc subTypeDesc,(case when export_type = 1 then '隐号' when export_type = 2 then '全号' else '无限制' end) exportType,create_time createTime,down_load_time downLoadTime,
+				bac.EmployeeName creator,
+			   (case when export_status = 1 then '未导出'
+					 when export_status = 2 then '导出成功'
+					 when export_status = 3 then '导出失败'
+					when export_status = 4 then '导出失败(未查询到数据)'
+					 else '' end) exportStatus,
+				wait_time waitTime,export_time exportTime
+		from s_excel_export_log log
+				 INNER JOIN b_account bac on bac.id = log.creator
+		where 1 = 1
+		<if test="projectIds != null and projectIds!=''">
+			and (F_LableIsExist(log.project_id,#{projectIds}) = 1 or log.project_id = '/' or log.project_id is null)
+		</if>
+		<if test="mainTypeDesc != null and mainTypeDesc!=''">
+			and log.main_type_desc like '%${mainTypeDesc}%'
+		</if>
+		<if test="subTypeList != null and subTypeList.size() > 0">
+			and log.sub_type in
+			<foreach collection="subTypeList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="exportStatusList != null and exportStatusList.size() > 0">
+			and log.export_status in
+			<foreach collection="exportStatusList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="exportTypeList != null and exportTypeList.size() > 0">
+			and log.export_type in
+			<foreach collection="exportTypeList" index="index" item="item" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="userName!=null and userName!=''">
+			and (bac.EmployeeName like concat('%',#{userName},'%') or bac.UserName like concat('%',#{userName},'%'))
+		</if>
+		<if test="reportTime==1 and date1!=null and date1!='' and date2!=null and date2!=''">
+			and log.create_time BETWEEN #{date1} AND #{date2}
+		</if>
+		<if test="reportTime==2  and date1!=null and date1!='' and date2!=null and date2!=''">
+			and log.down_load_time BETWEEN #{date1} AND #{date2}
+		</if>
+		order by log.create_time desc
+	</select>
+
+	<update id="updateExcelExportLog" parameterType="cn.visolink.system.excel.model.ExcelExportLog">
+		update s_excel_export_log
+		<set>
+		  	<if test="exportStatus!=null and exportStatus!=''">
+				export_status = #{exportStatus},
+			</if>
+			<if test="isDel!=null and isDel!=''">
+				is_del = #{isDel},
+			</if>
+			<if test="downLoadTime!=null and downLoadTime!=''">
+				down_load_time = #{downLoadTime},
+			</if>
+			<if test="exceptionMessage!=null and exceptionMessage!=''">
+				exception_message = #{exceptionMessage},
+			</if>
+			<if test="isDown!=null and isDown!=''">
+				is_down = #{isDown},
+			</if>
+			edit_time = now(),
+			editor = #{editor}
+		</set>
+		where id = #{id}
+	</update>
+
+	<select id="getExcelExportDownList" parameterType="java.lang.String" resultType="cn.visolink.system.excel.model.ExcelExportLog">
+		select id,create_time createTime,(case when export_status = 1 then '导出中'
+																	when export_status = 2 then '导出成功'
+																	when export_status = 3 then '导出失败'
+											   						when export_status = 4 then '导出失败(未查询到数据)'
+																	else '' end) exportStatusDesc,export_status exportStatus,is_down isDown,
+			   down_load_url downLoadUrl,sub_type_desc subTypeDesc,file_name fileName,(case when export_type = 1 then '隐号'
+																							when export_type = 2 then '全号'
+																							when export_type = 3 then '无限制'
+																							else '' end) exportType
+		from s_excel_export_log
+		where creator = #{creator} and is_del = 0 and is_asyn = 1 order by create_time desc
+	</select>
+
+	<select id="getExcelExportDownIsExist" parameterType="cn.visolink.system.excel.model.ExcelExportLog" resultType="_int">
+		select count(1) from s_excel_export_log
+		where creator = #{creator}
+		  <if test="exportType!=null and exportType!=''">
+			  and export_type = #{exportType}
+		  </if>
+		  and sub_type = #{subType} and export_status = 1 and is_del = 0 and is_asyn = 1;
+	</select>
+	<select id="getDictionaryList" parameterType="java.lang.String" resultType="cn.visolink.system.parameter.model.vo.DictionaryVO">
+		select id,DictCode,DictName
+		from s_dictionary where
+		    <if test="pid==null">
+				pid in (
+				select id from s_dictionary where pid = '-1' and DictCode = 'export_type')
+			</if>
+		    <if test="pid!=null and pid!=''">
+				pid = #{pid}
+			</if>
+	</select>
+
+	<select id="getProIsUp" parameterType="java.lang.String" resultType="_int">
+		select count(1) from b_project where id = #{projectId} and isSyn = 1
+	</select>
+
+	<select id="getProTeam" parameterType="java.lang.String" resultType="java.lang.String">
+		select ID from s_organization where ProjectID = #{projectId} and OrgName = #{teamName};
+	</select>
+
+	<!--创建项目组织-->
+	<insert id="addProTeamOrg" parameterType="java.util.Map">
+		INSERT INTO `s_organization`(`ID`, `PID`, `OrgCode`, `OrgName`, `OrgShortName`, `OrgCategory`, `ListIndex`, `Levels`, `FullPath`, `AuthCompanyID`, `ProductID`, `Creator`, `CreateTime`,  `Status`, `IsDel`, `ProjectID`)
+		values(#{ID},#{PID},#{OrgCode},#{OrgName},#{OrgShortName},'8',1,3,concat((select t.FullPath from (select FullPath from s_organization where ID = #{PID}) t),'/',#{OrgName}),'ede1b679-3546-11e7-a3f8-5254007b6f02','ee3b2466-3546-11e7-a3f8-5254007b6f02','系统自动',now(),1,0,#{ProjectID});
+	</insert>
+
+	<!--新增岗位-插入Jobs信息-->
+	<insert id="saveProTeamJob" parameterType="java.util.Map">
+		INSERT  INTO S_Jobs
+		( ID ,
+		  JobCode ,
+		  JobName ,
+		  JobDesc ,
+		  JobPID ,
+		  CommonJobID ,
+		  JobOrgID ,
+		  AuthCompanyID ,
+		  ProductID ,
+		  CreateTime ,
+		  IsDel
+		)
+		VALUES  ( #{ID},
+				  #{JobCode},
+				  #{JobName},
+				  #{JobDesc},
+				  #{JobPID},
+				  #{CommonJobID},
+				  #{JobOrgID},
+				  UUID(),
+				  UUID(),
+				  now() ,
+				  0
+				)
+	</insert>
+
+	<select id="getComJobId" resultType="java.util.Map">
+		select ID,JobCode from s_commonjobs where JobCode in ('zygw','xsjl','qyzygw','qyxsjl','qyzszj','qyyxjl');
+	</select>
+
+	<select id="getTeamJobs" parameterType="java.lang.String" resultType="java.util.Map">
+		select com.JobCode,job.ID from s_jobs job
+				INNER JOIN s_commonjobs com on com.id = job.CommonJobID
+		where JobOrgID = #{teamOrgId} and com.JobCode in ('zygw','xsjl','qyzygw','qyxsjl');
+	</select>
+	<select id="getUserId" parameterType="java.lang.String" resultType="java.lang.String">
+		select ID from b_account where userName = #{alias};
+	</select>
+
+	<select id="getUserJobIsOk" parameterType="java.lang.String" resultType="_int">
+		select count(1) from s_jobsuserrel
+		where AccountID = #{accountId}
+		  and JobID = #{jobId};
+	</select>
+
+	<insert id="addUserJob" parameterType="java.util.Map">
+		insert into s_jobsuserrel(ID,AccountID,JobID,Tag)
+		values(uuid(),#{AccountID},#{JobID},#{Tag})
+	</insert>
+
+	<select id="getAreaOrg" parameterType="java.lang.String" resultType="java.util.Map">
+		select org.ID,org.OrgName,org.FullPath, org1.ID proOrgId,org1.OrgName proOrgName,org1.FullPath proOrgFullPath,org1.ProjectID projectId
+		from s_organization org
+				 left join s_organization org1 on org.id = org1.pid and org1.OrgCategory = 4
+		where org.id = #{areaId};
+	</select>
+
+    <insert id="addProOrg" parameterType="java.util.Map">
+		insert into s_organization(ID,PID,OrgCode,OrgName,OrgShortName,OrgCategory,Levels,
+								   FullPath,AuthCompanyID,ProductID,Creator,CreateTime,ProjectID)
+		values(#{ID},#{PID},#{ID},#{OrgName},#{OrgName},#{OrgCategory}
+				  ,#{Levels},#{FullPath},uuid(),uuid(),'系统自动'
+				  ,now(),#{ProjectID})
+	</insert>
+
+	<insert id="addPronew" parameterType="java.util.Map">
+		insert into b_project(ID,ProjectNum,ProjectName,ProjectFullName,
+							  OrgID,Creator,CreateTime,tag,AreaID,
+							  AreaName,ComGUID,isSyn,isRegion)
+		values(#{ID},#{ProjectNum},#{ProjectName},#{ProjectName},#{OrgID}
+				  ,'系统自动',now(),#{tag},#{AreaID},#{AreaName},#{ComGUID},#{isSyn},#{isRegion})
+	</insert>
+
+	<insert id="insertProjectClues" parameterType="cn.visolink.system.excel.model.ReportCustomerForm">
+		INSERT INTO b_project_clues (ProjectClueId,BasicCustomerId,TradeLevel,CustomerName,
+									 CustomerMobile,CustomerGender,ExpectedVisitDate,IsFollow,SourceType,SourceTypeDesc,
+									 SourceTypeOld,SourceTypeOldDesc,ClueStatus,IsFirstTable,projectId,ProjectName,
+									 ReportUserID,ReportUserName,ReportTeamID,ReportCreateTime,ReportTeamName,SalesAttributionId,
+									 SalesAttributionName,SalesAttributionGroupId,SalesAttributionGroupName,SalesAttributionTeamId,
+									 SalesAttributionTeamName,SalesAttributionTime,IsReportExpire,ReportExpireDate,IsTokerVisitExpire,
+									 TokerVisitExpireDate,IsDel,CreateTime,CreateUserId,IntentionBusiness,Remarks,
+									 SalesTheLatestFollowDate,ReportExpireWarningDate,AreaCode,flag,`Level`,CustomerLevel,
+									 Contacts,Longitude,Latitude,SourceMode,BelongIndustrise,BelongIndustriseDesc,ReportUserRole,CustomerAddress,
+									 Position,IsPark,ParkName,ParkAddress,MainProducts,Floor,PlantType,RentAndSaleType,RentalPrice,ParkFloor,PlantTypeDesc,RentAndSaleTypeDesc,SourceModeCode,
+									 ParkProvince, ParkCity, ParkCounty, ParkStreet)
+		VALUES
+		<foreach collection="list" item="list" separator=",">
+			(#{list.projectClueUuid},#{list.customerUuid},#{list.tradeLevel},#{list.customerName},#{list.customerMobile},#{list.customerGender},
+			null,0,3,null,3,null,0,0,#{list.projectId},#{list.projectName},#{list.userId},#{list.employeeName},#{list.orgId},#{list.createDate},#{list.orgName},#{list.userId},#{list.employeeName},
+			#{list.orgId},#{list.orgName},#{list.orgId},#{list.orgName},now(),0,null,0,null,0,
+			now(),#{list.userId},#{list.intentionBusiness},#{list.remarks},null,null,'0086',#{list.flag}
+			,#{list.tradeLevel},'E',
+			#{list.contacts},
+			#{list.longitude},#{list.latitude},
+			#{list.sourceMode},
+			#{list.belongIndustrise},
+			#{list.belongIndustriseDesc},#{list.reportUserRole},#{list.customerAddress},
+			#{list.position},#{list.isPark},#{list.parkName},#{list.parkAddress},#{list.mainProducts},#{list.floor},
+			#{list.plantType},#{list.rentAndSaleType},#{list.rentalPrice},#{list.parkFloor},#{list.plantTypeDesc},#{list.rentAndSaleTypeDesc},(select DictCode from s_dictionary where pid = '3109eff7-cac2-4973-8888-586e802aca2a' and DictName = #{list.sourceMode}),
+			#{list.parkProvince}, #{list.parkCity}, #{list.parkCounty}, #{list.parkStreet})
+		</foreach>
+	</insert>
+
+	<!--新增跟进-->
+	<insert id="saveFollowNodeUpRecord" parameterType="cn.visolink.system.excel.model.ReportCustomerForm">
+		insert into b_followup_record(FollowRecordId,FollowUpWay,FollowUpDetail,UserId,FollowUpDate,FollowUpType,IsDel,ProjectClueId,SaleCustomerId,ProjectId,EmployeeName,orgName,CreateTime,OpportunityClueId)
+		values
+		<foreach collection="list" item="list" separator=",">
+			(uuid(),#{list.followUpWay},#{list.followUpDetail},#{list.userId},#{list.createDate},2,0,#{list.projectClueId},#{list.projectClueId},#{list.projectId},#{list.employeeName},#{list.orgName},#{list.createDate},#{list.opportunityClueId})
+		</foreach>
+	</insert>
+
+	<insert id="addDimension" parameterType="cn.visolink.system.excel.model.ReportCustomerForm">
+		insert into b_customer_dimension(
+			DimensionName,
+			DimensionAddress,
+			ParkName,
+			ParkAddress,
+			Longitude,
+			Latitude,
+			UserId,
+			NumberOfLayers,
+			createTime,
+			creator,
+			ProjectClueId,
+			OpportunityClueId,
+			DimensionType,
+			BelongIndustrise,
+			BelongIndustriseDesc,
+			ProjectId,
+			BelongIndustriseTwo,
+			BelongIndustriseTwoDesc,
+			BelongIndustriseThree,
+			BelongIndustriseThreeDesc,
+			BelongIndustriseFour,
+			BelongIndustriseFourDesc
+		)
+		values
+		<foreach collection="list" item="list" separator=",">
+			(#{list.customerName},
+			#{list.customerAddress},
+			#{list.parkName},
+			#{list.parkAddress},
+			#{list.longitude},
+			#{list.latitude},
+			#{list.userId},
+			#{list.parkFloor},
+			now(),
+			#{list.userId},
+			#{list.projectClueId},
+			#{list.opportunityClueId},
+			#{list.dimensionType},
+			#{list.belongIndustrise},
+			#{list.belongIndustriseDesc},
+			#{list.projectId},
+			#{list.belongIndustriseTwo},
+			#{list.belongIndustriseTwoDesc},
+			#{list.belongIndustriseThree},
+			#{list.belongIndustriseThreeDesc},
+			#{list.belongIndustriseFour},
+			#{list.belongIndustriseFourDesc})
+		</foreach>
+	</insert>
+
+	<!--走访信息-->
+	<insert id="saveInformationZ" parameterType="cn.visolink.system.excel.model.ReportCustomerForm">
+		insert into b_information(id,ProjectClueId,projectId,CustomerName,
+								  CustomerMobile,CustomerGender,
+								  BelongIndustrise,BelongIndustriseDesc,
+								  CreateTime,CreateUserId,IsDel,
+								  IntentionalAreaDesc,
+								  IntentionalFloorDesc,
+								  ResistanceDesc,
+								  YxArea,
+								  YxAreaDesc,
+								  ZyreasonDesc,
+								  IntentionClass,
+								  IntentionClassDesc,
+								  IntentionType,
+								  IntentionTypeDesc,
+								  YxSignTime,
+								  DemandRemarks,
+								  BelongIndustriseTwo,
+								  BelongIndustriseTwoDesc,
+								  BelongIndustriseThree,
+								  BelongIndustriseThreeDesc,
+								  BelongIndustriseFour,
+								  BelongIndustriseFourDesc,
+								  IntentionalPrice,
+								  AnnualOutputValue,
+								  NowRent,
+								  NowOfficeSpace,
+								  PollutantDischarge,
+								  PollutantDischargeDesc,
+								  Needs
+		)
+		values
+		<foreach collection="list" item="list" separator=",">
+			(uuid(),#{list.projectClueId},#{list.projectId},#{list.customerName},
+			#{list.customerMobile},#{list.customerGender},#{list.belongIndustrise},
+			#{list.belongIndustriseDesc},now(),#{list.userId},0,
+			#{list.intentionalAreaDesc},
+			#{list.intentionalFloorDesc},
+			#{list.resistanceDesc},#{list.yxArea},#{list.yxAreaDesc},
+			#{list.zyreasonDesc},#{list.intentionClass},#{list.intentionClassDesc},
+			#{list.intentionType},#{list.intentionTypeDesc},
+			#{list.yxSignTime},#{list.demandRemarks},#{list.belongIndustriseTwo},
+			#{list.belongIndustriseTwoDesc},#{list.belongIndustriseThree},
+			#{list.belongIndustriseThreeDesc},#{list.belongIndustriseFour},
+			#{list.belongIndustriseFourDesc},#{list.intentionalPrice},
+			#{list.annualOutputValue},
+			#{list.nowRent},
+			#{list.nowOfficeSpace},
+			#{list.pollutantDischarge},
+			#{list.pollutantDischargeDesc},
+			#{list.needs})
+		</foreach>
+	</insert>
+
+	<select id="getDictParentHyfl" resultType="java.util.Map">
+		select ID code,DictName name from s_dictionary where DictName = #{dictName} and PID =  (select ID from s_dictionary where IsDel = 0 and DictCode = 'SshyD') and IsDel = 0;
+	</select>
+	<select id="getDictChildHtzl" resultType="java.util.Map">
+		select ID code,DictName name from s_dictionary where DictName = #{dictName} and PID =  (select ID from s_dictionary where IsDel = 0 and ID = #{dictCode}) and IsDel = 0;
+	</select>
+	<select id="getProInfo" resultType="java.util.Map">
+		SELECT
+		bp.ID projectId,
+		bp.ProjectName projectName,
+		bp.ProjectStatus projectStatus,
+		bp.`Status` status,
+		bp.OrgID orgID,
+		org.OrgName orgName
+		FROM
+		b_project bp
+		LEFT JOIN s_organization org ON org.id = bp.OrgID
+		WHERE
+		bp.pid IS NULL and bp.isSyn = 1
+			AND bp.projectName = #{projectName}
+	</select>
+	<select id="getUserOrgInfo" resultType="java.util.Map">
+		select org.ID orgId, org.OrgName orgName, ba.ID userId, ba.EmployeeName userName
+		from b_account ba
+				 INNER JOIN s_jobsuserrel rel on rel.AccountID = ba.id
+				 INNER JOIN s_jobs jobs on jobs.id = rel.JobID
+				 INNER JOIN s_commonjobs com on com.id = jobs.CommonJobID
+				 INNER JOIN s_organization org on org.id = jobs.JobOrgID
+		where ProjectID = #{projectId}
+		  and com.JobCode = #{jobCode}
+		  and ba.UserName = #{userName}
+			limit 1;
+	</select>
+
+	<update id="delProhectClueMarkTemp">
+		delete from b_project_mark_temp where creator = #{userId};
+	</update>
+
+	<insert id="saveProhectClueMarkTemp" parameterType="cn.visolink.system.excel.model.ReportCustomerForm">
+		insert into b_project_mark_temp
+		( ProjectClueUuid,ProjectClueId,CustomerUuid
+		,UserId,EmployeeName,JobId
+		,JobName,OrgId,OrgName
+		,CustomerName,Contacts,CustomerMobile
+		,CustomerGender,CardNum,ProjectId
+		,ProjectName,Remarks,ExpectedVisitDate
+		,MainMediaGuId,MainMediaName,SubMediaGuId
+		,SubMediaName,TradeLevel,ReportExpireDate
+		,TokerVisitExpireDate,IntentionBusiness,FollowUpWay
+		,FollowUpDetail,ReportExpireWarningDate,SalesFollowExpireWarningDate
+		,AreaCode,CreateDate,CommunicationContent
+		,Flag,Position,SourceModeCode
+		,SourceMode,IsPark,ParkName
+		,ParkAddress,ParkFloor,CustomerAddress
+		,BelongIndustrise,BelongIndustriseDesc,BelongIndustriseTwo
+		,BelongIndustriseTwoDesc,BelongIndustriseThree,BelongIndustriseThreeDesc
+		,BelongIndustriseFour,BelongIndustriseFourDesc,CustomerType
+		,ReportUserRole,MainProducts,Floor
+		,PlantType,PlantTypeDesc,RentAndSaleType
+		,RentAndSaleTypeDesc,RentalPrice,Longitude
+		,Latitude,IntentionalAreaDesc,IntentionalFloorDesc
+		,ResistanceDesc,YxArea,YxAreaDesc
+		,ZyreasonDesc,IntentionClass,IntentionClassDesc
+		,IntentionType,IntentionTypeDesc,YxSignTime
+		,DemandRemarks,DimensionType,IntentionalPrice
+		,LegalPerson,LegalPersonPhone,EnterpriseType
+		,EnterpriseTypeDesc,CustomerCardType,CustomerCardTypeDesc
+		,CustomerCardNum,PostCode,PollutantDischarge
+		,PollutantDischargeDesc,Needs,NowRent
+		,NowOfficeSpace,AnnualOutputValue,ParkProvince
+		,ParkCity,ParkCounty,ParkStreet,creator,Label,CustomerMobileS
+		)
+		values
+		<foreach collection="list" item="list" separator=",">
+		       (#{list.projectClueUuid},#{list.projectClueId},#{list.customerUuid}
+			   ,#{list.userId},#{list.employeeName},#{list.jobId}
+			   ,#{list.jobName},#{list.orgId},#{list.orgName}
+			   ,#{list.customerName},#{list.contacts},#{list.customerMobile}
+			   ,#{list.customerGender},#{list.cardNum},#{list.projectId}
+			   ,#{list.projectName},#{list.remarks},#{list.expectedVisitDate}
+			   ,#{list.mainMediaGuId},#{list.mainMediaName},#{list.subMediaGuId}
+			   ,#{list.subMediaName},#{list.tradeLevel},#{list.reportExpireDate}
+			   ,#{list.tokerVisitExpireDate},#{list.intentionBusiness},#{list.followUpWay}
+			   ,#{list.followUpDetail},#{list.reportExpireWarningDate},#{list.salesFollowExpireWarningDate}
+			   ,#{list.areaCode},#{list.createDate},#{list.communicationContent}
+			   ,#{list.flag},#{list.position},#{list.sourceModeCode}
+			   ,#{list.sourceMode},#{list.isPark},#{list.parkName}
+			   ,#{list.parkAddress},#{list.parkFloor},#{list.customerAddress}
+			   ,#{list.belongIndustrise},#{list.belongIndustriseDesc},#{list.belongIndustriseTwo}
+			   ,#{list.belongIndustriseTwoDesc},#{list.belongIndustriseThree},#{list.belongIndustriseThreeDesc}
+			   ,#{list.belongIndustriseFour},#{list.belongIndustriseFourDesc},#{list.customerType}
+			   ,#{list.reportUserRole},#{list.mainProducts},#{list.floor}
+			   ,#{list.plantType},#{list.plantTypeDesc},#{list.rentAndSaleType}
+			   ,#{list.rentAndSaleTypeDesc},#{list.rentalPrice},#{list.longitude}
+			   ,#{list.latitude},#{list.intentionalAreaDesc},#{list.intentionalFloorDesc}
+			   ,#{list.resistanceDesc},#{list.yxArea},#{list.yxAreaDesc}
+			   ,#{list.zyreasonDesc},#{list.intentionClass},#{list.intentionClassDesc}
+			   ,#{list.intentionType},#{list.intentionTypeDesc},#{list.yxSignTime}
+			   ,#{list.demandRemarks},#{list.dimensionType},#{list.intentionalPrice}
+			   ,#{list.legalPerson},#{list.legalPersonPhone},#{list.enterpriseType}
+			   ,#{list.enterpriseTypeDesc},#{list.customerCardType},#{list.customerCardTypeDesc}
+			   ,#{list.customerCardNum},#{list.postCode},#{list.pollutantDischarge}
+			   ,#{list.pollutantDischargeDesc},#{list.needs},#{list.nowRent}
+			   ,#{list.nowOfficeSpace},#{list.annualOutputValue},#{list.parkProvince}
+			   ,#{list.parkCity},#{list.parkCounty},#{list.parkStreet},#{userId},#{list.label},#{list.customerMobileS}
+			   )
+		</foreach>
+	</insert>
+
+	<select id="getProhectClueMarkTempList" resultType="cn.visolink.system.excel.model.ReportCustomerForm">
+		select
+			ifnull(ProjectClueUuid,"") projectClueUuid,ifnull(ProjectClueId,"") projectClueId,ifnull(CustomerUuid,"") customerUuid,
+		    ifnull(UserId,"") userId,ifnull(EmployeeName,"") employeeName,ifnull(JobId,"") jobId,
+		    ifnull(JobName,"") jobName,ifnull(OrgId,"") orgId,ifnull(OrgName,"") orgName,
+		    ifnull(CustomerName,"") customerName,ifnull(Contacts,"") contacts,ifnull(CustomerMobile,"") customerMobile,
+		    ifnull(CustomerGender,"") customerGender,ifnull(CardNum,"") cardNum,ifnull(ProjectId,"") projectId,
+		    ifnull(ProjectName,"") projectName,ifnull(Remarks,"") remarks,ifnull(ExpectedVisitDate,"") expectedVisitDate,
+		    ifnull(MainMediaGuId,"") mainMediaGuId,ifnull(MainMediaName,"") mainMediaName,ifnull(SubMediaGuId,"") subMediaGuId,
+			ifnull(SubMediaName,"") subMediaName,ifnull(TradeLevel,"") tradeLevel,ifnull(ReportExpireDate,"") reportExpireDate,
+			ifnull(TokerVisitExpireDate,"") tokerVisitExpireDate,ifnull(IntentionBusiness,"") intentionBusiness,ifnull(FollowUpWay,"") followUpWay,
+			ifnull(FollowUpDetail,"") followUpDetail,ifnull(ReportExpireWarningDate,"") reportExpireWarningDate,ifnull(SalesFollowExpireWarningDate,"") salesFollowExpireWarningDate,
+			ifnull(AreaCode,"") areaCode,ifnull(CreateDate,"") createDate,ifnull(CommunicationContent,"") communicationContent,
+			ifnull(Flag,"") flag,ifnull(Position,"") 'position',ifnull(SourceModeCode,"") sourceModeCode,
+			ifnull(SourceMode,"") sourceMode,(case IsPark when 1 then '是' else '否' end ) isPark,ifnull(ParkName,"") parkName,
+		    ifnull(ParkAddress,"") parkAddress,ifnull(ParkFloor,"") parkFloor,ifnull(CustomerAddress,"") customerAddress,
+			ifnull(BelongIndustrise,"") belongIndustrise,ifnull(BelongIndustriseDesc,"") belongIndustriseDesc,ifnull(BelongIndustriseTwo,"") belongIndustriseTwo,
+			ifnull(BelongIndustriseTwoDesc,"") belongIndustriseTwoDesc,ifnull(BelongIndustriseThree,"") belongIndustriseThree,
+		    ifnull(BelongIndustriseThreeDesc,"") belongIndustriseThreeDesc,
+			ifnull(BelongIndustriseFour,"") belongIndustriseFour,ifnull(BelongIndustriseFourDesc,"") belongIndustriseFourDesc,ifnull(CustomerType,"") customerType,
+			ifnull(ReportUserRole,"") reportUserRole,ifnull(MainProducts,"") mainProducts,ifnull(Floor,"") floor,
+			ifnull(PlantType,"") plantType,ifnull(PlantTypeDesc,"") plantTypeDesc,ifnull(RentAndSaleType,"") rentAndSaleType,
+			ifnull(RentAndSaleTypeDesc,"") rentAndSaleTypeDesc,ifnull(RentalPrice,"") rentalPrice,ifnull(Longitude,"") longitude,
+			ifnull(Latitude,"") latitude,ifnull(IntentionalAreaDesc,"") intentionalAreaDesc,ifnull(IntentionalFloorDesc,"") intentionalFloorDesc,
+			ifnull(ResistanceDesc,"") resistanceDesc,ifnull(YxArea,"") yxArea,ifnull(YxAreaDesc,"") yxAreaDesc,
+			ifnull(ZyreasonDesc,"") zyreasonDesc,ifnull(IntentionClass,"") intentionClass,ifnull(IntentionClassDesc,"") intentionClassDesc,
+			ifnull(IntentionType,"") intentionType,ifnull(IntentionTypeDesc,"") intentionTypeDesc,ifnull(YxSignTime,"") yxSignTime,
+			ifnull(DemandRemarks,"") demandRemarks,ifnull(DimensionType,"") dimensionType,ifnull(IntentionalPrice,"") intentionalPrice,
+			ifnull(LegalPerson,"") legalPerson,ifnull(LegalPersonPhone,"") legalPersonPhone,ifnull(EnterpriseType,"") enterpriseType,
+			ifnull(EnterpriseTypeDesc,"") enterpriseTypeDesc,ifnull(CustomerCardType,"") customerCardType,ifnull(CustomerCardTypeDesc,"") customerCardTypeDesc,
+			ifnull(CustomerCardNum,"") customerCardNum,ifnull(PostCode,"") postCode,ifnull(PollutantDischarge,"") pollutantDischarge,
+			ifnull(PollutantDischargeDesc,"") pollutantDischargeDesc,ifnull(Needs,"") needs,ifnull(NowRent,"") nowRent,
+			ifnull(NowOfficeSpace,"") nowOfficeSpace,ifnull(AnnualOutputValue,"") annualOutputValue,ifnull(ParkProvince,"") parkProvince,
+			ifnull(ParkCity,"") parkCity,ifnull(ParkCounty,"") parkCounty,ifnull(ParkStreet,"") parkStreet,ifnull(Label,"") label,ifnull(CustomerMobileS,"") customerMobileS
+		from b_project_mark_temp where creator = #{userId}
+	</select>
+
+    <update id="saveMarkTempToProjectClue">
+		INSERT INTO b_project_clues (ProjectClueId,BasicCustomerId,TradeLevel,CustomerName,
+			CustomerMobile,CustomerGender,ExpectedVisitDate,IsFollow,SourceType,SourceTypeDesc,
+			SourceTypeOld,SourceTypeOldDesc,ClueStatus,IsFirstTable,projectId,ProjectName,
+			ReportUserID,ReportUserName,ReportTeamID,ReportCreateTime,ReportTeamName,SalesAttributionId,
+			SalesAttributionName,SalesAttributionGroupId,SalesAttributionGroupName,SalesAttributionTeamId,
+			SalesAttributionTeamName,SalesAttributionTime,IsReportExpire,ReportExpireDate,IsTokerVisitExpire,
+			TokerVisitExpireDate,IsDel,CreateTime,CreateUserId,IntentionBusiness,Remarks,
+			SalesTheLatestFollowDate,ReportExpireWarningDate,AreaCode,flag,`Level`,CustomerLevel,
+			Contacts,Longitude,Latitude,SourceMode,BelongIndustrise,BelongIndustriseDesc,ReportUserRole,CustomerAddress,
+			Position,IsPark,ParkName,ParkAddress,MainProducts,Floor,PlantType,RentAndSaleType,RentalPrice,ParkFloor,PlantTypeDesc,RentAndSaleTypeDesc,SourceModeCode,
+			ParkProvince, ParkCity, ParkCounty, ParkStreet, Label)
+		select
+			projectClueUuid,customerUuid,tradeLevel,customerName,customerMobile,customerGender,
+			null,0,3,null,3,null,0,0,projectId,projectName,userId,employeeName,orgId,createDate,orgName,userId,employeeName,
+			orgId,orgName,orgId,orgName,now(),0,null,0,null,0,
+			now(),userId,intentionBusiness,remarks,null,null,'0086',flag,tradeLevel,'E',
+			contacts,
+			longitude,latitude,
+			sourceMode,
+			belongIndustrise,
+			belongIndustriseDesc,reportUserRole,customerAddress,
+			position,isPark,parkName,parkAddress,mainProducts,floor,
+			plantType,rentAndSaleType,rentalPrice,parkFloor,plantTypeDesc,rentAndSaleTypeDesc,(select DictCode from s_dictionary where pid = '3109eff7-cac2-4973-8888-586e802aca2a' and DictName = sourceMode),
+			parkProvince, parkCity, parkCounty, parkStreet, Label
+		from b_project_mark_temp where creator = #{userId};
+		insert into b_followup_record(FollowRecordId,FollowUpWay,FollowUpDetail,UserId,FollowUpDate,FollowUpType,IsDel,ProjectClueId,SaleCustomerId,ProjectId,EmployeeName,orgName,CreateTime,OpportunityClueId)
+		select
+			uuid(),followUpWay,followUpDetail,userId,createDate,2,0,projectClueUuid,customerUuid,projectId,employeeName,orgName,createDate,opportunityClueId
+		from b_project_mark_temp where creator = #{userId};
+		insert into b_customer_dimension(
+			DimensionName,
+			DimensionAddress,
+			ParkName,
+			ParkAddress,
+			Longitude,
+			Latitude,
+			UserId,
+			NumberOfLayers,
+			createTime,
+			creator,
+			ProjectClueId,
+			OpportunityClueId,
+			DimensionType,
+			BelongIndustrise,
+			BelongIndustriseDesc,
+			ProjectId,
+			BelongIndustriseTwo,
+			BelongIndustriseTwoDesc,
+			BelongIndustriseThree,
+			BelongIndustriseThreeDesc,
+			BelongIndustriseFour,
+			BelongIndustriseFourDesc
+		)
+		select
+			customerName,
+			customerAddress,
+			parkName,
+			parkAddress,
+			longitude,
+			latitude,
+			userId,
+			parkFloor,
+			now(),
+			userId,
+			projectClueId,
+			opportunityClueId,
+			dimensionType,
+			belongIndustrise,
+			belongIndustriseDesc,
+			projectId,
+			belongIndustriseTwo,
+			belongIndustriseTwoDesc,
+			belongIndustriseThree,
+			belongIndustriseThreeDesc,
+			belongIndustriseFour,
+			belongIndustriseFourDesc
+		from b_project_mark_temp where creator = #{userId};
+		insert into b_information(id,ProjectClueId,projectId,CustomerName,
+			CustomerMobile,CustomerGender,
+			BelongIndustrise,BelongIndustriseDesc,
+			CreateTime,CreateUserId,IsDel,
+			IntentionalAreaDesc,
+			IntentionalFloorDesc,
+			ResistanceDesc,
+			YxArea,
+			YxAreaDesc,
+			ZyreasonDesc,
+			IntentionClass,
+			IntentionClassDesc,
+			IntentionType,
+			IntentionTypeDesc,
+			YxSignTime,
+			DemandRemarks,
+			BelongIndustriseTwo,
+			BelongIndustriseTwoDesc,
+			BelongIndustriseThree,
+			BelongIndustriseThreeDesc,
+			BelongIndustriseFour,
+			BelongIndustriseFourDesc,
+			IntentionalPrice,
+			AnnualOutputValue,
+			NowRent,
+			NowOfficeSpace,
+			PollutantDischarge,
+			PollutantDischargeDesc,
+			Needs
+		)
+		select
+			uuid(),projectClueId,projectId,customerName,
+			customerMobile,customerGender,belongIndustrise,
+			belongIndustriseDesc,now(),userId,0,
+			intentionalAreaDesc,
+			intentionalFloorDesc,
+			resistanceDesc,yxArea,yxAreaDesc,
+			zyreasonDesc,intentionClass,intentionClassDesc,
+			intentionType,intentionTypeDesc,
+			yxSignTime,demandRemarks,belongIndustriseTwo,
+			belongIndustriseTwoDesc,belongIndustriseThree,
+			belongIndustriseThreeDesc,belongIndustriseFour,
+			belongIndustriseFourDesc,intentionalPrice,
+			annualOutputValue,
+			nowRent,
+			nowOfficeSpace,
+			pollutantDischarge,
+			pollutantDischargeDesc,
+			needs
+		from b_project_mark_temp where creator = #{userId};
+	</update>
+
+
+
+	<update id="saveMarkTempToProjectClueA">
+		INSERT INTO b_project_clues (ProjectClueId,BasicCustomerId,TradeLevel,CustomerName,
+									 CustomerMobile,CustomerGender,ExpectedVisitDate,IsFollow,SourceType,SourceTypeDesc,
+									 SourceTypeOld,SourceTypeOldDesc,ClueStatus,IsFirstTable,projectId,ProjectName,
+									 ReportUserID,ReportUserName,ReportTeamID,ReportCreateTime,ReportTeamName,SalesAttributionId,
+									 SalesAttributionName,SalesAttributionGroupId,SalesAttributionGroupName,SalesAttributionTeamId,
+									 SalesAttributionTeamName,SalesAttributionTime,IsReportExpire,ReportExpireDate,IsTokerVisitExpire,
+									 TokerVisitExpireDate,IsDel,CreateTime,CreateUserId,IntentionBusiness,Remarks,
+									 SalesTheLatestFollowDate,ReportExpireWarningDate,AreaCode,flag,`Level`,CustomerLevel,
+									 Contacts,Longitude,Latitude,SourceMode,BelongIndustrise,BelongIndustriseDesc,ReportUserRole,CustomerAddress,
+									 Position,IsPark,ParkName,ParkAddress,MainProducts,Floor,PlantType,RentAndSaleType,RentalPrice,ParkFloor,PlantTypeDesc,RentAndSaleTypeDesc,SourceModeCode,
+									 ParkProvince, ParkCity, ParkCounty, ParkStreet, Label)
+		select
+			projectClueUuid,customerUuid,tradeLevel,customerName,customerMobile,customerGender,
+			null,0,3,null,3,null,0,0,projectId,projectName,userId,employeeName,orgId,createDate,orgName,userId,employeeName,
+			orgId,orgName,orgId,orgName,now(),0,null,0,null,0,
+			now(),#{userId},intentionBusiness,remarks,null,null,'0086',flag,tradeLevel,'E',
+			contacts,
+			longitude,latitude,
+			sourceMode,
+			belongIndustrise,
+			belongIndustriseDesc,reportUserRole,customerAddress,
+			position,isPark,parkName,parkAddress,mainProducts,floor,
+			plantType,rentAndSaleType,rentalPrice,parkFloor,plantTypeDesc,rentAndSaleTypeDesc,(select DictCode from s_dictionary where pid = '3109eff7-cac2-4973-8888-586e802aca2a' and DictName = sourceMode),
+			parkProvince, parkCity, parkCounty, parkStreet, Label
+		from b_project_mark_temp where creator = #{userId};
+	</update>
+	<update id="saveMarkTempToProjectClueB">
+		insert into b_followup_record(FollowRecordId,FollowUpWay,FollowUpDetail,UserId,FollowUpDate,FollowUpType,IsDel,ProjectClueId,SaleCustomerId,ProjectId,EmployeeName,orgName,CreateTime,OpportunityClueId)
+		select
+			uuid(),followUpWay,followUpDetail,userId,createDate,2,0,projectClueUuid,customerUuid,projectId,employeeName,orgName,createDate,opportunityClueId
+		from b_project_mark_temp where creator = #{userId};
+	</update>
+	<update id="saveMarkTempToProjectClueC">
+		insert into b_customer_dimension(
+			DimensionName,
+			DimensionAddress,
+			ParkName,
+			ParkAddress,
+			Longitude,
+			Latitude,
+			UserId,
+			NumberOfLayers,
+			createTime,
+			creator,
+			ProjectClueId,
+			OpportunityClueId,
+			DimensionType,
+			BelongIndustrise,
+			BelongIndustriseDesc,
+			ProjectId,
+			BelongIndustriseTwo,
+			BelongIndustriseTwoDesc,
+			BelongIndustriseThree,
+			BelongIndustriseThreeDesc,
+			BelongIndustriseFour,
+			BelongIndustriseFourDesc
+		)
+		select
+			customerName,
+			customerAddress,
+			parkName,
+			parkAddress,
+			longitude,
+			latitude,
+			userId,
+			parkFloor,
+			now(),
+			userId,
+			projectClueId,
+			opportunityClueId,
+			dimensionType,
+			belongIndustrise,
+			belongIndustriseDesc,
+			projectId,
+			belongIndustriseTwo,
+			belongIndustriseTwoDesc,
+			belongIndustriseThree,
+			belongIndustriseThreeDesc,
+			belongIndustriseFour,
+			belongIndustriseFourDesc
+		from b_project_mark_temp where creator = #{userId};
+	</update>
+	<update id="saveMarkTempToProjectClueD">
+		insert into b_information(id,ProjectClueId,projectId,CustomerName,
+								  CustomerMobile,CustomerGender,
+								  BelongIndustrise,BelongIndustriseDesc,
+								  CreateTime,CreateUserId,IsDel,
+								  IntentionalAreaDesc,
+								  IntentionalFloorDesc,
+								  ResistanceDesc,
+								  YxArea,
+								  YxAreaDesc,
+								  ZyreasonDesc,
+								  IntentionClass,
+								  IntentionClassDesc,
+								  IntentionType,
+								  IntentionTypeDesc,
+								  YxSignTime,
+								  DemandRemarks,
+								  BelongIndustriseTwo,
+								  BelongIndustriseTwoDesc,
+								  BelongIndustriseThree,
+								  BelongIndustriseThreeDesc,
+								  BelongIndustriseFour,
+								  BelongIndustriseFourDesc,
+								  IntentionalPrice,
+								  AnnualOutputValue,
+								  NowRent,
+								  NowOfficeSpace,
+								  PollutantDischarge,
+								  PollutantDischargeDesc,
+								  Needs
+		)
+		select
+			uuid(),projectClueId,projectId,customerName,
+			customerMobile,customerGender,belongIndustrise,
+			belongIndustriseDesc,now(),userId,0,
+			intentionalAreaDesc,
+			intentionalFloorDesc,
+			resistanceDesc,yxArea,yxAreaDesc,
+			zyreasonDesc,intentionClass,intentionClassDesc,
+			intentionType,intentionTypeDesc,
+			yxSignTime,demandRemarks,belongIndustriseTwo,
+			belongIndustriseTwoDesc,belongIndustriseThree,
+			belongIndustriseThreeDesc,belongIndustriseFour,
+			belongIndustriseFourDesc,intentionalPrice,
+			annualOutputValue,
+			nowRent,
+			nowOfficeSpace,
+			pollutantDischarge,
+			pollutantDischargeDesc,
+			needs
+		from b_project_mark_temp where creator = #{userId};
+	</update>
+
+	<update id="saveMarkTempToProjectClueE">
+		<![CDATA[
+		INSERT INTO b_project_clues_contacts (
+		ContactsId,
+		ProjectClueId,
+		CustomerMobile,
+		Contacts,
+		SortOrder,
+		CreateTime,
+		CreateUserId
+		)
+		SELECT
+		UUID() AS ContactsId,
+		a.ProjectClueId,
+		TRIM(a.CustomerMobileS) AS CustomerMobile,
+		a.Contacts,
+		1 AS SortOrder,
+		NOW() AS CreateTime,
+		a.creator
+		FROM b_project_mark_temp a
+		WHERE a.CustomerMobileS IS NOT NULL
+		AND a.CustomerMobileS != ''
+		AND a.CustomerMobileS NOT LIKE '%;%' AND  creator = #{userId}
+		union all
+		SELECT
+		UUID() AS ContactsId,
+		a.ProjectClueId,
+		TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(a.CustomerMobileS, ';', numbers.n), ';', -1)) AS CustomerMobile,
+		a.Contacts,
+		numbers.n AS SortOrder,
+		NOW() AS CreateTime,
+		a.creator AS CreateUserId
+		FROM b_project_mark_temp a
+		CROSS JOIN (
+		SELECT 1 AS n UNION ALL
+		SELECT 2 UNION ALL
+		SELECT 3 UNION ALL
+		SELECT 4 UNION ALL
+		SELECT 5 UNION ALL
+		SELECT 6 UNION ALL
+		SELECT 7 UNION ALL
+		SELECT 8 UNION ALL
+		SELECT 9 UNION ALL
+		SELECT 10
+		) numbers
+		WHERE a.CustomerMobileS IS NOT NULL
+		AND a.CustomerMobileS != ''
+		AND a.CustomerMobileS LIKE '%;%'
+		AND numbers.n <= (
+		(LENGTH(a.CustomerMobileS) - LENGTH(REPLACE(a.CustomerMobileS, ';', '')))
+		)+1
+		AND TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(a.CustomerMobileS, ';', numbers.n), ';', -1)) != ''
+		AND creator = #{userId};
+		     ]]>
+	</update>
+	<update id="saveMarkTempToProjectClueCache">
+		INSERT INTO
+		b_project_clues_cache
+		(
+		ProjectClueId,
+		CustomerName,
+		CustomerMobile,
+		Longitude,
+		Latitude,
+		StatusType,
+		UpdateTime,
+		mapType,
+		dataRange
+		)
+
+		select
+		projectClueId,customerName,
+		customerMobile,
+		longitude,
+		latitude,
+		6,
+		now(),
+		1,
+		1
+		from b_project_mark_temp where creator = #{userId}
+		union all
+		select
+		projectClueId,customerName,
+		customerMobile,
+		longitude,
+		latitude,
+		8,
+		now(),
+		2,
+		1
+		from b_project_mark_temp where creator = #{userId}
+
+	</update>
+
+	<insert id="insertLogs" parameterType="cn.visolink.message.model.SysLog">
+		insert into s_timetaslogs(ID,TaskName,StartTime,ExecutTime,ResultStatus,Note)
+		values(UUID(),#{TaskName},#{StartTime},#{ExecutTime},#{ResultStatus},#{Note})
+	</insert>
+
+    <insert id="insertLogsWithID" parameterType="cn.visolink.message.model.SysLog">
+        insert into s_timetaslogs(ID,TaskName,StartTime,ExecutTime,ResultStatus,Note)
+        values(#{MyUUID},#{TaskName},#{StartTime},#{ExecutTime},#{ResultStatus},#{Note})
+    </insert>
+
+	<select id="getProInfoByorgName" resultType="java.util.Map">
+		select ID orgId, ProjectID projectId from s_organization where PID = (select ID from s_organization where orgName = #{orgName} and IsDel = 0 and Status = 1) and OrgCategory = 4 and IsDel = 0 and Status = 1;
+	</select>
+	<select id="getComJobInfoByJobCode" resultType="java.util.Map">
+		select * from s_commonjobs where JobCode = #{jobCode}
+	</select>
+
+	<select id="getJobInfoInsProject" resultType="java.util.Map">
+		select * from s_jobs where CommonJobID = #{commonJobID} and JobOrgID = #{orgId}
+	</select>
+
+	<select id="getUserInfoByUserName" resultType="java.util.Map">
+		select ID userId,UserName userName,EmployeeName employeeName from b_account where IsDel = 0 and Status = 1 and EmployeeName = #{userName}
+	</select>
+
+	<select id="getUserInfoSByUserName" resultType="java.util.Map">
+		select ID userId,UserName userName,EmployeeName employeeName from b_account where IsDel = 0 and Status = 1 and EmployeeName = #{userName}
+	</select>
+
+	<select id="getUserJobrelInfo" resultType="java.util.Map">
+		select * from s_jobsuserrel where AccountID = #{userId} and JobID = #{jobId}
+	</select>
+
+	<insert id="saveSystemJobForManagement" parameterType="java.util.Map">
+		INSERT  INTO S_Jobs
+		( ID ,
+		  JobCode ,
+		  JobName ,
+		  JobDesc ,
+		  JobPID ,
+		  CommonJobID ,
+		  JobOrgID ,
+		  AuthCompanyID ,
+		  ProductID ,
+		  Creator ,
+		  CreateTime ,
+		  Editor ,
+		  EditTime ,
+		  Status ,
+		  IsDel
+		)
+		VALUES  ( #{ID},
+				  #{JobCode},
+				  #{JobName},
+				  #{JobDesc},
+				  #{JobPID},
+				  #{CommonJobID},
+				  #{JobOrgID},
+				  #{AuthCompanyID},
+				  #{ProductID},
+				  #{Creator},
+				  now() ,
+				  NULL ,
+				  NULL ,
+				  #{Status},
+				  0
+				)
+	</insert>
+
+	<insert id="saveJobSuserrel" parameterType="java.util.Map">
+		insert into s_jobsuserrel(ID,AccountID,JobID,CurrentJob,Tag)
+		values (uuid(),#{ID},#{jobId},#{CurrentJob},#{Tag})
+	</insert>
+
+	<!--获取未导出任务详情-->
+	<select id="getExcelLog" resultType="cn.visolink.system.excel.model.ExcelExportLog">
+		select id,area_name areaName,project_id projectId,project_name projectName,main_type mainType,main_type_desc mainTypeDesc,create_time createTime,file_name fileName,
+			   sub_type subType,sub_type_desc subTypeDesc,export_type exportType,do_sql doSql,export_status exportStatus
+		from s_excel_export_log
+		where is_del = 0 and export_status = 1;
+	</select>
+
+	<!--更新任务状态-->
+	<update id="updateExcelStatus" parameterType="cn.visolink.system.excel.model.ExcelExportLog">
+		update s_excel_export_log
+		<set>
+			<if test="exportStatus!=null and exportStatus!=''">
+				export_status = #{exportStatus},
+			</if>
+			<if test="fileName!=null and fileName!=''">
+				file_name = #{fileName},
+			</if>
+			<if test="downLoadUrl!=null and downLoadUrl!=''">
+				down_load_url = #{downLoadUrl},
+			</if>
+			<if test="waitTime!=null and waitTime!=''">
+				wait_time = #{waitTime},
+			</if>
+			<if test="exportTime!=null and exportTime!=''">
+				export_time = #{exportTime},
+			</if>
+			edit_time = now(),
+			editor = '系统自动'
+		</set>
+		where id = #{id}
+	</update>
+
+	<select id="selectNeedDelLog" parameterType="java.lang.String" resultType="java.lang.String">
+		select file_name from s_excel_export_log where create_time &lt; DATE_SUB(#{time},INTERVAL 3 day) and is_asyn = 1 and file_name is not null;
+	</select>
+	<update id="delLogs" parameterType="java.lang.String">
+		update s_excel_export_log
+		set is_del = 1
+		where create_time &lt; DATE_SUB(#{time},INTERVAL 3 day);
+	</update>
+
+	<insert id="addCstToPool">
+		insert into b_customerpublicpool(ID,PoolType,ReportUserName,projectId,ProjectClueId,
+										 OpportunityClueId,AddType,SalesAttributionName,SalesAttributionId,SalesAttributionTime,
+										 CustomerName,CustomerMobile,CustomerCardType,CustomerCardNum,SalesTheLatestFollowDate,
+										 add_pro_time,add_region_time,CustomerType,ReportUserRole,CustomerGender,ReportTime,Level,Label,Contacts,evaluate_desc)
+		values
+			(uuid(),1,#{employeeName},#{projectId},#{projectClueId},#{opportunityClueId},1,
+			 #{employeeName},#{userId},NOW(),#{customerName},#{customerMobile},
+			 #{customerCardType},#{customerCardNum},null,NOW(),null,#{customerType},1,null
+				,NOW(),'','',#{contacts},#{flag})
+	</insert>
+	<insert id="saveInformationZs" parameterType="cn.visolink.system.excel.model.ReportCustomerForm">
+		insert into b_information(id,ProjectClueId,OpportunityClueId,projectId,CustomerName,
+								  CustomerMobile,CustomerGender,
+								  BelongIndustrise,BelongIndustriseDesc,
+								  CreateTime,CreateUserId,IsDel,
+								  IntentionalAreaDesc,
+								  IntentionalFloorDesc,
+								  ResistanceDesc,
+								  YxArea,
+								  YxAreaDesc,
+								  ZyreasonDesc,
+								  IntentionClass,
+								  IntentionClassDesc,
+								  IntentionType,
+								  IntentionTypeDesc,
+								  YxSignTime,
+								  DemandRemarks,
+								  BelongIndustriseTwo,
+								  BelongIndustriseTwoDesc,
+								  BelongIndustriseThree,
+								  BelongIndustriseThreeDesc,
+								  BelongIndustriseFour,
+								  BelongIndustriseFourDesc,
+								  IntentionalPrice,
+								  AnnualOutputValue,
+								  NowRent,
+								  NowOfficeSpace,
+								  PollutantDischarge,
+								  PollutantDischargeDesc,
+								  Needs,
+								  DetailedAddress,
+								  Province,City,District,Description
+		)
+		values(uuid(),#{projectClueId},#{opportunityClueId},#{projectId},#{customerName},
+			   #{customerMobile},#{customerGender},#{belongIndustrise},
+			   #{belongIndustriseDesc},now(),#{userId},0,
+			   #{intentionalAreaDesc},
+			   #{intentionalFloorDesc},
+			   #{resistanceDesc},#{yxArea},#{yxAreaDesc},
+			   #{zyreasonDesc},#{intentionClass},#{intentionClassDesc},
+			   #{intentionType},#{intentionTypeDesc},
+			   #{yxSignTime},#{demandRemarks},#{belongIndustriseTwo},
+			   #{belongIndustriseTwoDesc},#{belongIndustriseThree},
+			   #{belongIndustriseThreeDesc},#{belongIndustriseFour},
+			   #{belongIndustriseFourDesc},#{intentionalPrice},
+			   #{annualOutputValue},
+			   #{nowRent},
+			   #{nowOfficeSpace},
+			   #{pollutantDischarge},
+			   #{pollutantDischargeDesc},
+			   #{needs},
+			   #{detailedAddress},
+			   #{province},#{city},#{district},#{remarks})
+	</insert>
+	<insert id="insertProjectOpp">
+		INSERT INTO b_project_opportunity (OpportunityClueId,ProjectClueId,BasicCustomerId,CustomerName,
+										   CustomerMobile,CustomerGender,IsFollow,SourceType,SourceTypeDesc,
+										   SourceTypeOld,SourceTypeOldDesc,ClueStatus,projectId,ProjectName,
+										   ReportUserID,ReportUserName,ReportCreateTime,SalesAttributionId,
+										   SalesAttributionName,SalesAttributionTime,
+										   IsDel,CreateTime,CreateUserId,Remarks,CatchTime,SalesFollowExpireDate,SalesFollowExpireWarningDate,
+										   CustomerLevel,Contacts,Longitude,Latitude,SourceMode,ReportUserRole,CustomerAddress,
+										   Position,IsPark,ParkName,ParkAddress,MainProducts,Floor,PlantType,RentAndSaleType,RentalPrice,ParkFloor,
+										   ReportTeamID,ReportTeamName,SalesAttributionTeamId,SalesAttributionTeamName,SalesUserRole,PlantTypeDesc,RentAndSaleTypeDesc,SourceModeCode,
+										   CustomerType,LegalPerson,LegalPersonPhone,CustomerCardType,CustomerCardTypeDesc,CustomerCardNum,EnterpriseType,EnterpriseTypeDesc,PostCode,
+										   ParkProvince, ParkCity, ParkCounty, ParkStreet, ParkLongitude, ParkLatitude,diy_hide_customer_name,flag)
+		VALUES
+			(#{opportunityClueId},#{projectClueId},#{customerUuid},#{customerName},#{customerMobile},#{customerGender},
+			 0,3,null,
+			 3,null,#{clueStatus},#{projectId},#{projectName},#{userId},#{employeeName},now(),#{userId},#{employeeName},
+			 now(),0,now(),#{userId},#{remarks},now(),#{salesFollowExpireDate},#{salesFollowExpireWarningDate},'E',
+			 #{contacts},
+			 #{longitude},#{latitude},
+			 #{sourceMode},#{reportUserRole},#{customerAddress},
+			 #{position},#{isPark},#{parkName},#{parkAddress},#{mainProducts},#{floor},
+			 #{plantType},#{rentAndSaleType},#{rentalPrice},#{parkFloor},
+			 #{orgId},#{orgName},#{orgId},#{orgName},#{reportUserRole},#{plantTypeDesc},#{rentAndSaleTypeDesc},#{sourceMode},
+			 #{customerType},#{legalPerson},#{legalPersonPhone},#{customerCardType},#{customerCardTypeDesc},#{customerCardNum},#{enterpriseType},#{enterpriseTypeDesc},#{postCode},
+			 #{parkProvince}, #{parkCity}, #{parkCounty}, #{parkStreet}, #{ParkLongitude}, #{ParkLatitude},concat(left(#{customerName},1),'**'),#{flag})
+	</insert>
+	<insert id="insertCustomerBasicZs">
+		insert into b_customer_basic(ID,Name,Gender,Mobile,Creator,CreateTime,Status,projectId,ProjectName,AreaCode,CustomerType,CardNum)
+		values(#{customerUuid},#{customerName},#{customerGender},#{customerMobile},#{userId},now(),1,#{projectId},#{projectName},#{areaCode},#{customerType},#{cardNum})
+	</insert>
+
+	<select id="getProInfoByProName" resultType="java.util.Map">
+		select ID projectId,ProjectName projectName from b_project where ProjectName = #{projectName}
+	</select>
+	<select id="getOrgInfoByProAndUser" resultType="java.util.Map">
+		select org.OrgName orgName, org.ID orgId, org.ProjectID projectId, job.JobCode jobCode, rel.CurrentJob, rel.JobID, com.JobCode
+		from s_jobsuserrel rel
+				 LEFT JOIN s_jobs job on job.id = rel.JobID
+				 LEFT JOIN s_organization org on org.id = job.JobOrgID
+				 left join s_commonjobs com on job.CommonJobID = com.ID
+		where OrgName is not null
+		  and job.IsDel = 0
+		  and job.Status = 1
+		  and com.JobCode = 'zygw'
+		  and rel.AccountID = #{userId}
+		  and org.ProjectID = #{projectId}
+	</select>
+
+	<select id="getCustDealInfo" resultType="java.util.Map">
+		SELECT DISTINCT ot.CstName,ot.ProjectID,p.ProjectName FROM b_opportunity_trade ot left join b_project p
+		on ot.ProjectID=p.Id where ot.CstName= #{custName} limit 1
+	</select>
+
+	<select id="getBasicCustomerId" resultType="java.lang.String">
+		select ID from b_customer_basic where 1=1
+										  and Name = #{customerName}
+										  and Mobile = #{customerMobile}
+			limit 1
+	</select>
+
+
+	<select id="getCstIsOkReferralClue" parameterType="java.util.Map" resultType="java.util.Map">
+		select 'proClue' type,count(1) count,SalesAttributionName name from b_project_clues
+		where projectId in (
+		<foreach collection="proList" separator="," item="item">
+			#{item}
+		</foreach>
+		) and SalesAttributionId is not null and ClueStatus &lt;9
+		and (CustomerName = #{customerName} or CustomerMobile = #{customerMobile})
+	</select>
+	<select id="checkZsdtdrCustomerExists" parameterType="java.util.Map" resultType="java.lang.Integer">
+	    SELECT COUNT(1) FROM b_project_clues 
+	    WHERE ReportUserID = (select  ID  from b_account where UserName= #{reportUserName}) AND CustomerName = #{customerName}
+	    and  SourceMode = #{sourceMode} AND ProjectName = #{projectName} and IsDel=0
+	</select>
+
+	<select id="checkZsdtdrCustomerExistsHis" parameterType="java.util.Map" resultType="java.lang.Integer">
+		SELECT COUNT(1) FROM b_project_clues
+		WHERE CustomerName = #{customerName}
+		and  ProjectName = #{projectName} and IsDel=0
+	</select>
+
+	<select id="getZsdtdrClueTempList" resultType="cn.visolink.system.excel.model.ReportCustomerForm">
+    	select * from b_project_mark_temp  where creator = #{userId}
+	</select>
+
+	<!-- 查询需要更新的附件记录 -->
+	<select id="getHistoryCustomerEnclosures" resultType="java.util.Map">
+		SELECT id, enclosureUrl, enclosureName
+		FROM b_enclosure
+		WHERE enclosureType = 1
+		  AND isDel = 0
+		  AND enclosureUrl IS NOT NULL
+		  AND enclosureUrl != ''
+                  AND enclosureUrl like '%https://track-record-file-base.amap.com%'
+		order by createTime desc
+			limit 200
+	</select>
+
+	<!-- 更新附件URL -->
+	<update id="updateEnclosureUrl" parameterType="java.util.Map">
+		UPDATE b_enclosure
+		SET enclosureUrl = #{enclosureUrl}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 查询地图导入客户历史记录 -->
+	<select id="queryMapImportCustomerHistory" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT ID,
+		case when TaskName='批量导入地图客户任务结束' then '导入地图客户'
+		else '导入历史地图客户' end as TaskName ,
+		ExecutTime, ResultStatus, Note
+		FROM s_timetaslogs
+		WHERE TaskName IN ('批量导入地图客户任务结束','批量导入地图客户历史数据任务结束')
+		AND 1=1 and ExecutTime>='2025-09-10'
+		<if test="note != null and note != ''">
+			AND Note LIKE CONCAT('%', #{note}, '%')
+		</if>
+		<if test="startTime != null and startTime != ''">
+			AND ExecutTime >= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			AND ExecutTime &lt;= #{endTime}
+		</if>
+		<if test="historyId != null and historyId != ''">
+			AND ID = #{historyId}
+		</if>
+		ORDER BY ExecutTime DESC
+	</select>
+	
+	<!-- 根据用户ID删除跟进记录 -->
+	<delete id="deleteFollowupRecordByUserId" parameterType="java.lang.String">
+		DELETE FROM b_followup_record 
+		WHERE ProjectClueId IN (
+			SELECT ProjectClueId 
+			FROM b_project_clues 
+			WHERE flag LIKE CONCAT('%', #{userId}, '%')
+		)
+	</delete>
+	
+	<!-- 根据用户ID删除项目线索 -->
+	<delete id="deleteProjectCluesByUserId" parameterType="java.lang.String">
+		DELETE FROM b_project_clues 
+		WHERE flag LIKE CONCAT('%', #{userId}, '%')
+	</delete>
+	
+	<!-- 检查项目线索状态 -->
+	<select id="checkProjectCluesStatus" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT ProjectClueId, ClueStatus, CustomerName
+		FROM b_project_clues 
+		WHERE flag LIKE CONCAT('%', #{userId}, '%')
+		AND ClueStatus != 0
+	</select>
+	
+	<!-- 检查任务客户关联 -->
+	<select id="checkTaskCustomerRelation" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT tc.customerId, tc.taskId, pcl.CustomerName
+		FROM b_task_customer tc
+		INNER JOIN b_project_clues pcl ON tc.customerId = pcl.ProjectClueId
+		WHERE pcl.flag LIKE CONCAT('%', #{userId}, '%')
+	</select>
+	
+	<!-- 更新定时任务日志状态 -->
+	    <update id="updateTimeTaskLogStatus" parameterType="java.util.Map">
+        UPDATE s_timetaslogs 
+        SET ResultStatus = #{resultStatus}
+        WHERE ID = #{historyId}
+    </update>
+
+    <!-- 根据线索ID查询联系方式 -->
+    <select id="queryCluesContacts" resultType="java.util.Map">
+        SELECT 
+            c.ContactsId,
+            c.ProjectClueId,
+            c.CustomerMobile,
+            c.Contacts,
+            c.SortOrder,
+            c.CreateTime,
+            c.CreateUserId,
+            a.EmployeeName as CreateUserName
+        FROM b_project_clues_contacts c
+        LEFT JOIN b_account a ON c.CreateUserId = a.ID
+        WHERE c.ProjectClueId = #{projectClueId}
+        ORDER BY c.SortOrder ASC
+    </select>
+</mapper>

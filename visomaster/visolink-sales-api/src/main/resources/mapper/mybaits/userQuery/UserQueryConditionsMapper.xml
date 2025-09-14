@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.userQuery.mapper.UserQueryConditionsMapper">
+    
+    <!-- 保存或更新用户查询条件 -->
+    <insert id="saveOrUpdate">
+        INSERT INTO b_user_query_conditions (id, user_id, interface_name, query_params, create_time, update_time)
+        VALUES (#{id}, #{userId}, #{interfaceName}, #{queryParams}, NOW(), NOW())
+        ON DUPLICATE KEY UPDATE
+            query_params = VALUES(query_params),
+            update_time = NOW()
+    </insert>
+    
+    <!-- 查询用户指定接口的最近一次查询条件 -->
+    <select id="getLatestByUserAndInterface" resultType="cn.visolink.system.userQuery.entity.UserQueryConditions">
+        SELECT id, user_id as userId, interface_name as interfaceName, 
+               query_params as queryParams, create_time as createTime, update_time as updateTime
+        FROM b_user_query_conditions
+        WHERE user_id = #{userId} AND interface_name = #{interfaceName}
+        ORDER BY update_time DESC
+        LIMIT 1
+    </select>
+    
+    <!-- 删除用户指定接口的查询条件 -->
+    <delete id="deleteByUserAndInterface">
+        DELETE FROM b_user_query_conditions
+        WHERE user_id = #{userId} AND interface_name = #{interfaceName}
+    </delete>
+    
+    <!-- 根据ID查询记录 -->
+    <select id="getById" resultType="cn.visolink.system.userQuery.entity.UserQueryConditions">
+        SELECT id, user_id as userId, interface_name as interfaceName, 
+               query_params as queryParams, create_time as createTime, update_time as updateTime
+        FROM b_user_query_conditions
+        WHERE id = #{id}
+    </select>
+    
+    <!-- 根据dataRange和mapType过滤查询用户指定接口的最近一次查询条件 -->
+    <select id="getLatestByUserAndInterfaceWithFilter" resultType="cn.visolink.system.userQuery.entity.UserQueryConditions">
+        SELECT id, user_id as userId, interface_name as interfaceName, 
+               query_params as queryParams, create_time as createTime, update_time as updateTime
+        FROM b_user_query_conditions
+        WHERE user_id = #{userId} 
+          AND interface_name = #{interfaceName}
+          <if test="dataRange != null and dataRange != ''">
+              AND query_params LIKE CONCAT('%"dataRange":"', #{dataRange}, '"%')
+          </if>
+          <if test="mapType != null and mapType != ''">
+              AND query_params LIKE CONCAT('%"mapType":"', #{mapType}, '"%')
+          </if>
+        ORDER BY update_time DESC
+        LIMIT 1
+    </select>
+    
+</mapper>

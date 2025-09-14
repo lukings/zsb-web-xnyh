@@ -1,0 +1,297 @@
+{
+  "info": {
+    "name": "审批流程配置系统API",
+    "description": "审批流程配置系统的完整API接口集合",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "审批流程配置管理",
+      "item": [
+        {
+          "name": "保存审批流程配置",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"processName\": \"客户信息变更审批\",\n  \"processType\": \"2\",\n  \"levelType\": \"3\",\n  \"regionId\": \"region123\",\n  \"projectId\": \"project123\",\n  \"isEnabled\": 1,\n  \"isForce\": 0,\n  \"nodes\": [\n    {\n      \"nodeName\": \"部门经理审批\",\n      \"nodeType\": \"1\",\n      \"approvalJobList\": [\"部门经理\", \"副经理\"],\n      \"ccJobList\": [\"部门主管\"],\n      \"timeoutDays\": 3,\n      \"isRequired\": 1\n    },\n    {\n      \"nodeName\": \"总经理审批\",\n      \"nodeType\": \"1\",\n      \"approvalJobList\": [\"总经理\"],\n      \"ccJobList\": [\"副总经理\"],\n      \"timeoutDays\": 5,\n      \"isRequired\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/save",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "save"]
+            }
+          }
+        },
+        {
+          "name": "更新审批流程配置",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"config123\",\n  \"processName\": \"客户信息变更审批-更新版\",\n  \"processType\": \"2\",\n  \"levelType\": \"3\",\n  \"regionId\": \"region123\",\n  \"projectId\": \"project123\",\n  \"isEnabled\": 1,\n  \"isForce\": 0,\n  \"nodes\": [\n    {\n      \"nodeName\": \"部门经理审批\",\n      \"nodeType\": \"1\",\n      \"approvalJobList\": [\"部门经理\"],\n      \"ccJobList\": [\"部门主管\"],\n      \"timeoutDays\": 3,\n      \"isRequired\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/update",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "update"]
+            }
+          }
+        },
+        {
+          "name": "根据ID查询审批流程配置",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/getById?id=config123",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "getById"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "config123"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "查询审批流程配置列表",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"processType\": \"2\",\n  \"levelType\": \"3\",\n  \"regionId\": \"region123\",\n  \"projectId\": \"project123\",\n  \"isEnabled\": 1,\n  \"processName\": \"客户信息\",\n  \"pageNum\": 1,\n  \"pageSize\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/select",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "select"]
+            }
+          }
+        },
+        {
+          "name": "删除审批流程配置",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/delete?id=config123",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "delete"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "config123"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "批量删除审批流程配置",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\"config123\", \"config124\", \"config125\"]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/batchDelete",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "batchDelete"]
+            }
+          }
+        },
+        {
+          "name": "启用/禁用审批流程",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/toggleEnabled?id=config123&isEnabled=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "toggleEnabled"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "config123"
+                },
+                {
+                  "key": "isEnabled",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "复制审批流程配置",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/copy?sourceId=config123&targetProcessType=3&targetLevelType=2&targetRegionId=region456",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "copy"],
+              "query": [
+                {
+                  "key": "sourceId",
+                  "value": "config123"
+                },
+                {
+                  "key": "targetProcessType",
+                  "value": "3"
+                },
+                {
+                  "key": "targetLevelType",
+                  "value": "2"
+                },
+                {
+                  "key": "targetRegionId",
+                  "value": "region456"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "清空所有流程配置",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/clearAll",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "clearAll"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "审批流程节点管理",
+      "item": [
+        {
+          "name": "保存审批流程节点",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"processConfigId\": \"config123\",\n  \"nodeName\": \"部门经理审批\",\n  \"nodeType\": \"1\",\n  \"nodeOrder\": 1,\n  \"approvalJobList\": [\"部门经理\", \"副经理\"],\n  \"ccJobList\": [\"部门主管\"],\n  \"timeoutDays\": 3,\n  \"isRequired\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/saveNode",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "saveNode"]
+            }
+          }
+        },
+        {
+          "name": "更新审批流程节点",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"node123\",\n  \"processConfigId\": \"config123\",\n  \"nodeName\": \"部门经理审批-更新版\",\n  \"nodeType\": \"1\",\n  \"nodeOrder\": 1,\n  \"approvalJobList\": [\"部门经理\"],\n  \"ccJobList\": [\"部门主管\"],\n  \"timeoutDays\": 5,\n  \"isRequired\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/updateNode",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "updateNode"]
+            }
+          }
+        },
+        {
+          "name": "删除审批流程节点",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/deleteNode?id=node123",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "deleteNode"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "node123"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "根据流程配置ID查询节点列表",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approval/process/getNodesByConfigId?processConfigId=config123",
+              "host": ["{{baseUrl}}"],
+              "path": ["approval", "process", "getNodesByConfigId"],
+              "query": [
+                {
+                  "key": "processConfigId",
+                  "value": "config123"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8001",
+      "type": "string"
+    }
+  ]
+}

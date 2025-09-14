@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.phone.mapper.PhoneMapper">
+
+    <!--获取认知渠道-->
+    <select id="getParentChannel" resultType="java.util.Map">
+        select DISTINCT DictCode,DictName from s_dictionary where pid = '8384E489-BE94-0B8E-FD4D-6667914920CB' and isDel =0 and status=1;
+    </select>
+
+    <!--获取认知通道-->
+    <select id="getChildChannel" parameterType="java.util.List" resultType="java.util.Map">
+        select DISTINCT DictCode,DictName from s_dictionary where pid = 'f03bb217-27a9-4772-92a9-d7be56483833' and isDel =0 and status=1
+        <if test="projectList!=null and projectList.size()>0">
+          and ProjectID in
+            <foreach collection="projectList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+</mapper>

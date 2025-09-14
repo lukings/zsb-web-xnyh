@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.companyQw.dao.CompanyQwSynDao">
+
+
+    <!--获取父部门ID-->
+    <select id="getDeptPid" parameterType="java.lang.String" resultType="java.lang.String">
+        select dept_id from b_qw_org where jk_org_id = #{orgPid};
+    </select>
+    <!--更新根部门组织ID-->
+    <update id="updateQwDept" parameterType="java.lang.String">
+        update b_qw_org set jk_org_id = #{orgId} where dept_id = 1
+    </update>
+
+    <select id="getQwUserIsOk" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            qu.userid,
+            ( SELECT GROUP_CONCAT( dept_id ) FROM b_qw_org_user_rel WHERE user_id = qu.userid AND is_del = 0 ) depts
+        FROM
+            b_qw_user qu
+        WHERE
+            qu.mobile = #{mobile};
+    </select>
+
+    <!--保存部门至本地-->
+    <insert id="addQwDept" parameterType="java.util.Map">
+        insert into b_qw_org(dept_id,parentid,dept_name,`order`,creator,create_time,jk_org_id,jk_pro_id)
+        values
+            (#{dept_id},#{parentid},#{dept_name},#{order},#{creator},now(),#{jk_org_id},#{jk_pro_id})
+    </insert>
+
+    <select id="getDeptAll" resultType="java.lang.String">
+        select dept_id from b_qw_org where is_del = 0
+    </select>
+
+
+    <insert id="addQwUser" parameterType="cn.visolink.system.companyQw.model.QwUserVo">
+        insert into b_qw_user(email,main_department,userid,`name`,mobile,gender,create_time,account_id,status)
+        values
+        (#{email},#{mainDepartment},#{userid},#{name},#{mobile},#{gender},now(),#{accountId},'4');
+        insert into b_qw_org_user_rel(dept_id,user_id,create_time)
+        values(#{mainDepartment},#{userid},now())
+    </insert>
+
+    <insert id="addQwUserNew" parameterType="java.util.Map">
+        insert into b_qw_user(email,avatar,telephone,alias,status,address,`position`,main_department,userid,`name`,mobile,gender,create_time,account_id)
+        values
+        (#{Email},#{Avatar},#{Telephone},#{Alias},#{Status},#{Address},#{Position},#{MainDepartment},#{UserID},#{Name},#{Mobile},#{Gender},#{CreateTime},#{accountId});
+    </insert>
+
+    <update id="updateQwUser" parameterType="java.util.Map">
+        update b_qw_user
+        <set>
+            <if test="Email!=null and Email!=''">
+                email = #{Email},
+            </if>
+            <if test="Avatar!=null and Avatar!=''">
+                avatar = #{Avatar},
+            </if>
+            <if test="Telephone!=null and Telephone!=''">
+                telephone = #{Telephone},
+            </if>
+            <if test="Alias!=null and Alias!=''">
+                alias = #{Alias},
+            </if>
+            <if test="Status!=null and Status!=''">
+                status = #{Status},
+            </if>
+            <if test="Address!=null and Address!=''">
+                address = #{Address},
+            </if>
+            <if test="Position!=null and Position!=''">
+                `position` = #{Position},
+            </if>
+            <if test="MainDepartment!=null and MainDepartment!=''">
+                main_department = #{MainDepartment},
+            </if>
+            <if test="NewUserID!=null and NewUserID!=''">
+                userid = #{NewUserID},
+            </if>
+            <if test="Name!=null and Name!=''">
+                `name` = #{Name},
+            </if>
+            <if test="Gender!=null and Gender!=''">
+                gender = #{Gender},
+            </if>
+            <if test="accountId!=null and accountId!=''">
+                account_id = #{accountId},
+            </if>
+            edit_time = #{CreateTime}
+        </set>
+        where userid = #{UserID}
+    </update>
+
+    <select id="getOldOrg" parameterType="java.lang.String" resultType="java.lang.String">
+        select dept_id from b_qw_org_user_rel where user_id = #{userid} and is_del = 0
+    </select>
+
+    <update id="updateAllUser" parameterType="java.util.Map">
+        update b_qw_org_user_rel set user_id = #{NewUserID} where user_id = #{UserID} and is_del = 0;
+        update b_qw_user_cst_tag set userid = #{NewUserID} where userid = #{UserID} and is_del = 0;
+        update b_qw_user_cst_rel set userid = #{NewUserID} where userid = #{UserID} and is_del = 0;
+        update b_qw_user_cst_statistics set userid = #{NewUserID} where userid = #{UserID} and is_del = 0;
+        update b_qw_user_cst_group_statistics set owner = #{NewUserID} where owner = #{UserID} and is_del = 0;
+        update b_qw_contact_user set user_id = #{NewUserID} where user_id = #{UserID} and is_del = 0;
+    </update>
+
+    <insert id="addUserDepts" parameterType="java.util.Map">
+        insert into b_qw_org_user_rel(dept_id,user_id,create_time,direct_leader)
+        values
+       <foreach collection="list" item="item" separator=",">
+           (#{item.dept_id},#{item.user_id},#{item.create_time},#{item.direct_leader})
+       </foreach>
+    </insert>
+
+    <select id="getAcUserId" parameterType="java.util.Map" resultType="java.lang.String">
+        SELECT
+            ba.ID
+        FROM
+            b_account ba
+                INNER JOIN s_jobsuserrel rel ON ba.id = rel.AccountID
+                AND IsDel = 0
+                INNER JOIN s_jobs jobs ON rel.JobID = jobs.ID
+                AND jobs.isIdm = 0
+                INNER JOIN s_commonjobs com ON jobs.CommonJobID = com.ID
+                AND com.isIdm = 0
+                INNER JOIN (
+                SELECT
+                    sorg.id
+                FROM
+                    b_qw_org org
+                        INNER JOIN s_organization sorg ON org.jk_org_id = sorg.id
+                        AND sorg.IsDel = 0
+                WHERE
+                    org.dept_id IN ( 
+                      <foreach collection="depts" separator="," item="item">
+                          #{item}
+                      </foreach>
+                        )
+            ) org ON org.id = jobs.JobOrgID
+        WHERE
+            ( com.JobCode = 'zygw' OR com.JobCode = 'nqgw' )
+          AND ba.isIdm = 0
+          AND ba.mobile = #{mobile}
+            LIMIT 1
+    </select>
+
+    <select id="getOldUser" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.QwUserVo">
+        select account_id accountId,userid from b_qw_user where userid = #{userid};
+    </select>
+
+    <delete id="delQwUserOrg" parameterType="java.lang.String">
+        delete from b_qw_org_user_rel
+        where user_id = #{userid}
+    </delete>
+
+    <update id="delQwUser" parameterType="java.util.Map">
+        update b_qw_user set status = 5,is_del = 1,edit_time = #{edit_time}
+        where userid = #{userid}
+    </update>
+
+    <insert id="addQwUserRel" parameterType="cn.visolink.system.companyQw.model.QwUserVo">
+        insert into b_qw_org_user_rel(dept_id,user_id,create_time)
+        values(#{mainDepartment},#{userid},now())
+    </insert>
+
+
+    <!--添加临时客户数据-->
+    <insert id="addQwCstTemp" parameterType="java.util.Map">
+        insert into t_qw_cst_res(ChangeType,UserID,CreateTime,WelcomeCode,Event,
+                                 ExternalUserID,ToUserName,FromUserName,MsgType,
+                                 Source,State)
+        values(#{ChangeType},#{UserID},#{CreateTime},#{WelcomeCode},#{Event},
+               #{ExternalUserID},#{ToUserName},#{FromUserName},#{MsgType}
+                  ,#{Source},#{State})
+    </insert>
+
+    <select id="getChannelCodeIsWelcome" parameterType="java.lang.String" resultType="cn.visolink.system.companyQw.model.ChannelCode">
+        SELECT
+            con.id,
+            con.is_add_welcome_words isAddWelcomeWords
+        FROM
+            b_qw_contact_user cu
+                INNER JOIN b_qw_contact con ON cu.contact_id = con.id
+        WHERE
+            cu.state = #{state}
+          AND cu.user_id = #{userId}
+          AND cu.is_del = 0 LIMIT 1
+    </select>
+
+
+</mapper>

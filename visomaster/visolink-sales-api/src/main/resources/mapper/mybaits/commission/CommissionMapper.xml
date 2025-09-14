@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.visolink.system.commission.mapper.CommissionMapper">
+
+    <!--获取无效数据列表-->
+    <select id="getInvalidDataList" parameterType="java.util.Map" resultType="java.util.Map">
+        select ot.projectID,p.projectName,ot.roomName,o.performanceAttributorID,o.performanceAttributor,
+        o.reportUserID,o.reportUserName,o.customerName,
+        concat(left(o.customerMobile,3),'****',right(o.customerMobile,4)) customerMobile,
+        DATE_FORMAT(ot.contractDate,'%Y-%m-%d %H:%i:%s') contractDate,0 as status,ot.TradeGUID tradeGUID
+        from b_opportunity_trade ot
+        inner join  b_project_opportunity o on o.OpportunityClueId = ot.OpportunityClueId and o.PerformanceAttributorID != o.ReportUserID
+        LEFT JOIN b_project p ON ot.ProjectID = p.id
+        where ot.ClueStatus = '签约'
+        <if test="brokerId != null and brokerId !=''">
+            and o.reportUserID = #{brokerId}
+        </if>
+        <if test="intentionId != null and intentionId !=''">
+            and ot.intentionID = #{intentionId}
+        </if>
+        <if test="projectNames != null and projectNames.size > 0 ">
+            and p.projectName in
+        <foreach collection="projectNames" index="index" item="item" open="("
+                     separator="," close=")">
+                #{item}
+        </foreach>
+        </if>
+    </select>
+
+</mapper>

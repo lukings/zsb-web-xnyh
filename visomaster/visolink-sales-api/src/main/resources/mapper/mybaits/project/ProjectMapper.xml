@@ -1,0 +1,940 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.visolink.system.project.dao.ProjectMapper">
+
+	<resultMap id="projectMap" type="cn.visolink.system.project.model.vo.ProjectVO">
+		<result column="ProjectId" property="projectId"/>
+		<result column="ProjectName" property="projectName"/>
+		<result column="OrgId" property="orgId"/>
+		<result column="UserName" property="userName"/>
+		<result column="AreaName" property="areaName"/>
+		<result column="AreaId" property="areaId"/>
+		<result column="ComGUID" property="comguid"/>
+	</resultMap>
+	<select id="findFullPath" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				and job.isIdm = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				and scj.isIdm = 0
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode NOT IN ( 'zygw','qyzygw', 'khds', 'nqgw' )
+	</select>
+	<select id="findFullPathSQX" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				and job.isIdm = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				and scj.isIdm = 0
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode NOT IN ('zygw', 'qyzygw','khds', 'nqgw', 'xsjl', 'qyxsjl', 'zszj', 'qyzszj','yxjl','qyyxjl','fztj','qycsss','jtcbss')
+		union all
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				and job.isIdm = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				and scj.isIdm = 0
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+				inner join s_user_org_rel url on ac.ID = url.user_id and find_in_set(so.ProjectID,url.project_id)
+				and (IF(url.is_no_time = 0, DATE_FORMAT(NOW(), '%Y-%m-%d') between url.start_time and url.end_time, true))
+				and url.approve_status = 2
+				and url.isdel = 0
+				and url.status = 1
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode IN ('xsjl', 'qyxsjl', 'zszj', 'qyzszj','yxjl')
+	</select>
+
+	<select id="findFullPathByOwnerUser" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				and job.isIdm = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				and scj.isIdm = 0
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode IN ('zygw', 'qyzygw', 'xsjl', 'yxjl', 'zszj')
+	</select>
+
+	<select id="findFullPathAll" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode NOT IN ( 'zygw', 'qyzygw' )
+	</select>
+
+	<select id="findFullPathHasUser" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				and job.isIdm = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				and scj.isIdm = 0
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode NOT IN ('khds', 'nqgw' )
+	</select>
+
+	<select id="findFullPathAllHasUser" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+		WHERE
+			ac.UserName = #{UserName}
+		  	AND scj.JobCode NOT IN ('xsjl', 'qyxsjl', 'zszj', 'qyzszj','yxjl','qyyxjl','fztj','qycsss','jtcbss')
+		union all
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+				left join s_user_org_rel url on ac.ID = url.user_id and find_in_set(so.ProjectID,url.project_id)
+				and (IF(url.is_no_time = 0, DATE_FORMAT(NOW(), '%Y-%m-%d') between url.start_time and url.end_time, true))
+				and url.approve_status = 2
+				and url.isdel = 0
+				and url.status = 1
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode IN ('xsjl', 'qyxsjl', 'zszj', 'qyzszj','yxjl')
+	</select>
+
+	<select id="findFullPathNotApply" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode NOT IN ('xsjl', 'qyxsjl', 'zszj', 'qyzszj','yxjl','qyyxjl','fztj','qycsss','jtcbss')
+	</select>
+
+	<select id="findOrgProjectId" resultType="java.lang.String">
+		SELECT ifnull(if(ProjectID = '059BF37F-4DFF-E811-80CF-005056A23479', (select ComGUID
+																			  from b_project bp
+																			  where bp.ID = (select org1.ProjectID
+																							 from s_organization org1
+																							 where org1.OrgCategory = 4
+																							   and org1.PID = so.ID
+			limit 1)), ProjectID),
+					  (select ComGUID
+					   from b_project bp
+					   where bp.ID = (select org1.ProjectID
+									  from s_organization org1
+									  where org1.OrgCategory = 4
+										and org1.PID =
+											(select org2.ID
+											 from s_organization org2
+											 where org2.PID = so.ID
+						  limit 1)
+                              limit 1))) ProjectID
+		FROM b_account ac
+				 INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				 INNER JOIN s_jobs job ON job.ID = jur.JobID
+			AND job.STATUS = 1
+			AND job.IsDel = 0
+			and job.isIdm = 0
+				 INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+			AND scj.IsDel = 0
+			AND scj.STATUS = 1
+			and scj.isIdm = 0
+				 INNER JOIN s_organization so ON job.JobOrgID = so.ID
+			AND so.STATUS = 1
+			AND so.IsDel = 0
+		WHERE ac.UserName = #{UserName}
+		  AND scj.JobCode NOT IN ('khds', 'nqgw')
+	</select>
+
+	<select id="findFullPathAllInsZs" resultType="java.util.Map">
+		select org.id, org.OrgName, org.ProjectID, com.JobCode, FullPath
+		from s_jobsuserrel rel
+				 LEFT JOIN s_jobs job on job.id = rel.JobID
+				 LEFT JOIN s_organization org on org.id = job.JobOrgID
+				 left join s_commonjobs com on job.CommonJobID = com.ID
+		where OrgName is not null
+		  and rel.status = 1
+		  and rel.AccountID = #{UserId}
+		  and rel.status = 1
+		  AND job.STATUS = 1
+		  AND job.IsDel = 0
+		  AND com.IsDel = 0
+		  AND com.STATUS = 1
+		  AND org.STATUS = 1
+		  AND org.IsDel = 0
+		order by org.ProjectID
+	</select>
+
+<!--	根据当前登录人查询对应所拥有的项目列表-->
+	<select id="findProjectListByUserName" resultType="java.util.Map" >
+		<choose>
+
+				<when test="jobCode!='10001'">
+					SELECT
+					org.ProjectID projectId,
+					p.projectName
+					FROM
+					s_organization org
+					INNER JOIN b_project p ON org.ProjectID = p.ID
+					AND p.STATUS = 1
+					AND p.IsDel = 0
+					WHERE
+					${where}
+					AND p.pid IS NULL
+					AND p.orgId IS NOT NULL
+					AND p.orgId != ''
+
+
+					GROUP BY
+					org.ProjectID
+					<!--SELECT-->
+					<!--so.ProjectID projectId,-->
+					<!--p.projectName,-->
+					<!--so.ID orgId,-->
+					<!--ac.UserName userName-->
+					<!--FROM-->
+					<!--b_account ac-->
+					<!--inner join s_jobsuserrel jur on jur.AccountID = ac.ID-->
+					<!--inner join s_jobs job on job.ID = jur.JobID and job.Status = 1 and job.IsDel = 0-->
+					<!--inner join s_commonjobs scj on job.CommonJobID=scj.ID and scj.IsDel = 0 and scj.Status = 1-->
+					<!--inner JOIN s_organization so ON job.JobOrgID = so.ID and so.Status = 1 and so.IsDel = 0-->
+					<!--inner JOIN b_project p ON so.ProjectID = p.ID  and p.Status = 1 and p.IsDel = 0-->
+					<!--WHERE-->
+					<!--ac.UserName = #{UserName}-->
+					<!--and p.IsStages =0 and scj.JobCode not in ('zygw','khds','nqgw')-->
+					<!--and p.pid is null-->
+					<!--and p.orgId is not null-->
+					<!--and p.Status = 1-->
+					<!--and p.IsDel = 0-->
+					<!--and p.orgId != ''-->
+					<!--<if test="projectName!=null and projectName!=''">-->
+					<!--and p.ProjectName like "%"#{projectName}"%"-->
+					<!--</if>-->
+					<!--group by so.ProjectID-->
+				</when>
+				<otherwise>
+						SELECT
+						p.id projectId,
+						p.projectName,
+						#{UserName} userName
+						FROM
+						b_project p where  p.Status = 1 and p.IsDel = 0
+						and IsStages =0
+						and pid is null
+						and orgId is not null
+						and orgId != ''
+					<if test="projectName!=null and projectName!=''">
+						and p.ProjectName like "%"#{projectName}"%"
+					</if>
+				</otherwise>
+		</choose>
+
+	</select>
+	<!--获取用户区域权限-->
+	<select id="getRegionByUserName" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT distinct
+			p.AreaName projectName,
+			p.ComGUID projectId
+		FROM
+			s_organization org
+				INNER JOIN b_project p ON org.ProjectID = p.ID
+				AND p.STATUS = 1
+				AND p.IsDel = 0
+		WHERE
+			${where}
+		  AND p.pid IS NULL
+		  AND p.orgId IS NOT NULL
+		  AND p.orgId != ''
+		  and p.isSyn = 1
+	</select>
+
+	<select id="getProjectListByUserName" parameterType="java.util.Map" resultType="cn.visolink.system.project.model.vo.ProjectVO" >
+		<choose>
+			<when test="JobCode!='10001'">
+				SELECT
+				p.investmentTypeCode as investmentTypeCode,
+				org.ProjectID projectId,
+				p.ProjectName projectName,
+				org.id orgId,
+				p.AreaName areaName,
+				p.AreaID areaId,
+				p.ComGUID comguid
+				FROM
+				s_organization org
+				INNER JOIN b_project p ON org.ProjectID = p.ID
+				AND p.STATUS = 1
+				AND p.IsDel = 0
+				WHERE
+				${where}
+				AND p.pid IS NULL
+				AND p.orgId IS NOT NULL
+				AND p.orgId != ''
+
+				GROUP BY
+				org.ProjectID
+				<!--SELECT
+				so.ProjectID,
+				p.ProjectName,
+				so.ID OrgId,
+				ac.UserName,
+				p.AreaName,
+				p.AreaID
+				FROM
+				b_account ac
+				inner join s_jobsuserrel jur on jur.AccountID = ac.ID
+				inner join s_jobs job on job.ID = jur.JobID and job.Status = 1 and job.IsDel = 0
+				inner join s_commonjobs scj on job.CommonJobID=scj.ID and scj.IsDel = 0 and scj.Status = 1
+				inner JOIN s_organization so ON job.JobOrgID = so.ID and so.Status = 1 and so.IsDel = 0
+				inner JOIN b_project p ON so.ProjectID = p.ID  and p.Status = 1 and p.IsDel = 0
+				WHERE
+				ac.UserName = #{UserName}
+				and p.IsStages =0
+				and scj.JobCode not in ('zygw','khds','nqgw')
+				and p.pid is null
+				and p.orgId is not null
+				and p.Status = 1
+				and p.IsDel = 0
+				and p.orgId != ''
+				group by so.ProjectID-->
+			</when>
+			<otherwise>
+				SELECT
+				p.investmentTypeCode as investmentTypeCode,
+				p.id projectId,
+				p.ProjectName projectName,
+				#{UserName} userName,
+				p.AreaName areaName,
+				p.AreaID areaId,
+				p.ComGUID comguid
+				FROM
+				b_project p where  p.Status = 1 and p.IsDel = 0
+				and IsStages =0
+				and pid is null
+				and orgId is not null
+				and orgId != ''
+
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="getProjectListByUserNameSmds" parameterType="java.util.Map" resultType="cn.visolink.system.project.model.vo.ProjectVO" >
+		<choose>
+			<when test="JobCode!='10001'">
+				select *
+				from (
+				SELECT org.ProjectID projectId,
+					p.ProjectName projectName,
+					p.ComGUID        orgId,
+					''            areaName
+				FROM s_organization org
+				INNER JOIN b_project p ON org.ProjectID = p.ID AND p.STATUS = 1 AND p.IsDel = 0
+				WHERE
+				${where}
+				  AND p.pid IS NULL AND p.orgId IS NOT NULL AND
+				p.orgId != ''
+				union
+				SELECT ifnull(org.ProjectID, org.id) projectId,
+					org.OrgName                   projectName,
+					org.id                        orgId,
+					org.OrgName                   areaName
+				FROM s_organization org
+				WHERE
+				${where2}
+				) t
+				GROUP BY t.projectId
+			</when>
+			<otherwise>
+				SELECT
+				p.id projectId,
+				p.ProjectName projectName,
+				#{UserName} userName,
+				p.AreaName areaName,
+				p.AreaID areaId,
+				p.ComGUID comguid
+				FROM
+				b_project p where  p.Status = 1 and p.IsDel = 0
+				and IsStages =0
+				and pid is null
+				and orgId is not null
+				and orgId != ''
+
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="getProjectListByUserIdAndQy" resultType="cn.visolink.system.project.model.vo.ProjectVO">
+		<choose>
+		<when test="JobCode!='10001'">
+			SELECT org.ProjectID projectId,
+					 p.ProjectName projectName,
+					 org.id        orgId,
+					 p.AreaName    areaName,
+					 p.AreaID      areaId,
+					 p.ComGUID     comguid
+			FROM s_organization org
+					 INNER JOIN b_project p ON org.ProjectID = p.ID AND p.STATUS = 1 AND p.IsDel = 0
+					 inner join s_user_org_rel url on url.project_id = p.ID
+			<if test="UserId != null and UserId != ''">
+									and url.user_id = #{UserId}
+			</if>
+									and approve_status = 2 and (IF(url.is_no_time = 0, DATE_FORMAT(NOW(), '%Y-%m-%d') between url.start_time and url.end_time, true))
+			WHERE p.pid IS NULL
+				AND p.orgId IS NOT NULL
+				AND p.orgId != ''
+				<if test="projectIds != null and projectIds.size() > 0">
+					and p.ID in
+					<foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+						#{projectId}
+					</foreach>
+				</if>
+				<if test="UserId != null and UserId != ''">
+						and p.ComGUID in (select distinct ComGUID
+												from b_project
+												where id in (
+														select ProjectID
+														from s_organization
+														where PID in (SELECT so.ID
+																					FROM b_account ac
+																									 INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+																									 INNER JOIN s_jobs job ON job.ID = jur.JobID
+																							AND job.STATUS = 1
+																							AND job.IsDel = 0
+																							and job.isIdm = 0
+																									 INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+																							AND scj.IsDel = 0
+																							AND scj.STATUS = 1
+																							and scj.isIdm = 0
+																									 INNER JOIN s_organization so ON job.JobOrgID = so.ID
+																							AND so.STATUS = 1
+																							AND so.IsDel = 0
+																					WHERE ac.ID =  #{UserId}
+																						AND scj.JobCode = 'qyyxjl')
+															and OrgCategory = 4
+															and `Status` = 1
+															and IsDel = 0
+															and ProjectID is not null
+															and ProjectID != 'null'))
+
+				</if>
+			GROUP BY org.ProjectID
+		</when>
+			<otherwise>
+				SELECT org.ProjectID projectId,
+				p.ProjectName projectName,
+				org.id        orgId,
+				p.AreaName    areaName,
+				p.AreaID      areaId,
+				p.ComGUID     comguid
+				FROM s_organization org
+				INNER JOIN b_project p ON org.ProjectID = p.ID AND p.STATUS = 1 AND p.IsDel = 0
+				inner join s_user_org_rel url on url.project_id = p.ID
+				and approve_status = 2 and (IF(url.is_no_time = 0, DATE_FORMAT(NOW(), '%Y-%m-%d') between url.start_time and url.end_time, true))
+				WHERE p.pid IS NULL
+				AND p.orgId IS NOT NULL
+				AND p.orgId != ''
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="getBookProjectListByUserName" parameterType="java.util.Map" resultMap="projectMap" >
+		<choose>
+			<when test="JobCode!='10001'">
+				SELECT
+				DISTINCT
+				org.ProjectID,
+				p.ProjectName,
+				org.id OrgId,
+				p.AreaName,
+				p.AreaID
+				FROM
+				s_organization org
+				INNER JOIN b_project p ON org.ProjectID = p.ID
+				INNER JOIN a_build_book ab on p.id = ab.ProjectID and ab.IsDel = 0
+				and ab.Status = 1 and ab.IsPublish = 1
+				AND p.STATUS = 1
+				AND p.IsDel = 0
+				WHERE
+				${where}
+				AND p.pid IS NULL
+				AND p.orgId IS NOT NULL
+				AND p.orgId != ''
+
+				GROUP BY
+				org.ProjectID
+			</when>
+			<otherwise>
+				SELECT
+				DISTINCT
+				p.id ProjectId,
+				p.ProjectName,
+				#{UserName} UserName,
+				p.AreaName,
+				p.AreaID
+				FROM
+				b_project p
+				INNER JOIN a_build_book ab on p.id = ab.ProjectID and ab.IsDel = 0
+				                                and ab.Status = 1 and ab.IsPublish = 1
+				where  p.Status = 1 and p.IsDel = 0
+				and p.IsStages =0
+				and p.pid is null
+				and p.orgId is not null
+				and p.orgId != ''
+
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="getOrgListByUser" parameterType="java.lang.String" resultType="java.lang.String">
+		select DISTINCT org.ID
+		from s_jobsuserrel jur
+				 JOIN b_account acc ON acc.ID = jur.AccountID
+				 INNER JOIN s_jobs jobs on jobs.id = jur.jobid
+				 left join s_organization org on org.id = jobs.JobOrgID
+		where acc.UserName= #{userName} and jur.status = 1 and org.ID is not null;
+	</select>
+
+	<select id="getCityList" resultType="java.util.Map">
+		SELECT ID,OrgName FROM s_organization WHERE OrgCategory = '2'
+	    AND ProjectID is not null AND OrgName is not null
+	    <if test="orgStr != null and orgStr != ''">
+	        AND ID in (${orgStr})
+		</if>
+	</select>
+
+	<select id="getCityListByOrgId" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT ID,OrgName FROM s_organization
+		WHERE OrgCategory = 3 AND ID in (${orgStr})
+		UNION
+		SELECT sorg.ID,sorg.OrgName
+		FROM s_organization sorg
+		INNER JOIN (SELECT DISTINCT sorgg.ID FROM s_organization sorgg
+		WHERE sorgg.OrgCategory = 2 AND sorgg.ID in (${orgStr})) temp  ON temp.ID = sorg.PID
+	</select>
+
+	<select id="getProList" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.ProjectList">
+		SELECT
+		    bp.investmentTypeCode                                            investmentTypeCode,
+		    ( SELECT DictName FROM s_dictionary WHERE DictCode = bp.investmentTypeCode AND PID='9a2b2b66-203f-44e3-8d1a-7b116e6b03f7') AS investmentTypeName,
+			bp.ID                                            projectId,
+			bp.ProjectName                                   projectName,
+			bp.ProjectStatus                                 projectStatus,
+			bp.`Status`                                      status,
+			bp.OrgID                                         orgID,
+			org.OrgName                                      orgName,
+			bp.AreaName                                      areaName,
+		    bp.isRegion                                      isRegion,
+			trans.trans_project_id            				 transProjectId,
+			trans.trans_project_name  						 transProjectName,
+			trans.start_time                                 startTime,
+			trans.end_time                                   endTime,
+			trans.status                                     transStatus,
+			if(length(trim(trans.status)) > 0, '已联动', '未联动') transProstatus
+		FROM
+			b_project bp
+			LEFT JOIN s_organization org ON org.id = bp.OrgID
+			left join b_project_translate trans on find_in_set(bp.ID, trans.trans_project_id)
+-- 			                                           and trans.status = 1
+-- 			                                           and (now() between trans.start_time and trans.end_time)
+		WHERE
+			bp.pid IS NULL
+		  <if test="projectName!=null and projectName!=''">
+			  AND bp.projectName LIKE '%${projectName}%'
+		  </if>
+	</select>
+
+	<select id="getProDetail" parameterType="java.util.Map" resultType="cn.visolink.system.allpeople.examine.model.ProjectList">
+		SELECT
+		bp.investmentTypeCode                                            investmentTypeCode,
+		( SELECT DictName FROM s_dictionary WHERE DictCode = bp.investmentTypeCode AND PID='9a2b2b66-203f-44e3-8d1a-7b116e6b03f7') AS investmentTypeName,
+		   bp.ID projectId,
+			bp.ProjectName projectName,
+			bp.ProjectStatus projectStatus,
+			bp.`Status` status,
+			bp.OrgID orgID,
+			org.OrgName orgName,
+			cc.CityName cityName
+		FROM
+			b_project bp
+				LEFT JOIN s_organization org ON org.id = bp.OrgID
+				left join a_city_project cp on cp.ProjectID = bp.ID
+				LEFT JOIN a_city cc on cc.ID = cp.CityID
+		WHERE
+			bp.ID = #{projectId}
+	</select>
+
+	<update id="updateProject" parameterType="java.util.Map">
+		update b_project set OrgID = #{orgID},isSyn = #{isSyn},
+		                    investmentTypeCode = #{investmentTypeCode},
+		                     Status = #{status},EditTime = now(),
+							 Editor = #{Editor}
+        where ID = #{projectId}
+	</update>
+
+	<select id="findFullPathByJobs" parameterType="java.util.Map" resultType="java.lang.String">
+		select DISTINCT org.FullPath
+		from s_jobs job
+				 INNER JOIN s_organization org on job.JobOrgID = org.ID
+		where job.id in (${JobIDs});
+	</select>
+
+	<update id="updateTranslatePro">
+		update b_project_translate set isdel = 1 where project_id = #{projectId}
+	</update>
+
+	<insert id="saveTranslatePro">
+		insert into b_project_translate(id, trans_project_id, project_id, creator, creat_time, status, isdel)
+		values
+		<foreach collection="list" item="list" separator=",">
+			(
+			UUID(),#{list.transProjectId},#{list.projectId},#{list.userId},now(),#{list.status},0
+			)
+		</foreach>
+	</insert>
+
+	<select id="getTranslatePro" resultType="java.util.Map">
+		select id, group_concat(distinct trans_project_id) transProjectIds, project_id projectId, creat_time creatTime, status
+		from b_project_translate
+		where isdel = 0
+		  and project_id = #{projectId}
+	</select>
+	<select id="getZyProject" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				and job.isIdm = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				and scj.isIdm = 0
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+				inner join s_user_org_rel url on ac.ID = url.user_id and find_in_set(so.ProjectID,url.project_id)
+				and (IF(url.is_no_time = 0, DATE_FORMAT(NOW(), '%Y-%m-%d') between url.start_time and url.end_time,true))
+				and url.approve_status = 2
+				and url.isdel = 0
+				and url.status = 1
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode in ('zszj', 'qyzszj')
+	</select>
+	<select id="getZyProjectGw" resultType="java.lang.String">
+		select com.JobCode
+		from b_project bp
+				 INNER JOIN s_organization org on org.ProjectID = bp.id
+				 INNER JOIN s_jobs job on job.JobOrgID = org.id
+				 INNER JOIN s_jobsuserrel rel on rel.JobID = job.id and rel.status = 1
+				 INNER JOIN s_commonjobs com on com.id = job.CommonJobID
+		where rel.AccountID = #{userId}
+		  and bp.ID = #{projectId}
+		  and com.JobCode in ('zszj', 'qyzszj')
+		  and bp.isSyn = 1
+		  and bp.pid is null limit 1
+	</select>
+	<select id="getZygwProject" resultType="java.lang.String">
+		SELECT
+			FullPath
+		FROM
+			b_account ac
+				INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				INNER JOIN s_jobs job ON job.ID = jur.JobID
+				AND job.STATUS = 1
+				AND job.IsDel = 0
+				and job.isIdm = 0
+				INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+				AND scj.IsDel = 0
+				AND scj.STATUS = 1
+				and scj.isIdm = 0
+				INNER JOIN s_organization so ON job.JobOrgID = so.ID
+				AND so.STATUS = 1
+				AND so.IsDel = 0
+		WHERE
+			ac.UserName = #{UserName}
+		  AND scj.JobCode in ('zygw', 'qyzygw')
+	</select>
+
+	<select id="getTranslateProListByAreaId" resultType="cn.visolink.system.project.model.vo.ProjectVO">
+		SELECT org.ProjectID projectId,
+			   p.ProjectName projectName,
+			   org.id        orgId,
+			   p.AreaName    areaName,
+			   p.AreaID      areaId,
+			   p.ComGUID     comguid
+		FROM s_organization org
+				 INNER JOIN b_project p ON org.ProjectID = p.ID
+			AND p.STATUS = 1
+			AND p.IsDel = 0
+		WHERE p.isRegion = 0
+		  AND p.pid IS NULL
+		  AND p.orgId IS NOT NULL
+		  AND p.orgId != ''
+		  AND p.AreaID = (
+			  select AreaID
+			  from b_project
+			  where ID = #{id}
+		  )
+		  <if test="transType != '' and transType != null and '1'.toString() == transType">
+			  and p.id not in
+			  <foreach collection="list" item="item" separator="," open="(" close=")">
+				  #{item}
+			  </foreach>
+		  </if>
+		  <if test="transType != '' and transType != null and '2'.toString() == transType">
+			  and p.id in
+			  <foreach collection="list" item="item" separator="," open="(" close=")">
+				  #{item}
+			  </foreach>
+		  </if>
+		GROUP BY org.ProjectID
+	</select>
+
+	<select id="getTranslateProjectByAreaId"
+			resultType="cn.visolink.system.project.model.vo.TranslateProjectVo">
+		select id,
+			   trans_project_id transProjectId,
+			   trans_project_name transProjectName,
+			   project_id projectId,
+			   project_name projectName,
+			   start_time startTime,
+			   end_time endTime,
+			   status,
+			   creator,
+			   creat_time creatTime,
+			   editor,
+			   enit_time enitTime,
+			   isdel
+		from b_project_translate where area_id = #{areaId}
+	</select>
+
+	<select id="getTranslateProjectByAreaIdInsStatus"
+			resultType="cn.visolink.system.project.model.vo.TranslateProjectVo">
+		select id,
+			   trans_project_id transProjectId,
+			   trans_project_name transProjectName,
+			   project_id projectId,
+			   project_name projectName,
+			   start_time startTime,
+			   end_time endTime,
+			   status,
+			   creator,
+			   creat_time creatTime,
+			   editor,
+			   enit_time enitTime,
+			   isdel
+		from b_project_translate where area_id = (
+			select AreaID
+			from b_project
+			where ID = #{id}
+		)
+-- 		and status = 1
+-- 			and now() between start_time and end_time
+	</select>
+
+	<select id="getProIsRegion" resultType="java.lang.String">
+		select isRegion from b_project where ID = #{projectId}
+	</select>
+
+	<select id="getAllRegionNew2" parameterType="java.util.Map" resultType="java.util.Map">
+		select DISTINCT ComGUID areaId,org.OrgName areaName
+		from b_project bp
+				 INNER JOIN s_organization org on org.id = bp.ComGUID
+		where bp.IsDel = 0 and bp.isSyn = 1 ${where}
+	</select>
+
+    <select id="getProjectNameByProjectId" resultType="java.lang.String">
+		select ProjectName from b_project where ID = #{projectId}
+	</select>
+	<select id="getProjectListByIds"
+		resultType="cn.visolink.system.project.model.vo.ProjectVO">
+		SELECT
+		org.ProjectID projectId,
+		p.ProjectName projectName,
+		org.id orgId,
+		p.AreaName areaName,
+		p.AreaID areaId,
+		p.ComGUID comguid
+		FROM
+		s_organization org
+		INNER JOIN b_project p ON org.ProjectID = p.ID
+		AND p.STATUS = 1
+		AND p.IsDel = 0
+		WHERE 1=1
+		AND p.pid IS NULL
+		AND p.orgId IS NOT NULL
+		AND p.orgId != ''
+			and p.id in
+			<foreach collection="projectIds" item="item" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+	</select>
+
+	<insert id="saveTranslateProject">
+		insert into b_project_translate
+		( id,trans_project_id,trans_project_name,
+		area_id,area_name,
+		creator,creat_time,status,isdel,
+		start_time,end_time)
+		values (UUID(),#{transProjectId},#{transProjectName},
+		        #{areaId},#{areaName},
+			    #{userId},NOW(),#{status},0,
+			    #{startTime},#{endTime})
+	</insert>
+
+	<update id="updateTranslateProject">
+		update b_project_translate
+		set
+			trans_project_id =  #{transProjectId},
+			trans_project_name =  #{transProjectName},
+			start_time =  #{startTime},
+			end_time =  #{endTime},
+			status =  #{status},
+			editor =  #{userId},
+			enit_time =  NOW()
+		where id =  #{id}
+	</update>
+
+	<select id="getTeamIdsByProject" resultType="java.lang.String">
+		select id
+		from s_organization where ProjectID in (
+		<foreach collection="proIds" item="item" separator=",">
+			#{item}
+		</foreach>
+		) and OrgCategory = 8 and IsDel = 0 and Status = 1
+	</select>
+
+	<select id="getTeamIdsByQxProject" resultType="java.lang.String">
+		SELECT group_concat(url.org_id)
+		FROM b_account ac
+				 INNER JOIN s_jobsuserrel jur ON jur.AccountID = ac.ID and jur.status = 1
+				 INNER JOIN s_jobs job ON job.ID = jur.JobID
+			AND job.STATUS = 1
+			AND job.IsDel = 0
+				 INNER JOIN s_commonjobs scj ON job.CommonJobID = scj.ID
+			AND scj.IsDel = 0
+			AND scj.STATUS = 1
+				 INNER JOIN s_organization so ON job.JobOrgID = so.ID
+			AND so.STATUS = 1
+			AND so.IsDel = 0
+				 inner join s_user_org_rel url on ac.ID = url.user_id and find_in_set(so.ProjectID, url.project_id)
+			and (IF(url.is_no_time = 0, DATE_FORMAT(NOW(), '%Y-%m-%d') between url.start_time and url.end_time, true))
+			and url.approve_status = 2
+			and url.isdel = 0
+			and url.status = 1
+		WHERE ac.UserName = #{UserName}
+		  AND scj.JobCode IN ('xsjl', 'qyxsjl', 'zszj', 'qyzszj', 'yxjl')
+	</select>
+
+	<select id="getAllProInsRegion" resultType="java.lang.String">
+		select ID
+		from b_project
+		where ComGUID in (
+		<foreach collection="qyIds" item="item" separator=",">
+			#{item}
+		</foreach>
+		) and IsDel = 0 and Status = 1 and isSyn = 1
+	</select>
+	<select id="getProInsRegion" resultType="java.lang.String">
+		select ID from b_project where ComGUID = #{id}
+	</select>
+</mapper>
