@@ -40,12 +40,11 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private JwtPermissionService permissionService;
 
-
-    @Autowired
+    @Autowired(required = false)
     private DBSQLServiceImpl dbsqlService;
 
     protected Gson gson = new Gson();
-    @Autowired
+    @Autowired(required = false)
     private FrameServiceApi frameServiceApi;
 
     @Autowired
@@ -56,10 +55,8 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private RedisUtil redisUtil;
 
-
     @Autowired
     private AuthMapper authMapper;
-
 
     @Override
     public UserDetails loadUserByUsername(String userName) {
@@ -117,8 +114,6 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService {
         return jwtUser;
     }
 
-
-
     public UserDetails createJwtUser(Map<String, Object> planMap, Map jobs, Map orgMap, Map menus) {
         JwtUser jwtUser = new JwtUser(
                 planMap.get("id").toString(),
@@ -130,7 +125,7 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService {
                 planMap.get("Gender") != null ? ((Integer) planMap.get("Gender")).intValue():1,
                 ObjectUtil.isNull(planMap.get("Mobile")) ? "" : planMap.get("Mobile") + "",
                 ObjectUtil.isNull(planMap.get("Address")) ? "" : planMap.get("Address") + "",
-                ObjectUtil.isNull(planMap.get("ProjectID")) ?"" :orgMap.get("ProjectID") + "",
+                ObjectUtil.isNull(planMap.get("ProjectID")) ?"":orgMap.get("ProjectID") + "",
                 ObjectUtil.isNull(planMap.get("ProjectName"))?"":orgMap.get("ProjectName") + "",
                 planMap.get("AuthCompanyID").toString(),
                 planMap.get("ProductID").toString(),
@@ -149,4 +144,10 @@ public class JwtUserDetailsServiceImpl implements UserDetailsService {
         return jwtUser;
     }
 
+    /**
+     * 检查是否在sharding模式下
+     */
+    public boolean isInShardingMode() {
+        return permissionService != null && permissionService.isInShardingMode();
+    }
 }

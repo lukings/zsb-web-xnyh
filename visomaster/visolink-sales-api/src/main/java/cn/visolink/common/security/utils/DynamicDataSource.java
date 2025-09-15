@@ -1,8 +1,14 @@
 package cn.visolink.common.security.utils;
 
-
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
+import org.springframework.core.env.Environment;
 
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 /**
@@ -28,10 +34,6 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
 
     public static Map<Object, Object> dataSourcesMap = new ConcurrentHashMap<>(10);
 
-    static {
-        dataSourcesMap.put("defaultDataSource", SpringUtils.getBean("defaultDataSource"));
-    }
-
     @Override
     protected Object determineCurrentLookupKey() {
         return DynamicDataSource.dataSourceKey.get();
@@ -49,5 +51,29 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
 
     public static void clear() {
         DynamicDataSource.dataSourceKey.remove();
+    }
+    
+    /**
+     * 初始化动态数据源配置
+     * 这个配置类将在Spring容器启动时初始化动态数据源
+     */
+    @Configuration
+    public static class DynamicDataSourceInitializer implements InitializingBean {
+        
+        @Autowired
+        private Environment environment;
+        
+        @Autowired(required = false)
+        private DataSource defaultDataSource;
+        
+        @Override
+        public void afterPropertiesSet() {
+            // 检查是否启用了sharding配置
+            String activeProfile = environment.getProperty("spring.profiles.active", "");
+            if (!activeProfile.contains("sharding") && defaultDataSource != null) {
+                // 仅在非sharding模式且defaultDataSource不为null时注册默认数据源
+                dataSourcesMap.put("defaultDataSource", defaultDataSource);
+            }
+        }
     }
 }

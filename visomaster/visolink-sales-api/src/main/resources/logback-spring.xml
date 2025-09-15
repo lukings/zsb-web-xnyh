@@ -49,6 +49,18 @@
         <appender-ref ref="SQL_FILE"/>
     </logger>
 
+    <!-- ShardingSphere SQL日志 -->
+    <logger name="org.apache.shardingsphere" level="DEBUG" additivity="false">
+        <appender-ref ref="SQL_CONSOLE"/>
+        <appender-ref ref="SQL_FILE"/>
+    </logger>
+    
+    <!-- ShardingSphere-SQL 特定日志 -->
+    <logger name="ShardingSphere-SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="SQL_CONSOLE"/>
+        <appender-ref ref="SQL_FILE"/>
+    </logger>
+
     <!-- MyBatis SQL语句日志（仅记录SQL，不记录结果集） -->
     <logger name="cn.visolink" level="INFO" additivity="false">
         <appender-ref ref="SQL_CONSOLE"/>

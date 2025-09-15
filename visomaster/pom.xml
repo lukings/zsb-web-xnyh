@@ -43,6 +43,8 @@
         <mybaits.plus.version>3.2.0</mybaits.plus.version>
         <cess.version>0.0.1</cess.version>
         <com.jcraft.version>0.1.54</com.jcraft.version>
+        <!-- ShardingSphere版本 - 兼容Spring Boot 2.1.0 -->
+        <shardingsphere.version>5.1.2</shardingsphere.version>
     </properties>
 
     <dependencies>
@@ -285,6 +287,27 @@
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-starter</artifactId>
             <version>${druid.version}</version>
+        </dependency>
+
+        <!-- ShardingSphere-JDBC 核心依赖 -->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-jdbc-core-spring-boot-starter</artifactId>
+            <version>${shardingsphere.version}</version>
+        </dependency>
+        
+        <!-- ShardingSphere-JDBC 读写分离依赖 -->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-readwrite-splitting-spring-boot-starter</artifactId>
+            <version>${shardingsphere.version}</version>
+        </dependency>
+        
+        <!-- ShardingSphere-JDBC 分片依赖 -->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-sharding-spring-boot-starter</artifactId>
+            <version>${shardingsphere.version}</version>
         </dependency>
 
         <!--lombok插件-->

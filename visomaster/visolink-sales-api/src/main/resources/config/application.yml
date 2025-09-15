@@ -8,8 +8,9 @@ spring:
   profiles:
 #    active: prod
 #    active: pre
-    active: uat
+#    active: uat
 #    active: dev
+    active: sharding-simple  # 启用简化分库分表配置
   jackson:
     time-zone: GMT+8
   data:
